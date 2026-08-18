@@ -4,7 +4,7 @@
   "module": "dist/customgraph.js",
   "debug": "dist/customgraph.js",
   "name": "custom-graph",
-  "version": "1.0.0",
+  "version": "0.0.1",
   "description": "Customizable statistics graph card for Home Assistant Lovelace",
   "license": "MIT",
   "targets": {

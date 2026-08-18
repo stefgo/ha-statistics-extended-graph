@@ -49,6 +49,15 @@ unaggregated ("raw") recorder history.
    - Resource type: `JavaScript Module`
 4. Clear the browser cache and reload the page.
 
+### Deploy script
+
+For development there is `builddeploy.sh`: it builds the card and copies
+`dist/customgraph.js` to the Home Assistant instance over SSH.
+
+1. `cp .env.example .env` and enter your instance (`CUSTOMGRAPH_HOST`, and
+   optionally port, config path or target directory). `.env` is git-ignored.
+2. Run `./builddeploy.sh`.
+
 ## Quick start
 
 The card has no visual editor: add it through the dashboard's *Manual card* /
