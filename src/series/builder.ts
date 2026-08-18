@@ -327,7 +327,6 @@ export const buildSeries = ({
     if (isLineLike) {
       const strokeAlpha = lineOpacity ?? LINE_ALPHA;
       const lineColor = applyAlpha(colorValue, strokeAlpha);
-      const hoverColor = applyAlpha(colorValue, Math.min(1, strokeAlpha + 0.15));
       const fillOpacity =
         typeof series.fill_opacity === "number"
           ? clampAlpha(series.fill_opacity)
@@ -354,10 +353,8 @@ export const buildSeries = ({
           type: series.line_style ?? "solid",
         },
         itemStyle: { color: lineColor, borderColor: lineColor },
-        emphasis: {
-          focus: "series",
-          itemStyle: { color: hoverColor, borderColor: hoverColor },
-        },
+        legendHoverLink: false,
+        emphasis: { disabled: true },
         color: lineColor,
       };
 
@@ -410,7 +407,6 @@ export const buildSeries = ({
           : BAR_FILL_ALPHA;
       const fillColor = applyAlpha(colorValue, fillOpacity);
       const borderColor = applyAlpha(colorValue, lineOpacity ?? BAR_BORDER_ALPHA);
-      const hoverColor = applyAlpha(colorValue, Math.min(1, fillOpacity + 0.2));
 
       const barSeries: BarSeriesOption = {
         id,
@@ -421,10 +417,8 @@ export const buildSeries = ({
         yAxisIndex: series.y_axis === "right" ? 1 : 0,
         z: index,
         itemStyle: { color: fillColor, borderColor },
-        emphasis: {
-          focus: "series",
-          itemStyle: { color: hoverColor, borderColor },
-        },
+        legendHoverLink: false,
+        emphasis: { disabled: true },
         color: fillColor,
         barMaxWidth: BAR_MAX_WIDTH,
       };

@@ -65,13 +65,6 @@ export const styleCompareSeries = (
 
     serie.itemStyle = { ...(serie.itemStyle ?? {}), color: itemColor };
     serie.color = itemColor;
-    serie.emphasis = {
-      ...(serie.emphasis ?? {}),
-      itemStyle: {
-        ...((serie.emphasis?.itemStyle as Record<string, unknown>) ?? {}),
-        color: itemColor,
-      },
-    };
 
     if (serie.type === "bar") {
       serie.itemStyle = { ...serie.itemStyle, borderColor: itemColor };
@@ -96,13 +89,6 @@ export const styleCompareSeries = (
 
   if (serie.type === "bar") {
     serie.itemStyle = { ...(serie.itemStyle ?? {}), opacity: COMPARE_OPACITY };
-    serie.emphasis = {
-      ...(serie.emphasis ?? {}),
-      itemStyle: {
-        ...((serie.emphasis?.itemStyle as Record<string, unknown>) ?? {}),
-        opacity: Math.min(1, COMPARE_OPACITY + 0.2),
-      },
-    };
   } else {
     serie.lineStyle = { ...(serie.lineStyle ?? {}), opacity: COMPARE_OPACITY };
     serie.itemStyle = { ...(serie.itemStyle ?? {}), opacity: COMPARE_OPACITY };
