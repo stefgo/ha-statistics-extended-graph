@@ -1,0 +1,39 @@
+{
+  "type": "module",
+  "source": "src/index.ts",
+  "module": "dist/customgraph.js",
+  "debug": "dist/customgraph.js",
+  "name": "custom-graph",
+  "version": "1.0.0",
+  "description": "Customizable statistics graph card for Home Assistant Lovelace",
+  "license": "MIT",
+  "targets": {
+    "module": {
+      "distDir": "./dist",
+      "publicUrl": "/hacsfiles/custom-graph/",
+      "optimize": true,
+      "includeNodeModules": true
+    },
+    "debug": {
+      "distDir": "../../community/custom-graph",
+      "publicUrl": "/hacsfiles/custom-graph/",
+      "includeNodeModules": true
+    }
+  },
+  "scripts": {
+    "build": "parcel build --target module",
+    "debug": "parcel build --target debug",
+    "watch": "parcel watch --target debug",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "parcel": "^2.10.0",
+    "typescript": "^5.3.3"
+  },
+  "dependencies": {
+    "custom-card-helpers": "^1.9.0",
+    "date-fns": "^2.30.0",
+    "home-assistant-js-websocket": "^8.0.1",
+    "lit": "^2.8.0"
+  }
+}

@@ -1,0 +1,1186 @@
+import type { HomeAssistant } from "custom-card-helpers";
+import type { UnsubscribeFunc } from "home-assistant-js-websocket";
+import { startOfHour } from "date-fns";
+import type {
+  AggregationTarget,
+  CustomGraphCardConfig,
+  SeriesConfig,
+} from "../config/types";
+import {
+  fetchStatistics,
+  fetchStatisticsMetadata,
+  maxStatisticsEnd,
+  mergeStatistics,
+  statisticsHaveData,
+  trimStatisticsToRange,
+  type Statistics,
+  type StatisticsMetaData,
+  type StatisticsMetaDataMap,
+  type StatisticValue,
+} from "../data/statistics";
+import {
+  fetchRawHistoryStates,
+  historyStatesToStatistics,
+  subscribeRawHistoryStream,
+} from "../data/history";
+import {
+  applyLiveHourPatch,
+  buildLiveHourPatch,
+  computeLiveHourWindow,
+} from "../data/live-hour";
+import { EnergyCollectionBinding } from "../energy/collection";
+import { resolveAggregationPlan } from "../time/aggregation";
+import { getNextRefreshTime } from "../time/refresh";
+import {
+  DEFAULT_TIMESPAN,
+  isRollingTimespan,
+  resolveTimespan,
+  todayRange,
+  type TimeRange,
+} from "../time/timespan";
+import { evaluateCalculation } from "../series/calculation";
+import {
+  calculationKey,
+  getSeriesSource,
+  getStatisticId,
+  DEFAULT_STAT_TYPE,
+} from "../series/model";
+import {
+  getSeriesTimeOffset,
+  shiftDate,
+  shiftStatisticValues,
+  type NormalizedTimeOffset,
+} from "../series/time-offset";
+import { FetchQueue, TimeoutError, withTimeout } from "./fetch-queue";
+import { log, OnceLogger } from "./logger";
+
+const FETCH_TIMEOUT_MS = 60_000;
+const RAW_DELTA_OVERLAP_MS = 60_000;
+const VISIBILITY_RESUME_DELAY_MS = 200;
+const LIVE_HOUR_MIN_DELAY_MS = 30_000;
+
+type FetchKey = "main" | "compare" | "live";
+
+interface RangeState {
+  start: number;
+  end: number | null;
+}
+
+interface TargetState {
+  statistics?: Statistics;
+  metadata: StatisticsMetaDataMap;
+  calculated: Map<string, StatisticValue[]>;
+  range?: RangeState;
+  aggregation?: AggregationTarget;
+  lastRawEnd?: number;
+}
+
+/** Everything the card needs in order to draw one frame. */
+export interface GraphSnapshot {
+  loading: boolean;
+  aggregationDisabled: boolean;
+  periodStart?: Date;
+  periodEnd?: Date;
+  comparePeriodStart?: Date;
+  comparePeriodEnd?: Date;
+  main: TargetState;
+  compare: TargetState;
+  /** Time-offset series data, keyed by the index in `config.series`. */
+  shiftedStatistics: Map<number, StatisticValue[]>;
+  shiftedMetadata: Map<number, StatisticsMetaData | undefined>;
+  shiftedCalculated: Map<string, StatisticValue[]>;
+}
+
+const emptyTargetState = (): TargetState => ({
+  metadata: {},
+  calculated: new Map(),
+});
+
+interface ShiftedFetchGroup {
+  key: string;
+  sourceStart: Date;
+  sourceEnd?: Date;
+  offset: NormalizedTimeOffset;
+  statisticSeries: Array<{ index: number; statisticId: string }>;
+  calculationSeries: Array<{ index: number; series: SeriesConfig }>;
+}
+
+/**
+ * Owns all data acquisition for the card: it resolves the visible range, keeps
+ * it in sync with the energy date picker, loads statistics or raw history at
+ * the right aggregation, evaluates calculation series and keeps everything
+ * refreshed. The card itself only renders the resulting snapshot.
+ */
+export class GraphDataController {
+  private _hass?: HomeAssistant;
+  private _config?: CustomGraphCardConfig;
+
+  private _periodStart?: Date;
+  private _periodEnd?: Date;
+  private _comparePeriodStart?: Date;
+  private _comparePeriodEnd?: Date;
+  private _energyRange?: TimeRange;
+  private _energyCompareRange?: TimeRange;
+  private _energyFallbackActive = false;
+
+  private _main: TargetState = emptyTargetState();
+  private _compare: TargetState = emptyTargetState();
+  private _shiftedStatistics = new Map<number, StatisticValue[]>();
+  private _shiftedMetadata = new Map<number, StatisticsMetaData | undefined>();
+  private _shiftedCalculated = new Map<string, StatisticValue[]>();
+
+  private _statisticIds: string[] = [];
+  private _statTypes: string[] = [];
+  private _isLoading = false;
+  /** Per-target request counter; only the newest response may write state. */
+  private _generations: Record<"main" | "compare", number> = { main: 0, compare: 0 };
+
+  private _rawStreamUnsub?: Promise<UnsubscribeFunc | void>;
+  private _autoRefreshTimeout?: number;
+  private _liveHourTimeout?: number;
+  private _visibilityResumeTimeout?: number;
+  private _connected = false;
+  private _visible =
+    typeof document === "undefined" || document.visibilityState !== "hidden";
+
+  private readonly _logger = new OnceLogger();
+  private readonly _queue: FetchQueue<FetchKey>;
+  private readonly _energyBinding: EnergyCollectionBinding;
+
+  constructor(private readonly _onChange: () => void) {
+    this._queue = new FetchQueue<FetchKey>(
+      () => this._visible,
+      (key) => this._runFetch(key)
+    );
+    this._energyBinding = new EnergyCollectionBinding(
+      (data) => this._onEnergyRange(data),
+      () => this._onEnergyUnavailable()
+    );
+  }
+
+  // ---------------------------------------------------------------- lifecycle
+
+  public connect(): void {
+    if (this._connected) {
+      return;
+    }
+    this._connected = true;
+    if (typeof document !== "undefined") {
+      document.addEventListener("visibilitychange", this._handleVisibilityChange);
+      this._visible = document.visibilityState !== "hidden";
+    }
+    this._sync();
+  }
+
+  public disconnect(): void {
+    this._connected = false;
+    if (typeof document !== "undefined") {
+      document.removeEventListener("visibilitychange", this._handleVisibilityChange);
+    }
+    this._energyBinding.disconnect();
+    this._queue.dispose();
+    this._clearTimer("_autoRefreshTimeout");
+    this._clearTimer("_liveHourTimeout");
+    this._clearTimer("_visibilityResumeTimeout");
+    void this._teardownRawStream();
+  }
+
+  public setHass(hass: HomeAssistant): void {
+    const first = !this._hass;
+    this._hass = hass;
+    if (first && this._connected) {
+      this._sync();
+    }
+  }
+
+  public setConfig(config: CustomGraphCardConfig): void {
+    const previous = this._config;
+    this._config = config;
+    this._logger.reset();
+
+    if (previous && !config.aggregation?.compute_current_hour) {
+      this._clearTimer("_liveHourTimeout");
+    }
+    if (this._connected) {
+      this._sync(previous);
+    }
+  }
+
+  public get snapshot(): GraphSnapshot {
+    return {
+      loading: this._isLoading,
+      aggregationDisabled: this._main.aggregation === "disabled",
+      periodStart: this._periodStart,
+      periodEnd: this._periodEnd,
+      comparePeriodStart: this._comparePeriodStart,
+      comparePeriodEnd: this._comparePeriodEnd,
+      main: this._main,
+      compare: this._compare,
+      shiftedStatistics: this._shiftedStatistics,
+      shiftedMetadata: this._shiftedMetadata,
+      shiftedCalculated: this._shiftedCalculated,
+    };
+  }
+
+  // ------------------------------------------------------------ configuration
+
+  private get _timespan() {
+    return this._config?.timespan ?? DEFAULT_TIMESPAN;
+  }
+
+  private get _usesEnergyPicker(): boolean {
+    return this._timespan.mode === "energy";
+  }
+
+  private _hasTimeOffsets(config = this._config): boolean {
+    return Boolean(config?.series.some((series) => getSeriesTimeOffset(series)));
+  }
+
+  /** Compare is only available through the energy date picker's compare toggle. */
+  private _shouldUseCompare(): boolean {
+    if (!this._usesEnergyPicker || !this._config) {
+      return false;
+    }
+    if (this._hasTimeOffsets()) {
+      return false;
+    }
+    return this._config.allow_compare !== false;
+  }
+
+  private _sync(previousConfig?: CustomGraphCardConfig): void {
+    if (!this._hass || !this._config) {
+      return;
+    }
+
+    const needsPicker = this._usesEnergyPicker;
+    const modeChanged = previousConfig?.timespan?.mode !== this._timespan.mode;
+    const keyChanged =
+      previousConfig?.collection_key !== this._config.collection_key;
+
+    if (needsPicker && (modeChanged || keyChanged || !previousConfig)) {
+      this._energyBinding.connect(this._hass, this._config.collection_key);
+    } else if (!needsPicker && previousConfig?.timespan?.mode === "energy") {
+      this._energyBinding.disconnect();
+      this._energyRange = undefined;
+      this._energyCompareRange = undefined;
+    }
+
+    if (!this._shouldUseCompare()) {
+      this._clearCompare();
+    }
+
+    const periodChanged = this._recalculatePeriod();
+    const compareChanged = this._recalculateComparePeriod();
+    const seriesChanged =
+      !!previousConfig &&
+      JSON.stringify(previousConfig.series) !== JSON.stringify(this._config.series);
+
+    if (periodChanged || seriesChanged) {
+      void this._teardownRawStream();
+      this._clearShifted();
+    }
+
+    if (periodChanged || seriesChanged || !this._main.statistics) {
+      this._queue.schedule("main");
+    }
+    if (
+      this._comparePeriodStart &&
+      (compareChanged || seriesChanged || !this._compare.statistics)
+    ) {
+      this._queue.schedule("compare");
+    }
+  }
+
+  // ------------------------------------------------------------------ periods
+
+  private _onEnergyRange(data: {
+    start: Date;
+    end?: Date;
+    startCompare?: Date;
+    endCompare?: Date;
+  }): void {
+    this._energyFallbackActive = false;
+    this._energyRange = { start: data.start, end: data.end };
+
+    if (this._shouldUseCompare() && data.startCompare) {
+      this._energyCompareRange = {
+        start: data.startCompare,
+        end: data.endCompare,
+      };
+    } else {
+      this._energyCompareRange = undefined;
+    }
+
+    const periodChanged = this._recalculatePeriod();
+    const compareChanged = this._recalculateComparePeriod();
+
+    if (periodChanged || !this._main.statistics) {
+      this._queue.schedule("main");
+    }
+    if (
+      this._comparePeriodStart &&
+      (compareChanged || !this._compare.statistics)
+    ) {
+      this._queue.schedule("compare");
+    }
+  }
+
+  private _onEnergyUnavailable(): void {
+    this._energyFallbackActive = true;
+    if (this._recalculatePeriod() || !this._main.statistics) {
+      this._queue.schedule("main");
+    }
+  }
+
+  private _resolveRange(): TimeRange | undefined {
+    const energyRange =
+      this._energyRange ?? (this._energyFallbackActive ? todayRange() : undefined);
+    try {
+      return resolveTimespan(this._timespan, energyRange);
+    } catch (error) {
+      log("error", "Invalid timespan configuration", {
+        error: error instanceof Error ? error.message : error,
+      });
+      return undefined;
+    }
+  }
+
+  private _recalculatePeriod(): boolean {
+    const resolved = this._resolveRange();
+    if (!resolved) {
+      return false;
+    }
+    const changed =
+      this._periodStart?.getTime() !== resolved.start.getTime() ||
+      this._periodEnd?.getTime() !== resolved.end?.getTime();
+
+    if (changed) {
+      this._periodStart = resolved.start;
+      this._periodEnd = resolved.end;
+      this._main.lastRawEnd = undefined;
+    }
+    return changed;
+  }
+
+  private _recalculateComparePeriod(): boolean {
+    const range = this._shouldUseCompare() ? this._energyCompareRange : undefined;
+
+    if (!range) {
+      if (this._comparePeriodStart || this._comparePeriodEnd) {
+        this._clearCompare();
+        return true;
+      }
+      return false;
+    }
+
+    const changed =
+      this._comparePeriodStart?.getTime() !== range.start.getTime() ||
+      this._comparePeriodEnd?.getTime() !== range.end?.getTime();
+
+    if (changed) {
+      this._comparePeriodStart = range.start;
+      this._comparePeriodEnd = range.end;
+      this._compare = emptyTargetState();
+    }
+    return changed;
+  }
+
+  private _clearCompare(): void {
+    this._comparePeriodStart = undefined;
+    this._comparePeriodEnd = undefined;
+    this._compare = emptyTargetState();
+  }
+
+  private _clearShifted(): void {
+    this._shiftedStatistics = new Map();
+    this._shiftedMetadata = new Map();
+    this._shiftedCalculated = new Map();
+  }
+
+  // ------------------------------------------------------------------ loading
+
+  private _collectStatisticRequests(): {
+    ids: string[];
+    types: string[];
+  } {
+    const ids = new Set<string>();
+    const types = new Set<string>();
+
+    this._config?.series.forEach((series) => {
+      const defaultStatType = series.stat_type ?? DEFAULT_STAT_TYPE;
+      if (getSeriesTimeOffset(series)) {
+        // Loaded separately from a shifted source range.
+        return;
+      }
+      if (getSeriesSource(series) === "statistic") {
+        const id = getStatisticId(series);
+        if (id) {
+          ids.add(id);
+          types.add(defaultStatType);
+        }
+        return;
+      }
+      series.calculation?.terms?.forEach((term) => {
+        const id = term.statistic_id?.trim();
+        if (id) {
+          ids.add(id);
+          types.add(term.stat_type ?? defaultStatType);
+        }
+      });
+    });
+
+    return {
+      ids: Array.from(ids),
+      types: types.size ? Array.from(types) : [DEFAULT_STAT_TYPE],
+    };
+  }
+
+  private async _runFetch(key: FetchKey): Promise<void> {
+    if (key === "live") {
+      await this._loadLiveHour();
+      return;
+    }
+    await this._loadStatistics(key === "compare");
+  }
+
+  private async _loadStatistics(isCompare: boolean): Promise<void> {
+    const hass = this._hass;
+    const config = this._config;
+    const periodStart = isCompare ? this._comparePeriodStart : this._periodStart;
+    const periodEnd = isCompare ? this._comparePeriodEnd : this._periodEnd;
+
+    if (!hass || !config || !periodStart || !this._visible) {
+      return;
+    }
+
+    const target = isCompare ? this._compare : this._main;
+    const range: RangeState = {
+      start: periodStart.getTime(),
+      end: periodEnd?.getTime() ?? null,
+    };
+
+    const { ids, types } = this._collectStatisticRequests();
+    if (!isCompare) {
+      this._statisticIds = ids;
+      this._statTypes = types;
+    }
+
+    const plan = resolveAggregationPlan(
+      periodStart,
+      periodEnd,
+      config.aggregation,
+      this._usesEnergyPicker
+    );
+
+    const targetKey = isCompare ? "compare" : "main";
+
+    if (plan[0] === "disabled") {
+      this._generations[targetKey] += 1;
+      this._applyDisabled(isCompare, range);
+      return;
+    }
+
+    const generation = ++this._generations[targetKey];
+    const showLoader = !isCompare && !this._main.statistics;
+    if (showLoader) {
+      this._isLoading = true;
+      this._onChange();
+    }
+
+    try {
+      const metadata = await this._loadMetadata(hass, ids);
+      const result = await this._fetchWithPlan(
+        hass,
+        plan,
+        periodStart,
+        periodEnd,
+        ids,
+        types,
+        isCompare,
+        range
+      );
+
+      if (generation !== this._generations[targetKey]) {
+        return;
+      }
+
+      target.metadata = metadata;
+      target.range = range;
+      target.aggregation = result.aggregation;
+
+      if (result.aggregation === "raw") {
+        const merged =
+          result.incremental && target.statistics
+            ? mergeStatistics(target.statistics, result.statistics)
+            : result.statistics;
+        target.statistics = trimStatisticsToRange(merged, range.start, range.end);
+        target.lastRawEnd = maxStatisticsEnd(target.statistics);
+      } else {
+        target.statistics = result.statistics;
+        target.lastRawEnd = undefined;
+      }
+
+      this._rebuildCalculations(isCompare);
+
+      if (!isCompare) {
+        if (result.aggregation === "raw") {
+          void this._restartRawStream();
+        } else {
+          void this._teardownRawStream();
+        }
+        await this._loadShiftedSeries(periodStart, periodEnd, generation);
+        if (generation !== this._generations.main) {
+          return;
+        }
+        this._scheduleAutoRefresh();
+        this._scheduleLiveHour();
+      }
+    } catch (error) {
+      if (generation === this._generations[targetKey]) {
+        log("error", "Failed to load statistics", {
+          compare: isCompare,
+          error: error instanceof Error ? error.message : error,
+        });
+        if (isCompare) {
+          this._compare = emptyTargetState();
+        } else {
+          this._main = emptyTargetState();
+          this._clearShifted();
+        }
+      }
+    } finally {
+      if (generation === this._generations[targetKey] && showLoader) {
+        this._isLoading = false;
+      }
+      this._onChange();
+    }
+  }
+
+  private _applyDisabled(isCompare: boolean, range: RangeState): void {
+    const target = emptyTargetState();
+    target.range = range;
+    target.aggregation = "disabled";
+
+    if (isCompare) {
+      this._compare = target;
+    } else {
+      this._main = target;
+      this._clearShifted();
+      this._clearTimer("_autoRefreshTimeout");
+      this._clearTimer("_liveHourTimeout");
+    }
+    this._isLoading = false;
+    this._onChange();
+  }
+
+  private async _loadMetadata(
+    hass: HomeAssistant,
+    ids: string[]
+  ): Promise<StatisticsMetaDataMap> {
+    if (!ids.length) {
+      return {};
+    }
+    try {
+      const entries = await withTimeout(
+        fetchStatisticsMetadata(hass, ids),
+        FETCH_TIMEOUT_MS,
+        "getStatisticsMetadata"
+      );
+      const metadata: StatisticsMetaDataMap = {};
+      entries.forEach((item) => {
+        metadata[item.statistic_id] = item;
+      });
+      return metadata;
+    } catch (error) {
+      if (!(error instanceof TimeoutError)) {
+        log("warn", "Failed to load statistics metadata", {
+          error: error instanceof Error ? error.message : error,
+        });
+      }
+      return {};
+    }
+  }
+
+  /**
+   * Walks the aggregation plan until one interval returns data. Every step is
+   * tried once; the last attempted interval is reported even when it was empty.
+   */
+  private async _fetchWithPlan(
+    hass: HomeAssistant,
+    plan: AggregationTarget[],
+    start: Date,
+    end: Date | undefined,
+    ids: string[],
+    types: string[],
+    isCompare: boolean,
+    range: RangeState
+  ): Promise<{
+    statistics: Statistics;
+    aggregation: AggregationTarget;
+    incremental: boolean;
+  }> {
+    if (!ids.length) {
+      return { statistics: {}, aggregation: plan[0], incremental: false };
+    }
+
+    let statistics: Statistics = {};
+    let lastAggregation: AggregationTarget = plan[0];
+    let incremental = false;
+
+    for (let idx = 0; idx < plan.length; idx++) {
+      const aggregation = plan[idx];
+      lastAggregation = aggregation;
+      if (aggregation === "disabled") {
+        return { statistics: {}, aggregation, incremental: false };
+      }
+
+      try {
+        if (aggregation === "raw") {
+          const target = isCompare ? this._compare : this._main;
+          const lastEnd = target.lastRawEnd;
+          const from =
+            lastEnd !== undefined && (range.end === null || lastEnd < range.end)
+              ? new Date(Math.max(start.getTime(), lastEnd - RAW_DELTA_OVERLAP_MS))
+              : start;
+          incremental = from !== start;
+          statistics = await this._fetchRawStatistics(hass, from, end, ids);
+        } else {
+          statistics = await withTimeout(
+            fetchStatistics(hass, start, end, ids, aggregation, types),
+            FETCH_TIMEOUT_MS,
+            `fetchStatistics:${aggregation}`
+          );
+          incremental = false;
+        }
+
+        if (statisticsHaveData(statistics, ids)) {
+          return { statistics, aggregation, incremental };
+        }
+        if (idx < plan.length - 1) {
+          log(
+            "warn",
+            `Aggregation "${aggregation}" returned no data. Trying "${plan[idx + 1]}".`
+          );
+        }
+      } catch (error) {
+        log("error", `Failed to load statistics for aggregation "${aggregation}"`, {
+          error: error instanceof Error ? error.message : error,
+        });
+      }
+    }
+
+    return { statistics, aggregation: lastAggregation, incremental };
+  }
+
+  private async _fetchRawStatistics(
+    hass: HomeAssistant,
+    start: Date,
+    end: Date | undefined,
+    ids: string[]
+  ): Promise<Statistics> {
+    // Query slightly beyond the visible range so lines reach both edges.
+    const buffer = end
+      ? Math.max(60_000, (end.getTime() - start.getTime()) * 0.1)
+      : 60_000;
+    const queryStart = new Date(start.getTime() - buffer);
+    const queryEnd = end ? new Date(end.getTime() + buffer) : undefined;
+
+    const history = await withTimeout(
+      fetchRawHistoryStates(
+        hass,
+        queryStart,
+        queryEnd,
+        ids,
+        this._config?.aggregation?.raw_options
+      ),
+      FETCH_TIMEOUT_MS,
+      "fetchRawHistoryStates"
+    );
+    return historyStatesToStatistics(history);
+  }
+
+  // ------------------------------------------------------ time offset series
+
+  private _buildShiftedGroups(start: Date, end?: Date): ShiftedFetchGroup[] {
+    const groups = new Map<string, ShiftedFetchGroup>();
+
+    this._config?.series.forEach((series, index) => {
+      const offset = getSeriesTimeOffset(series);
+      if (!offset) {
+        return;
+      }
+      const source = getSeriesSource(series);
+      const statisticId = getStatisticId(series);
+      if (source === "statistic" && !statisticId) {
+        return;
+      }
+      if (source === "calculation" && !series.calculation?.terms?.length) {
+        return;
+      }
+
+      const sourceStart = shiftDate(start, offset, 1);
+      const sourceEnd = end ? shiftDate(end, offset, 1) : undefined;
+      const key = `${offset.value}:${offset.unit}`;
+
+      const group = groups.get(key) ?? {
+        key,
+        sourceStart,
+        sourceEnd,
+        offset,
+        statisticSeries: [],
+        calculationSeries: [],
+      };
+
+      if (source === "statistic" && statisticId) {
+        group.statisticSeries.push({ index, statisticId });
+      } else {
+        group.calculationSeries.push({ index, series });
+      }
+      groups.set(key, group);
+    });
+
+    return Array.from(groups.values());
+  }
+
+  private _shiftedGroupRequests(group: ShiftedFetchGroup): {
+    ids: string[];
+    types: string[];
+  } {
+    const ids = new Set<string>();
+    const types = new Set<string>();
+
+    group.statisticSeries.forEach(({ index, statisticId }) => {
+      ids.add(statisticId);
+      types.add(this._config?.series[index].stat_type ?? DEFAULT_STAT_TYPE);
+    });
+    group.calculationSeries.forEach(({ series }) => {
+      const defaultStatType = series.stat_type ?? DEFAULT_STAT_TYPE;
+      series.calculation?.terms?.forEach((term) => {
+        const id = term.statistic_id?.trim();
+        if (id) {
+          ids.add(id);
+          types.add(term.stat_type ?? defaultStatType);
+        }
+      });
+    });
+
+    return {
+      ids: Array.from(ids),
+      types: types.size ? Array.from(types) : [DEFAULT_STAT_TYPE],
+    };
+  }
+
+  /**
+   * Loads every series that configures `time_offset` from its shifted source
+   * range and projects the samples back onto the visible range.
+   */
+  private async _loadShiftedSeries(
+    start: Date,
+    end: Date | undefined,
+    generation: number
+  ): Promise<void> {
+    const hass = this._hass;
+    const groups = hass ? this._buildShiftedGroups(start, end) : [];
+    if (!hass || !groups.length) {
+      this._clearShifted();
+      return;
+    }
+
+    const statisticsByIndex = new Map<number, StatisticValue[]>();
+    const metadataByIndex = new Map<number, StatisticsMetaData | undefined>();
+    const calculatedByKey = new Map<string, StatisticValue[]>();
+
+    for (const group of groups) {
+      const { ids, types } = this._shiftedGroupRequests(group);
+      const plan = resolveAggregationPlan(
+        group.sourceStart,
+        group.sourceEnd,
+        this._config?.aggregation,
+        this._usesEnergyPicker
+      ).filter((aggregation) => aggregation !== "raw");
+
+      if (!plan.length || plan[0] === "disabled") {
+        this._logger.warnOnce(
+          `shifted-unsupported-${group.key}`,
+          "Series time offset requires aggregated statistics; raw history and disabled ranges are skipped."
+        );
+        continue;
+      }
+
+      const metadata = await this._loadMetadata(hass, ids);
+      const result = await this._fetchWithPlan(
+        hass,
+        plan,
+        group.sourceStart,
+        group.sourceEnd,
+        ids,
+        types,
+        false,
+        { start: group.sourceStart.getTime(), end: group.sourceEnd?.getTime() ?? null }
+      );
+
+      if (generation !== this._generations.main) {
+        return;
+      }
+      if (result.aggregation === "disabled") {
+        continue;
+      }
+
+      group.statisticSeries.forEach(({ index, statisticId }) => {
+        const values = result.statistics[statisticId];
+        if (!values?.length) {
+          return;
+        }
+        statisticsByIndex.set(index, shiftStatisticValues(values, group.offset));
+        metadataByIndex.set(index, metadata[statisticId]);
+      });
+
+      group.calculationSeries.forEach(({ index, series }) => {
+        const evaluated = evaluateCalculation(
+          series,
+          series.calculation!,
+          result.statistics,
+          index,
+          {
+            start: group.sourceStart,
+            end: group.sourceEnd,
+            period: result.aggregation,
+          },
+          this._logger
+        );
+        if (!evaluated?.values.length) {
+          return;
+        }
+        calculatedByKey.set(
+          calculationKey(index),
+          shiftStatisticValues(evaluated.values, group.offset)
+        );
+      });
+    }
+
+    this._shiftedStatistics = statisticsByIndex;
+    this._shiftedMetadata = metadataByIndex;
+    this._shiftedCalculated = calculatedByKey;
+  }
+
+  // ------------------------------------------------------------- calculations
+
+  private _rebuildCalculations(isCompare: boolean): void {
+    const target = isCompare ? this._compare : this._main;
+    const calculated = new Map<string, StatisticValue[]>();
+
+    this._config?.series.forEach((series, index) => {
+      if (!series.calculation || getSeriesSource(series) !== "calculation") {
+        return;
+      }
+      // Offset calculations are evaluated on their shifted source range.
+      if (!isCompare && getSeriesTimeOffset(series)) {
+        return;
+      }
+      const result = evaluateCalculation(
+        series,
+        series.calculation,
+        target.statistics ?? {},
+        index,
+        {
+          start: isCompare ? this._comparePeriodStart : this._periodStart,
+          end: isCompare ? this._comparePeriodEnd : this._periodEnd,
+          period: target.aggregation,
+        },
+        this._logger
+      );
+      if (result) {
+        calculated.set(calculationKey(index), result.values);
+      }
+    });
+
+    target.calculated = calculated;
+  }
+
+  // --------------------------------------------------------------- raw stream
+
+  private _shouldUseRawStream(): boolean {
+    return (
+      this._visible &&
+      !!this._hass &&
+      this._main.aggregation === "raw" &&
+      this._statisticIds.length > 0
+    );
+  }
+
+  private async _restartRawStream(): Promise<void> {
+    await this._teardownRawStream();
+    if (!this._shouldUseRawStream() || !this._hass) {
+      return;
+    }
+
+    const fallbackStart = this._main.range?.start ?? Date.now();
+    const startMs =
+      this._main.lastRawEnd !== undefined
+        ? Math.max(this._main.lastRawEnd - RAW_DELTA_OVERLAP_MS, fallbackStart)
+        : fallbackStart;
+
+    this._rawStreamUnsub = subscribeRawHistoryStream(
+      this._hass,
+      new Date(startMs),
+      this._statisticIds,
+      (message) => {
+        if (message?.states && Object.keys(message.states).length) {
+          this._applyRawStreamStates(message.states);
+        }
+      },
+      this._config?.aggregation?.raw_options
+    ).catch((error) => {
+      log("error", "Failed to subscribe to the raw history stream", {
+        error: error instanceof Error ? error.message : error,
+      });
+      this._rawStreamUnsub = undefined;
+      this._queue.schedule("main");
+      return undefined;
+    });
+  }
+
+  private async _teardownRawStream(): Promise<void> {
+    const handle = this._rawStreamUnsub;
+    this._rawStreamUnsub = undefined;
+    if (!handle) {
+      return;
+    }
+    try {
+      const unsubscribe = await handle;
+      if (typeof unsubscribe === "function") {
+        await unsubscribe();
+      }
+    } catch (error) {
+      log("warn", "Failed to unsubscribe from the raw history stream", {
+        error: error instanceof Error ? error.message : error,
+      });
+    }
+  }
+
+  private _applyRawStreamStates(
+    states: Parameters<typeof historyStatesToStatistics>[0]
+  ): void {
+    if (!this._shouldUseRawStream()) {
+      return;
+    }
+    const patch = historyStatesToStatistics(states);
+    if (!Object.values(patch).some((entries) => entries?.length)) {
+      return;
+    }
+
+    const range = this._main.range;
+    const merged = mergeStatistics(this._main.statistics, patch);
+    this._main.statistics = range
+      ? trimStatisticsToRange(merged, range.start, range.end)
+      : merged;
+    this._main.lastRawEnd = maxStatisticsEnd(this._main.statistics);
+    this._rebuildCalculations(false);
+    this._onChange();
+  }
+
+  /** Re-trims a streaming range after a rolling window has moved on. */
+  private _applyRollingWindowShift(): void {
+    if (!this._main.statistics || !this._periodStart) {
+      return;
+    }
+    const range: RangeState = {
+      start: this._periodStart.getTime(),
+      end: this._periodEnd?.getTime() ?? null,
+    };
+    this._main.statistics = trimStatisticsToRange(
+      this._main.statistics,
+      range.start,
+      range.end
+    );
+    this._main.range = range;
+    this._main.lastRawEnd = maxStatisticsEnd(this._main.statistics);
+    this._rebuildCalculations(false);
+    this._onChange();
+  }
+
+  // ------------------------------------------------------------ current hour
+
+  private _shouldComputeCurrentHour(): boolean {
+    if (!this._config?.aggregation?.compute_current_hour) {
+      return false;
+    }
+    if (this._main.aggregation !== "hour" || !this._periodStart) {
+      return false;
+    }
+    const now = new Date();
+    if (this._periodStart > now) {
+      return false;
+    }
+    return !this._periodEnd || this._periodEnd > startOfHour(now);
+  }
+
+  private _scheduleLiveHour(): void {
+    this._clearTimer("_liveHourTimeout");
+    if (!this._shouldComputeCurrentHour()) {
+      return;
+    }
+    this._queue.schedule("live", 250);
+    const delay = Math.max(
+      getNextRefreshTime("5minute") - Date.now(),
+      LIVE_HOUR_MIN_DELAY_MS
+    );
+    this._liveHourTimeout = window.setTimeout(() => {
+      this._liveHourTimeout = undefined;
+      this._scheduleLiveHour();
+    }, delay);
+  }
+
+  /**
+   * Estimates the ongoing hour from 5-minute statistics until Home Assistant
+   * publishes the official hourly aggregate.
+   */
+  private async _loadLiveHour(): Promise<void> {
+    const hass = this._hass;
+    if (!hass || !this._visible || !this._shouldComputeCurrentHour()) {
+      return;
+    }
+    const base = this._main.statistics;
+    if (!base || !this._statisticIds.length) {
+      return;
+    }
+
+    const window = computeLiveHourWindow(this._periodStart, this._periodEnd);
+    if (!window) {
+      return;
+    }
+
+    try {
+      const fiveMinute = await withTimeout(
+        fetchStatistics(
+          hass,
+          new Date(window.fetchStart),
+          new Date(window.fetchEnd),
+          this._statisticIds,
+          "5minute",
+          this._statTypes
+        ),
+        FETCH_TIMEOUT_MS,
+        "fetchStatistics:liveHour"
+      );
+
+      const patch = buildLiveHourPatch(base, fiveMinute, window, this._statisticIds);
+      if (!patch) {
+        return;
+      }
+      this._main.statistics = applyLiveHourPatch(base, patch);
+      this._rebuildCalculations(false);
+      this._onChange();
+    } catch (error) {
+      log("error", "Failed to load the current-hour estimate", {
+        error: error instanceof Error ? error.message : error,
+      });
+    }
+  }
+
+  // ------------------------------------------------------------- auto refresh
+
+  private _scheduleAutoRefresh(): void {
+    this._clearTimer("_autoRefreshTimeout");
+    if (!this._visible || !this._config || !this._periodStart) {
+      return;
+    }
+
+    const timespan = this._timespan;
+    if (timespan.mode === "fixed") {
+      const end = timespan.end ? new Date(timespan.end) : null;
+      if (!end || end <= new Date()) {
+        return; // Historical data does not change.
+      }
+    }
+
+    const aggregation = this._main.aggregation ?? "hour";
+    if (aggregation === "disabled") {
+      return;
+    }
+
+    const delay = getNextRefreshTime(aggregation) - Date.now();
+    if (!Number.isFinite(delay)) {
+      return;
+    }
+
+    this._autoRefreshTimeout = window.setTimeout(
+      () => {
+        this._autoRefreshTimeout = undefined;
+        this._runAutoRefresh(aggregation);
+      },
+      Math.max(delay, 60_000)
+    );
+  }
+
+  private _runAutoRefresh(aggregation: AggregationTarget): void {
+    if (!this._visible) {
+      return;
+    }
+
+    const periodChanged = this._recalculatePeriod();
+    const compareChanged = this._recalculateComparePeriod();
+    const rolling = isRollingTimespan(this._timespan);
+    let refreshMain = rolling ? periodChanged : true;
+
+    // A live raw stream already delivers new samples; only the window moves.
+    if (aggregation === "raw" && this._rawStreamUnsub) {
+      if (periodChanged) {
+        this._applyRollingWindowShift();
+      }
+      refreshMain = false;
+    }
+
+    if (refreshMain) {
+      this._queue.schedule("main");
+    }
+    if (this._comparePeriodStart && (compareChanged || refreshMain)) {
+      this._queue.schedule("compare");
+    }
+
+    this._scheduleAutoRefresh();
+  }
+
+  // ---------------------------------------------------------------- visibility
+
+  private readonly _handleVisibilityChange = (): void => {
+    const visible = document.visibilityState !== "hidden";
+    if (visible === this._visible) {
+      return;
+    }
+    this._visible = visible;
+
+    if (!visible) {
+      this._queue.pause();
+      this._clearTimer("_autoRefreshTimeout");
+      this._clearTimer("_liveHourTimeout");
+      void this._teardownRawStream();
+      return;
+    }
+
+    this._clearTimer("_visibilityResumeTimeout");
+    this._visibilityResumeTimeout = window.setTimeout(() => {
+      this._visibilityResumeTimeout = undefined;
+      if (!this._visible) {
+        return;
+      }
+      const parked = new Set(this._queue.takeParked());
+      parked.add("main");
+      if (this._comparePeriodStart) {
+        parked.add("compare");
+      }
+      parked.forEach((key) => this._queue.schedule(key));
+      this._scheduleAutoRefresh();
+    }, VISIBILITY_RESUME_DELAY_MS);
+  };
+
+  private _clearTimer(
+    field: "_autoRefreshTimeout" | "_liveHourTimeout" | "_visibilityResumeTimeout"
+  ): void {
+    const handle = this[field];
+    if (handle) {
+      window.clearTimeout(handle);
+      this[field] = undefined;
+    }
+  }
+}
