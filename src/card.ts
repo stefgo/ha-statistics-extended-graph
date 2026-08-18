@@ -10,6 +10,7 @@ import { OnceLogger } from "./core/logger";
 import { assembleChart } from "./chart/assemble";
 import { createZeroSnapshot } from "./chart/lines";
 import type { ChartOptions, SeriesOption } from "./types/echarts";
+import { CARD_VERSION } from "./version";
 
 interface LovelaceGridOptions {
   columns?: number | "full";
@@ -20,6 +21,12 @@ interface LovelaceGridOptions {
 
 const DISABLED_MESSAGE =
   "Fetching statistics is disabled for this period. Choose a shorter time range.";
+
+console.info(
+  "%c CUSTOM-GRAPH-CARD %c " + CARD_VERSION + " ",
+  "background-color: #000000; color: #4CAF50; font-weight: bold;",
+  "background-color: #666666; color: #FFFFFF; font-weight: bold;",
+);
 
 @customElement("custom-graph-card")
 export class CustomGraphCard extends LitElement {

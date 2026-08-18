@@ -21,9 +21,10 @@
     }
   },
   "scripts": {
-    "build": "parcel build --target module",
-    "debug": "parcel build --target debug",
-    "watch": "parcel watch --target debug",
+    "gen:version": "node scripts/gen-version.mjs",
+    "build": "npm run gen:version && parcel build --target module",
+    "debug": "npm run gen:version && parcel build --target debug",
+    "watch": "npm run gen:version && parcel watch --target debug",
     "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
