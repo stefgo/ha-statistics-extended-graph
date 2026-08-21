@@ -4525,7 +4525,6 @@ const SELECTION_SERIES_ID = `${SELECTION_ID_PREFIX}marker`;
 const SELECTION_AXIS_ID = `${SELECTION_ID_PREFIX}axis`;
 /** True for the helper series of the selection, which carry no data of a series. */
 const isSelectionSeries = (serie) => String(serie.id ?? "").startsWith(SELECTION_ID_PREFIX);
-const BAND_OPACITY = 0.16;
 /**
  * The axis the marker is drawn on: hidden, fixed to `0..1`, so a marker value
  * of `1` reaches the top of the plot without changing the data axes. It is
@@ -4543,42 +4542,31 @@ const buildSelectionAxis = () => ({
     splitLine: { show: false },
 });
 /**
- * Builds the visible marker. A bucket with a known end becomes a band across
- * its full width - an area from `1` down to the zero line of the hidden axis;
- * an open-ended one only gets a dashed line at its position.
+ * Builds the visible marker: a dashed line over the full plot height at the
+ * position of the selected bucket. It sits where the samples of that bucket sit
+ * and therefore runs through the dots of the line series, and it is drawn above
+ * the data so it stays readable over a bar.
  */
 const buildSelectionMarker = ({ period, computedStyle, axisIndex, }) => {
-    const accent = computedStyle.getPropertyValue("--primary-color").trim() || "#03a9f4";
-    const lineColor = computedStyle.getPropertyValue("--secondary-text-color").trim() || "#727272";
-    const marker = {
+    const color = computedStyle.getPropertyValue("--primary-color").trim() || "#03a9f4";
+    return {
         id: SELECTION_SERIES_ID,
         name: "selection",
         type: "line",
         silent: true,
         animation: false,
-        // Behind the data, so bars and lines keep reading as the foreground.
-        z: 0,
+        // Above bars and lines, which use the default z of 2.
+        z: 3,
         xAxisIndex: 0,
         yAxisIndex: axisIndex,
         showSymbol: false,
         symbol: "none",
-        data: period.end === null
-            ? [
-                [period.start, 0],
-                [period.start, 1],
-            ]
-            : [
-                [period.start, 1],
-                [period.end, 1],
-            ],
+        lineStyle: { color, width: 2, type: [6, 4], cap: "butt" },
+        data: [
+            [period.start, 0],
+            [period.start, 1],
+        ],
     };
-    if (period.end === null) {
-        marker.lineStyle = { color: lineColor, width: 1, type: "dashed" };
-        return marker;
-    }
-    marker.lineStyle = { width: 0, opacity: 0 };
-    marker.areaStyle = { color: accent, opacity: BAND_OPACITY, origin: "start" };
-    return marker;
 };
 
 /**
@@ -5018,7 +5006,7 @@ class SelectionInput {
 
 /** The released version — what `package.json` says, without the build counter */
 /** `<semver>+build.<n>` — what the card reports in the console */
-const CARD_VERSION = "0.0.1+build.25" ;
+const CARD_VERSION = "0.0.1+build.29" ;
 
 /** Name of the event the card fires whenever the selected period changes. */
 const SELECTION_EVENT = "custom-graph-selection";

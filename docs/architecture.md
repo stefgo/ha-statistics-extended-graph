@@ -69,5 +69,20 @@ card.ts                  Lit element: rendering, placeholders, animation
 - **Failures degrade locally.** A broken series is skipped and logged; the rest
   of the chart still renders.
 - **Presentation is intentionally reduced.** No legend, tooltip, axis pointers,
-  graphical editor or forecast series - which removes the interaction layer and
-  keeps the render path small.
+  graphical editor or forecast series - which keeps the render path small.
+- **One interaction: the time selection.** A click selects one bucket.
+  `chart/selection-input.ts` takes the position from the zrender layer of the
+  chart instance and converts the pixel into a value of the time axis - a direct
+  read that needs neither a tooltip formatter nor the transient axis pointer
+  state; the subscription is made on `pointerdown`, because Home Assistant
+  creates the instance lazily. The card only stores the clicked x value:
+  `chart/selection.ts` snaps it onto a bucket during every assembly,
+  `chart/dimming.ts` fades everything outside it, and marker and dots are
+  appended as line series of their own - the tree-shaken ECharts build of Home
+  Assistant registers only the bar, line and custom charts, so `markArea`,
+  `markLine` and `markPoint` would be dropped without a word. A hidden `0..1`
+  y axis lets the dashed marker line span the full plot height without touching
+  the scale of the data axes. Because all of it is plain data, the selection
+  survives every redraw instead of living inside the chart. It leaves the card
+  as a `custom-graph-selection` event carrying the period of the bucket, fired
+  after each assembly whenever that period changed.
