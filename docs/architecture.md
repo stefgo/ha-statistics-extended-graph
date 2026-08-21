@@ -38,6 +38,9 @@ card.ts                  Lit element: rendering, placeholders, animation
 | `src/series/calculation.ts` | Evaluates calculation series, including last-known-value fallback and constant-only series. |
 | `src/series/time-offset.ts` | Normalizes offsets and shifts dates and samples between source and display range. |
 | `src/series/builder.ts` | Turns series configurations into ECharts series options, including fill bands. |
+| `src/chart/selection.ts` | Snapping a click onto a bucket, the period it covers and the marker series that makes it visible. |
+| `src/chart/selection-input.ts` | Reads the clicked x value from the chart instance `<ha-chart-base>` exposes. |
+| `src/chart/dimming.ts` | Fades everything outside the selected bucket. |
 | `src/chart/axes.ts`, `bars.ts`, `lines.ts`, `compare.ts` | Presentation details: axis options, bar bucket alignment and labels, line normalization/extension, compare styling and stack layout. |
 | `src/chart/assemble.ts` | Combines all of the above into `{ series, options }`. |
 | `src/types/echarts.ts` | Structural typings for the option subset the card produces. Home Assistant provides the runtime. |

@@ -440,6 +440,35 @@ series:
 A plain string applies to both themes. As soon as `dark` is present it wins in
 dark mode. Theme switches are applied without reloading the dashboard.
 
+## Time selection
+
+A click inside the chart selects the bucket it lands on - exactly one at a
+time, a second click on the same bucket clears it again. The selected bucket is
+marked as a band (a dashed line when the bucket has no known end), every bar
+outside it is dimmed to 50 %, and line series - which are drawn as one shape and
+cannot dim single points - fade as a whole and restate their value at the
+selection as a dot.
+
+The selection is card state, not chart state: it is re-derived on every redraw
+and therefore survives data refreshes, live updates and theme switches. It ends
+with a reload, with leaving the page, or with a switch of the visible range,
+whose buckets the selection no longer belongs to.
+
+Every change fires a `custom-graph-selection` event that bubbles out of the
+card:
+
+```js
+document.addEventListener("custom-graph-selection", (event) => {
+  const { start, end, startTime, endTime } = event.detail;
+});
+```
+
+| Field | Meaning |
+| --- | --- |
+| `start` | Start of the selected bucket in epoch milliseconds, `null` when cleared |
+| `end` | End of the bucket (exclusive), `null` for an open-ended last bucket |
+| `startTime`, `endTime` | The same two points as ISO strings, `null` when cleared |
+
 ## Troubleshooting
 
 | Symptom | Cause and fix |

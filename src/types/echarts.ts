@@ -83,6 +83,35 @@ export interface ChartOptions {
   [key: string]: unknown;
 }
 
+/** A zrender mouse event, reduced to the pixel position the card reads. */
+export interface ZRenderEvent {
+  offsetX: number;
+  offsetY: number;
+}
+
+/** The zrender layer of a chart instance: raw canvas events. */
+export interface ZRenderHandler {
+  on(event: string, handler: (payload: ZRenderEvent) => void): void;
+  off(event: string, handler?: (payload: ZRenderEvent) => void): void;
+}
+
+/**
+ * The part of the ECharts instance the card uses. Home Assistant creates the
+ * instance inside `<ha-chart-base>` and exposes it as `chart`; the card only
+ * reads click positions from it and never drives the chart through it.
+ */
+export interface ChartInstance {
+  getZr(): ZRenderHandler | undefined;
+  convertFromPixel(
+    finder: Record<string, unknown>,
+    value: number | [number, number]
+  ): number | number[];
+  containPixel?(
+    finder: Record<string, unknown>,
+    value: [number, number]
+  ): boolean;
+}
+
 export interface LinearGradientColor {
   type: "linear";
   x: number;

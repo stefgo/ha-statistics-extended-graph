@@ -14,6 +14,9 @@ import { applyBarStyling } from "./bars";
 import { BarStackLayout, createCompareTransform, styleCompareSeries } from "./compare";
 import { extendLineSeries, normalizeLineSeries, toTuple } from "./lines";
 import { buildXAxis, buildYAxes } from "./axes";
+import { applySelectionDimming } from "./dimming";
+import { buildSelectionMarker, resolveSelection } from "./selection";
+import type { SelectedPeriod } from "./selection";
 
 export interface AssembleParams {
   hass: HomeAssistant;
@@ -22,12 +25,16 @@ export interface AssembleParams {
   computedStyle: CSSStyleDeclaration;
   darkMode: boolean;
   logger: OnceLogger;
+  /** Clicked x value of the selection; every other bucket is dimmed. */
+  selectedX?: number | null;
 }
 
 export interface AssembledChart {
   series: SeriesOption[];
   options: ChartOptions;
   hasData: boolean;
+  /** Period the click snapped to, `null` while nothing is selected. */
+  selection: SelectedPeriod | null;
 }
 
 interface MainInputs {
@@ -124,6 +131,7 @@ export const assembleChart = ({
   computedStyle,
   darkMode,
   logger,
+  selectedX = null,
 }: AssembleParams): AssembledChart | undefined => {
   const { periodStart, periodEnd } = snapshot;
   if (!periodStart || !snapshot.main.statistics || !snapshot.main.range) {
@@ -256,6 +264,20 @@ export const assembleChart = ({
     logger,
   });
 
+  // The selection is derived from the data of this assembly, so a refresh keeps
+  // marker and dimming in place as long as the bucket still exists.
+  const selection = resolveSelection(selectedX, {
+    series,
+    buckets,
+    aggregation: snapshot.main.aggregation,
+    displayEnd,
+  });
+
+  if (selection) {
+    applySelectionDimming(series, selection.bucket);
+    series.push(buildSelectionMarker({ period: selection, computedStyle }));
+  }
+
   const options: ChartOptions = {
     xAxis: buildXAxis({
       start: periodStart,
@@ -277,5 +299,5 @@ export const assembleChart = ({
     tooltip: { show: false, showContent: false, axisPointer: { type: "none" } },
   };
 
-  return { series, options, hasData: seriesHasValues(series) };
+  return { series, options, hasData: seriesHasValues(series), selection };
 };
