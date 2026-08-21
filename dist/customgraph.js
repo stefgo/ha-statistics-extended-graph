@@ -4433,6 +4433,12 @@ const buildYAxes = ({ axes, seriesConfigs, series, hass, }) => {
  * re-derives marker and dimming from the stored bucket, so a data refresh, a
  * theme switch or a live update can never lose the selection. It ends with the
  * page, not with a repaint.
+ *
+ * The marker is drawn as a line series of its own, not as `markArea` or
+ * `markLine`: Home Assistant ships a tree-shaken ECharts build that registers
+ * only the bar, line and custom charts, so the mark components do not exist and
+ * their options are dropped without a word. A hidden `0..1` y axis lets that
+ * series span the full plot height without touching the scale of the data axes.
  */
 /**
  * Snaps a clicked x position onto an existing sample. A click may land
@@ -4442,7 +4448,7 @@ const resolveBucket = (series, x) => {
     let bucket = null;
     let distance = Number.POSITIVE_INFINITY;
     series.forEach((serie) => {
-        if (!Array.isArray(serie.data)) {
+        if (isSelectionSeries(serie) || !Array.isArray(serie.data)) {
             return;
         }
         serie.data.forEach((point) => {
@@ -4463,7 +4469,7 @@ const resolveBucket = (series, x) => {
 const nextSampleAfter = (series, bucket) => {
     let next = null;
     series.forEach((serie) => {
-        if (!Array.isArray(serie.data)) {
+        if (isSelectionSeries(serie) || !Array.isArray(serie.data)) {
             return;
         }
         serie.data.forEach((point) => {
@@ -4511,50 +4517,67 @@ const resolveSelection = (x, { series, buckets, aggregation, displayEnd }) => {
         end: nextSampleAfter(series, bucket) ?? displayEnd,
     };
 };
-/** Id of the series that carries the visible selection marker. */
-const SELECTION_SERIES_ID = "__selection_marker";
+/** Id prefix of every series that only exists to draw the selection. */
+const SELECTION_ID_PREFIX = "__selection_";
+/** Id of the series that draws the marker of the selected bucket. */
+const SELECTION_SERIES_ID = `${SELECTION_ID_PREFIX}marker`;
+/** Id of the hidden `0..1` axis the marker is drawn on. */
+const SELECTION_AXIS_ID = `${SELECTION_ID_PREFIX}axis`;
+/** True for the helper series of the selection, which carry no data of a series. */
+const isSelectionSeries = (serie) => String(serie.id ?? "").startsWith(SELECTION_ID_PREFIX);
 const BAND_OPACITY = 0.16;
 /**
- * Builds the visible marker as a series of its own: it carries no data, so it
- * stays out of stacking, bar layout and axis scaling, and it is rebuilt from
- * the selection on every assembly instead of living inside the chart instance.
- *
- * A bucket with a known end is marked as a band across its full width; an
- * open-ended one only gets a line at its position.
+ * The axis the marker is drawn on: hidden, fixed to `0..1`, so a marker value
+ * of `1` reaches the top of the plot without changing the data axes. It is
+ * always part of the option, whether something is selected or not, which keeps
+ * the axis indices of the data series stable across redraws.
  */
-const buildSelectionMarker = ({ period, computedStyle, }) => {
+const buildSelectionAxis = () => ({
+    id: SELECTION_AXIS_ID,
+    type: "value",
+    show: false,
+    min: 0,
+    max: 1,
+    scale: false,
+    axisLabel: { show: false },
+    splitLine: { show: false },
+});
+/**
+ * Builds the visible marker. A bucket with a known end becomes a band across
+ * its full width - an area from `1` down to the zero line of the hidden axis;
+ * an open-ended one only gets a dashed line at its position.
+ */
+const buildSelectionMarker = ({ period, computedStyle, axisIndex, }) => {
     const accent = computedStyle.getPropertyValue("--primary-color").trim() || "#03a9f4";
     const lineColor = computedStyle.getPropertyValue("--secondary-text-color").trim() || "#727272";
     const marker = {
         id: SELECTION_SERIES_ID,
         name: "selection",
         type: "line",
-        data: [],
         silent: true,
         animation: false,
         // Behind the data, so bars and lines keep reading as the foreground.
         z: 0,
         xAxisIndex: 0,
-        yAxisIndex: 0,
+        yAxisIndex: axisIndex,
+        showSymbol: false,
+        symbol: "none",
+        data: period.end === null
+            ? [
+                [period.start, 0],
+                [period.start, 1],
+            ]
+            : [
+                [period.start, 1],
+                [period.end, 1],
+            ],
     };
     if (period.end === null) {
-        marker.markLine = {
-            silent: true,
-            animation: false,
-            symbol: "none",
-            label: { show: false },
-            lineStyle: { color: lineColor, width: 1, type: "dashed" },
-            data: [{ xAxis: period.start }],
-        };
+        marker.lineStyle = { color: lineColor, width: 1, type: "dashed" };
         return marker;
     }
-    marker.markArea = {
-        silent: true,
-        animation: false,
-        itemStyle: { color: accent, opacity: BAND_OPACITY },
-        label: { show: false },
-        data: [[{ xAxis: period.start }, { xAxis: period.end }]],
-    };
+    marker.lineStyle = { width: 0, opacity: 0 };
+    marker.areaStyle = { color: accent, opacity: BAND_OPACITY, origin: "start" };
     return marker;
 };
 
@@ -4565,8 +4588,11 @@ const buildSelectionMarker = ({ period, computedStyle, }) => {
  * Bars are dimmed point by point, since only the bars outside the selected
  * bucket are unaffected by it. A line is drawn as one shape and has no
  * per-point opacity, so the whole line fades instead and its value at the
- * selected bucket is restated as a `markPoint` - one object per series rather
- * than one per sample.
+ * selected bucket is restated as a dot.
+ *
+ * That dot is a line series of its own holding a single point, not a
+ * `markPoint`: the tree-shaken ECharts build of Home Assistant registers no
+ * mark components, so a `markPoint` would be dropped silently.
  */
 /** Opacity applied to everything outside the selection. */
 const DIM_OPACITY = 0.5;
@@ -4612,7 +4638,59 @@ const dimBarSeries = (serie, bucket) => {
         return dimItem(point, tuple);
     });
 };
-const dimLineSeries = (serie, bucket) => {
+/**
+ * Y position of a value as it is drawn. A stacked line sits on the sum of the
+ * series stacked below it, so the dot has to follow that sum instead of the
+ * raw value.
+ */
+const stackedValueAt = (series, index, bucket) => {
+    const target = series[index];
+    const value = valueAt(target, bucket);
+    if (value === null) {
+        return null;
+    }
+    const stack = target.stack?.trim();
+    if (!stack) {
+        return value;
+    }
+    let sum = 0;
+    for (let i = 0; i < index; i += 1) {
+        const other = series[i];
+        if (other.stack?.trim() !== stack || other.yAxisIndex !== target.yAxisIndex) {
+            continue;
+        }
+        sum += valueAt(other, bucket) ?? 0;
+    }
+    return sum + value;
+};
+/**
+ * The dot that restates the value of a faded line at the selected bucket. It
+ * stays out of every stack and draws above the data.
+ */
+const buildSelectionDot = (serie, value, bucket, color) => ({
+    id: `${SELECTION_ID_PREFIX}dot_${serie.id ?? bucket}`,
+    name: `${serie.name ?? "selection"} (selected)`,
+    type: "line",
+    data: [[bucket, value]],
+    xAxisIndex: serie.xAxisIndex ?? 0,
+    yAxisIndex: serie.yAxisIndex ?? 0,
+    symbol: "circle",
+    symbolSize: MARK_SYMBOL_SIZE,
+    showSymbol: true,
+    showAllSymbol: true,
+    lineStyle: { width: 0, opacity: 0 },
+    // The dot stays at full strength while the line behind it is faded.
+    itemStyle: color ? { color, opacity: 1 } : { opacity: 1 },
+    z: (serie.z ?? 2) + 1,
+    silent: true,
+    animation: false,
+});
+/**
+ * Fades a line as a whole and returns the dot for its value at the selected
+ * bucket, if it has one.
+ */
+const dimLineSeries = (series, index, bucket) => {
+    const serie = series[index];
     const lineStyle = serie.lineStyle;
     const areaStyle = serie.areaStyle;
     serie.lineStyle = dimmed(lineStyle);
@@ -4622,42 +4700,39 @@ const dimLineSeries = (serie, bucket) => {
     }
     // The invisible helpers of a fill band carry no value of their own.
     if (FILL_HELPER_PATTERN.test(String(serie.id ?? ""))) {
-        return;
+        return undefined;
     }
-    const value = valueAt(serie, bucket);
+    const value = stackedValueAt(series, index, bucket);
     if (value === null) {
-        return;
+        return undefined;
     }
     const color = lineStyle?.color ??
         serie.color;
-    serie.markPoint = {
-        silent: true,
-        symbol: "circle",
-        symbolSize: MARK_SYMBOL_SIZE,
-        label: { show: false },
-        animation: false,
-        // The mark stays at full strength while the line behind it is faded.
-        itemStyle: color ? { color, opacity: 1 } : { opacity: 1 },
-        data: [{ coord: [bucket, value] }],
-    };
+    return buildSelectionDot(serie, value, bucket, color);
 };
 /**
  * Fades everything outside the selected bucket. Runs after the bar styling,
- * whose per-item `itemStyle` is preserved, and leaves the marker series of the
- * selection itself untouched.
+ * whose per-item `itemStyle` is preserved, and leaves the helper series of the
+ * selection itself untouched. Returns the dots of the faded lines, which the
+ * caller appends to the series.
  */
 const applySelectionDimming = (series, bucket) => {
-    series.forEach((serie) => {
-        if (serie.id === SELECTION_SERIES_ID) {
+    const dots = [];
+    series.forEach((serie, index) => {
+        if (isSelectionSeries(serie)) {
             return;
         }
         if (serie.type === "bar") {
             dimBarSeries(serie, bucket);
         }
         else if (serie.type === "line") {
-            dimLineSeries(serie, bucket);
+            const dot = dimLineSeries(series, index, bucket);
+            if (dot) {
+                dots.push(dot);
+            }
         }
     });
+    return dots;
 };
 
 /**
@@ -4830,9 +4905,24 @@ const assembleChart = ({ hass, config, snapshot, computedStyle, darkMode, logger
         aggregation: snapshot.main.aggregation,
         displayEnd,
     });
+    // The hidden marker axis is always appended, so the axis indices of the data
+    // series never shift between a selected and a cleared chart.
+    const yAxis = [
+        ...buildYAxes({
+            axes: config.y_axes ?? [],
+            seriesConfigs: config.series,
+            series,
+            hass,
+        }),
+        buildSelectionAxis(),
+    ];
     if (selection) {
-        applySelectionDimming(series, selection.bucket);
-        series.push(buildSelectionMarker({ period: selection, computedStyle }));
+        const dots = applySelectionDimming(series, selection.bucket);
+        series.push(buildSelectionMarker({
+            period: selection,
+            computedStyle,
+            axisIndex: yAxis.length - 1,
+        }), ...dots);
     }
     const options = {
         xAxis: buildXAxis({
@@ -4843,12 +4933,7 @@ const assembleChart = ({ hass, config, snapshot, computedStyle, darkMode, logger
             fallbackEnd: snapshot.main.range.end,
             hass,
         }),
-        yAxis: buildYAxes({
-            axes: config.y_axes ?? [],
-            seriesConfigs: config.series,
-            series,
-            hass,
-        }),
+        yAxis,
         grid: { top: 15, left: 1, right: 1, bottom: 0, containLabel: true },
         // This card renders neither a legend nor a tooltip or axis pointers.
         legend: { show: false },
@@ -4933,7 +5018,7 @@ class SelectionInput {
 
 /** The released version — what `package.json` says, without the build counter */
 /** `<semver>+build.<n>` — what the card reports in the console */
-const CARD_VERSION = "0.0.1+build.24" ;
+const CARD_VERSION = "0.0.1+build.25" ;
 
 /** Name of the event the card fires whenever the selected period changes. */
 const SELECTION_EVENT = "custom-graph-selection";

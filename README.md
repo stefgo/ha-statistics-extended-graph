@@ -447,7 +447,8 @@ time, a second click on the same bucket clears it again. The selected bucket is
 marked as a band (a dashed line when the bucket has no known end), every bar
 outside it is dimmed to 50 %, and line series - which are drawn as one shape and
 cannot dim single points - fade as a whole and restate their value at the
-selection as a dot.
+selection as a dot. Stacked lines get their dot on the stacked position, where
+the line is actually drawn.
 
 The selection is card state, not chart state: it is re-derived on every redraw
 and therefore survives data refreshes, live updates and theme switches. It ends

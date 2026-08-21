@@ -6,10 +6,16 @@
  * re-derives marker and dimming from the stored bucket, so a data refresh, a
  * theme switch or a live update can never lose the selection. It ends with the
  * page, not with a repaint.
+ *
+ * The marker is drawn as a line series of its own, not as `markArea` or
+ * `markLine`: Home Assistant ships a tree-shaken ECharts build that registers
+ * only the bar, line and custom charts, so the mark components do not exist and
+ * their options are dropped without a word. A hidden `0..1` y axis lets that
+ * series span the full plot height without touching the scale of the data axes.
  */
 
 import type { AggregationTarget } from "../config/types";
-import type { SeriesOption } from "../types/echarts";
+import type { SeriesOption, YAxisOption } from "../types/echarts";
 import { advanceBucket } from "../time/buckets";
 import { toTuple } from "./lines";
 
@@ -35,7 +41,7 @@ export const resolveBucket = (
   let distance = Number.POSITIVE_INFINITY;
 
   series.forEach((serie) => {
-    if (!Array.isArray(serie.data)) {
+    if (isSelectionSeries(serie) || !Array.isArray(serie.data)) {
       return;
     }
     serie.data.forEach((point) => {
@@ -61,7 +67,7 @@ const nextSampleAfter = (
 ): number | null => {
   let next: number | null = null;
   series.forEach((serie) => {
-    if (!Array.isArray(serie.data)) {
+    if (isSelectionSeries(serie) || !Array.isArray(serie.data)) {
       return;
     }
     serie.data.forEach((point) => {
@@ -127,27 +133,54 @@ export const resolveSelection = (
   };
 };
 
-/** Id of the series that carries the visible selection marker. */
-export const SELECTION_SERIES_ID = "__selection_marker";
+/** Id prefix of every series that only exists to draw the selection. */
+export const SELECTION_ID_PREFIX = "__selection_";
+
+/** Id of the series that draws the marker of the selected bucket. */
+export const SELECTION_SERIES_ID = `${SELECTION_ID_PREFIX}marker`;
+
+/** Id of the hidden `0..1` axis the marker is drawn on. */
+export const SELECTION_AXIS_ID = `${SELECTION_ID_PREFIX}axis`;
+
+/** True for the helper series of the selection, which carry no data of a series. */
+export const isSelectionSeries = (serie: { id?: string }): boolean =>
+  String(serie.id ?? "").startsWith(SELECTION_ID_PREFIX);
 
 const BAND_OPACITY = 0.16;
+
+/**
+ * The axis the marker is drawn on: hidden, fixed to `0..1`, so a marker value
+ * of `1` reaches the top of the plot without changing the data axes. It is
+ * always part of the option, whether something is selected or not, which keeps
+ * the axis indices of the data series stable across redraws.
+ */
+export const buildSelectionAxis = (): YAxisOption => ({
+  id: SELECTION_AXIS_ID,
+  type: "value",
+  show: false,
+  min: 0,
+  max: 1,
+  scale: false,
+  axisLabel: { show: false },
+  splitLine: { show: false },
+});
 
 export interface SelectionMarkerParams {
   period: SelectedPeriod;
   computedStyle: CSSStyleDeclaration;
+  /** Index of the hidden axis inside the y axis array. */
+  axisIndex: number;
 }
 
 /**
- * Builds the visible marker as a series of its own: it carries no data, so it
- * stays out of stacking, bar layout and axis scaling, and it is rebuilt from
- * the selection on every assembly instead of living inside the chart instance.
- *
- * A bucket with a known end is marked as a band across its full width; an
- * open-ended one only gets a line at its position.
+ * Builds the visible marker. A bucket with a known end becomes a band across
+ * its full width - an area from `1` down to the zero line of the hidden axis;
+ * an open-ended one only gets a dashed line at its position.
  */
 export const buildSelectionMarker = ({
   period,
   computedStyle,
+  axisIndex,
 }: SelectionMarkerParams): SeriesOption => {
   const accent =
     computedStyle.getPropertyValue("--primary-color").trim() || "#03a9f4";
@@ -158,33 +191,32 @@ export const buildSelectionMarker = ({
     id: SELECTION_SERIES_ID,
     name: "selection",
     type: "line",
-    data: [],
     silent: true,
     animation: false,
     // Behind the data, so bars and lines keep reading as the foreground.
     z: 0,
     xAxisIndex: 0,
-    yAxisIndex: 0,
+    yAxisIndex: axisIndex,
+    showSymbol: false,
+    symbol: "none",
+    data:
+      period.end === null
+        ? [
+            [period.start, 0],
+            [period.start, 1],
+          ]
+        : [
+            [period.start, 1],
+            [period.end, 1],
+          ],
   };
 
   if (period.end === null) {
-    marker.markLine = {
-      silent: true,
-      animation: false,
-      symbol: "none",
-      label: { show: false },
-      lineStyle: { color: lineColor, width: 1, type: "dashed" },
-      data: [{ xAxis: period.start }],
-    };
+    marker.lineStyle = { color: lineColor, width: 1, type: "dashed" };
     return marker;
   }
 
-  marker.markArea = {
-    silent: true,
-    animation: false,
-    itemStyle: { color: accent, opacity: BAND_OPACITY },
-    label: { show: false },
-    data: [[{ xAxis: period.start }, { xAxis: period.end }]],
-  };
+  marker.lineStyle = { width: 0, opacity: 0 };
+  marker.areaStyle = { color: accent, opacity: BAND_OPACITY, origin: "start" };
   return marker;
 };

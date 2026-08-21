@@ -15,7 +15,11 @@ import { BarStackLayout, createCompareTransform, styleCompareSeries } from "./co
 import { extendLineSeries, normalizeLineSeries, toTuple } from "./lines";
 import { buildXAxis, buildYAxes } from "./axes";
 import { applySelectionDimming } from "./dimming";
-import { buildSelectionMarker, resolveSelection } from "./selection";
+import {
+  buildSelectionAxis,
+  buildSelectionMarker,
+  resolveSelection,
+} from "./selection";
 import type { SelectedPeriod } from "./selection";
 
 export interface AssembleParams {
@@ -273,9 +277,28 @@ export const assembleChart = ({
     displayEnd,
   });
 
+  // The hidden marker axis is always appended, so the axis indices of the data
+  // series never shift between a selected and a cleared chart.
+  const yAxis = [
+    ...buildYAxes({
+      axes: config.y_axes ?? [],
+      seriesConfigs: config.series,
+      series,
+      hass,
+    }),
+    buildSelectionAxis(),
+  ];
+
   if (selection) {
-    applySelectionDimming(series, selection.bucket);
-    series.push(buildSelectionMarker({ period: selection, computedStyle }));
+    const dots = applySelectionDimming(series, selection.bucket);
+    series.push(
+      buildSelectionMarker({
+        period: selection,
+        computedStyle,
+        axisIndex: yAxis.length - 1,
+      }),
+      ...dots
+    );
   }
 
   const options: ChartOptions = {
@@ -287,12 +310,7 @@ export const assembleChart = ({
       fallbackEnd: snapshot.main.range.end,
       hass,
     }),
-    yAxis: buildYAxes({
-      axes: config.y_axes ?? [],
-      seriesConfigs: config.series,
-      series,
-      hass,
-    }),
+    yAxis,
     grid: { top: 15, left: 1, right: 1, bottom: 0, containLabel: true },
     // This card renders neither a legend nor a tooltip or axis pointers.
     legend: { show: false },

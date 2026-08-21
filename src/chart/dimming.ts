@@ -5,13 +5,16 @@
  * Bars are dimmed point by point, since only the bars outside the selected
  * bucket are unaffected by it. A line is drawn as one shape and has no
  * per-point opacity, so the whole line fades instead and its value at the
- * selected bucket is restated as a `markPoint` - one object per series rather
- * than one per sample.
+ * selected bucket is restated as a dot.
+ *
+ * That dot is a line series of its own holding a single point, not a
+ * `markPoint`: the tree-shaken ECharts build of Home Assistant registers no
+ * mark components, so a `markPoint` would be dropped silently.
  */
 
 import type { ChartDataPoint, SeriesOption } from "../types/echarts";
 import { toTuple } from "./lines";
-import { SELECTION_SERIES_ID } from "./selection";
+import { isSelectionSeries, SELECTION_ID_PREFIX } from "./selection";
 
 /** Opacity applied to everything outside the selection. */
 export const DIM_OPACITY = 0.5;
@@ -69,7 +72,76 @@ const dimBarSeries = (serie: SeriesOption, bucket: number): void => {
   });
 };
 
-const dimLineSeries = (serie: SeriesOption, bucket: number): void => {
+/**
+ * Y position of a value as it is drawn. A stacked line sits on the sum of the
+ * series stacked below it, so the dot has to follow that sum instead of the
+ * raw value.
+ */
+const stackedValueAt = (
+  series: SeriesOption[],
+  index: number,
+  bucket: number
+): number | null => {
+  const target = series[index];
+  const value = valueAt(target, bucket);
+  if (value === null) {
+    return null;
+  }
+
+  const stack = target.stack?.trim();
+  if (!stack) {
+    return value;
+  }
+
+  let sum = 0;
+  for (let i = 0; i < index; i += 1) {
+    const other = series[i];
+    if (other.stack?.trim() !== stack || other.yAxisIndex !== target.yAxisIndex) {
+      continue;
+    }
+    sum += valueAt(other, bucket) ?? 0;
+  }
+  return sum + value;
+};
+
+/**
+ * The dot that restates the value of a faded line at the selected bucket. It
+ * stays out of every stack and draws above the data.
+ */
+const buildSelectionDot = (
+  serie: SeriesOption,
+  value: number,
+  bucket: number,
+  color: string | undefined
+): SeriesOption => ({
+  id: `${SELECTION_ID_PREFIX}dot_${serie.id ?? bucket}`,
+  name: `${serie.name ?? "selection"} (selected)`,
+  type: "line",
+  data: [[bucket, value]],
+  xAxisIndex: serie.xAxisIndex ?? 0,
+  yAxisIndex: serie.yAxisIndex ?? 0,
+  symbol: "circle",
+  symbolSize: MARK_SYMBOL_SIZE,
+  showSymbol: true,
+  showAllSymbol: true,
+  lineStyle: { width: 0, opacity: 0 },
+  // The dot stays at full strength while the line behind it is faded.
+  itemStyle: color ? { color, opacity: 1 } : { opacity: 1 },
+  z: (serie.z ?? 2) + 1,
+  silent: true,
+  animation: false,
+});
+
+/**
+ * Fades a line as a whole and returns the dot for its value at the selected
+ * bucket, if it has one.
+ */
+const dimLineSeries = (
+  series: SeriesOption[],
+  index: number,
+  bucket: number
+): SeriesOption | undefined => {
+  const serie = series[index];
   const lineStyle = serie.lineStyle as StyleRecord | undefined;
   const areaStyle = serie.areaStyle as StyleRecord | undefined;
 
@@ -81,47 +153,46 @@ const dimLineSeries = (serie: SeriesOption, bucket: number): void => {
 
   // The invisible helpers of a fill band carry no value of their own.
   if (FILL_HELPER_PATTERN.test(String(serie.id ?? ""))) {
-    return;
+    return undefined;
   }
 
-  const value = valueAt(serie, bucket);
+  const value = stackedValueAt(series, index, bucket);
   if (value === null) {
-    return;
+    return undefined;
   }
 
   const color =
     (lineStyle?.color as string | undefined) ??
     (serie.color as string | undefined);
 
-  serie.markPoint = {
-    silent: true,
-    symbol: "circle",
-    symbolSize: MARK_SYMBOL_SIZE,
-    label: { show: false },
-    animation: false,
-    // The mark stays at full strength while the line behind it is faded.
-    itemStyle: color ? { color, opacity: 1 } : { opacity: 1 },
-    data: [{ coord: [bucket, value] }],
-  };
+  return buildSelectionDot(serie, value, bucket, color);
 };
 
 /**
  * Fades everything outside the selected bucket. Runs after the bar styling,
- * whose per-item `itemStyle` is preserved, and leaves the marker series of the
- * selection itself untouched.
+ * whose per-item `itemStyle` is preserved, and leaves the helper series of the
+ * selection itself untouched. Returns the dots of the faded lines, which the
+ * caller appends to the series.
  */
 export const applySelectionDimming = (
   series: SeriesOption[],
   bucket: number
-): void => {
-  series.forEach((serie) => {
-    if (serie.id === SELECTION_SERIES_ID) {
+): SeriesOption[] => {
+  const dots: SeriesOption[] = [];
+
+  series.forEach((serie, index) => {
+    if (isSelectionSeries(serie)) {
       return;
     }
     if (serie.type === "bar") {
       dimBarSeries(serie, bucket);
     } else if (serie.type === "line") {
-      dimLineSeries(serie, bucket);
+      const dot = dimLineSeries(series, index, bucket);
+      if (dot) {
+        dots.push(dot);
+      }
     }
   });
+
+  return dots;
 };
