@@ -33,5 +33,10 @@ echo "Deploying customgraph.js to ${HOST}:${TARGET} ..."
 ssh -p "${SSH_PORT}" "${HOST}" "mkdir -p ${TARGET}"
 scp -P "${SSH_PORT}" dist/customgraph.js "${HOST}:${TARGET}/"
 
-echo "Done. Clear the browser cache and reload the dashboard."
+# Read back what the build baked into the bundle, so the message below names
+# the exact build that was just deployed.
+VERSION="$(node -p "require('./package.json').version")+build.$(cat .build-number 2>/dev/null || echo '?')"
+
+echo "Done. Deployed version: ${VERSION}"
+echo "Clear the browser cache and reload the dashboard."
 echo "Resource URL: /hacsfiles/custom-graph/customgraph.js"

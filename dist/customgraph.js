@@ -1,33 +1,5236 @@
-let e,t;function i(e,t,i,r){var s,a=arguments.length,n=a<3?t:null===r?r=Object.getOwnPropertyDescriptor(t,i):r;if("object"==typeof Reflect&&"function"==typeof Reflect.decorate)n=Reflect.decorate(e,t,i,r);else for(var o=e.length-1;o>=0;o--)(s=e[o])&&(n=(a<3?s(n):a>3?s(t,i,n):s(t,i))||n);return a>3&&n&&Object.defineProperty(t,i,n),n}"function"==typeof SuppressedError&&SuppressedError;let r=window,s=r.ShadowRoot&&(void 0===r.ShadyCSS||r.ShadyCSS.nativeShadow)&&"adoptedStyleSheets"in Document.prototype&&"replace"in CSSStyleSheet.prototype,a=Symbol(),n=new WeakMap;class o{constructor(e,t,i){if(this._$cssResult$=!0,i!==a)throw Error("CSSResult is not constructable. Use `unsafeCSS` or `css` instead.");this.cssText=e,this.t=t}get styleSheet(){let e=this.o,t=this.t;if(s&&void 0===e){let i=void 0!==t&&1===t.length;i&&(e=n.get(t)),void 0===e&&((this.o=e=new CSSStyleSheet).replaceSync(this.cssText),i&&n.set(t,e))}return e}toString(){return this.cssText}}let l=(e,...t)=>new o(1===e.length?e[0]:t.reduce((t,i,r)=>t+(e=>{if(!0===e._$cssResult$)return e.cssText;if("number"==typeof e)return e;throw Error("Value passed to 'css' function must be a 'css' function result: "+e+". Use 'unsafeCSS' to pass non-literal values, but take care to ensure page security.")})(i)+e[r+1],e[0]),e,a),h=s?e=>e:e=>e instanceof CSSStyleSheet?(e=>{let t,i="";for(let t of e.cssRules)i+=t.cssText;return new o("string"==typeof(t=i)?t:t+"",void 0,a)})(e):e,c=window,u=c.trustedTypes,d=u?u.emptyScript:"",m=c.reactiveElementPolyfillSupport,_={toAttribute(e,t){switch(t){case Boolean:e=e?d:null;break;case Object:case Array:e=null==e?e:JSON.stringify(e)}return e},fromAttribute(e,t){let i=e;switch(t){case Boolean:i=null!==e;break;case Number:i=null===e?null:Number(e);break;case Object:case Array:try{i=JSON.parse(e)}catch(e){i=null}}return i}},p=(e,t)=>t!==e&&(t==t||e==e),g={attribute:!0,type:String,converter:_,reflect:!1,hasChanged:p},f="finalized";class y extends HTMLElement{constructor(){super(),this._$Ei=new Map,this.isUpdatePending=!1,this.hasUpdated=!1,this._$El=null,this._$Eu()}static addInitializer(e){var t;this.finalize(),(null!=(t=this.h)?t:this.h=[]).push(e)}static get observedAttributes(){this.finalize();let e=[];return this.elementProperties.forEach((t,i)=>{let r=this._$Ep(i,t);void 0!==r&&(this._$Ev.set(r,i),e.push(r))}),e}static createProperty(e,t=g){if(t.state&&(t.attribute=!1),this.finalize(),this.elementProperties.set(e,t),!t.noAccessor&&!this.prototype.hasOwnProperty(e)){let i="symbol"==typeof e?Symbol():"__"+e,r=this.getPropertyDescriptor(e,i,t);void 0!==r&&Object.defineProperty(this.prototype,e,r)}}static getPropertyDescriptor(e,t,i){return{get(){return this[t]},set(r){let s=this[e];this[t]=r,this.requestUpdate(e,s,i)},configurable:!0,enumerable:!0}}static getPropertyOptions(e){return this.elementProperties.get(e)||g}static finalize(){if(this.hasOwnProperty(f))return!1;this[f]=!0;let e=Object.getPrototypeOf(this);if(e.finalize(),void 0!==e.h&&(this.h=[...e.h]),this.elementProperties=new Map(e.elementProperties),this._$Ev=new Map,this.hasOwnProperty("properties")){let e=this.properties;for(let t of[...Object.getOwnPropertyNames(e),...Object.getOwnPropertySymbols(e)])this.createProperty(t,e[t])}return this.elementStyles=this.finalizeStyles(this.styles),!0}static finalizeStyles(e){let t=[];if(Array.isArray(e))for(let i of new Set(e.flat(1/0).reverse()))t.unshift(h(i));else void 0!==e&&t.push(h(e));return t}static _$Ep(e,t){let i=t.attribute;return!1===i?void 0:"string"==typeof i?i:"string"==typeof e?e.toLowerCase():void 0}_$Eu(){var e;this._$E_=new Promise(e=>this.enableUpdating=e),this._$AL=new Map,this._$Eg(),this.requestUpdate(),null==(e=this.constructor.h)||e.forEach(e=>e(this))}addController(e){var t,i;(null!=(t=this._$ES)?t:this._$ES=[]).push(e),void 0!==this.renderRoot&&this.isConnected&&(null==(i=e.hostConnected)||i.call(e))}removeController(e){var t;null==(t=this._$ES)||t.splice(this._$ES.indexOf(e)>>>0,1)}_$Eg(){this.constructor.elementProperties.forEach((e,t)=>{this.hasOwnProperty(t)&&(this._$Ei.set(t,this[t]),delete this[t])})}createRenderRoot(){var e,t;let i=null!=(e=this.shadowRoot)?e:this.attachShadow(this.constructor.shadowRootOptions);return t=this.constructor.elementStyles,s?i.adoptedStyleSheets=t.map(e=>e instanceof CSSStyleSheet?e:e.styleSheet):t.forEach(e=>{let t=document.createElement("style"),s=r.litNonce;void 0!==s&&t.setAttribute("nonce",s),t.textContent=e.cssText,i.appendChild(t)}),i}connectedCallback(){var e;void 0===this.renderRoot&&(this.renderRoot=this.createRenderRoot()),this.enableUpdating(!0),null==(e=this._$ES)||e.forEach(e=>{var t;return null==(t=e.hostConnected)?void 0:t.call(e)})}enableUpdating(e){}disconnectedCallback(){var e;null==(e=this._$ES)||e.forEach(e=>{var t;return null==(t=e.hostDisconnected)?void 0:t.call(e)})}attributeChangedCallback(e,t,i){this._$AK(e,i)}_$EO(e,t,i=g){var r;let s=this.constructor._$Ep(e,i);if(void 0!==s&&!0===i.reflect){let a=(void 0!==(null==(r=i.converter)?void 0:r.toAttribute)?i.converter:_).toAttribute(t,i.type);this._$El=e,null==a?this.removeAttribute(s):this.setAttribute(s,a),this._$El=null}}_$AK(e,t){var i;let r=this.constructor,s=r._$Ev.get(e);if(void 0!==s&&this._$El!==s){let e=r.getPropertyOptions(s),a="function"==typeof e.converter?{fromAttribute:e.converter}:void 0!==(null==(i=e.converter)?void 0:i.fromAttribute)?e.converter:_;this._$El=s,this[s]=a.fromAttribute(t,e.type),this._$El=null}}requestUpdate(e,t,i){let r=!0;void 0!==e&&(((i=i||this.constructor.getPropertyOptions(e)).hasChanged||p)(this[e],t)?(this._$AL.has(e)||this._$AL.set(e,t),!0===i.reflect&&this._$El!==e&&(void 0===this._$EC&&(this._$EC=new Map),this._$EC.set(e,i))):r=!1),!this.isUpdatePending&&r&&(this._$E_=this._$Ej())}async _$Ej(){this.isUpdatePending=!0;try{await this._$E_}catch(e){Promise.reject(e)}let e=this.scheduleUpdate();return null!=e&&await e,!this.isUpdatePending}scheduleUpdate(){return this.performUpdate()}performUpdate(){var e;if(!this.isUpdatePending)return;this.hasUpdated,this._$Ei&&(this._$Ei.forEach((e,t)=>this[t]=e),this._$Ei=void 0);let t=!1,i=this._$AL;try{(t=this.shouldUpdate(i))?(this.willUpdate(i),null==(e=this._$ES)||e.forEach(e=>{var t;return null==(t=e.hostUpdate)?void 0:t.call(e)}),this.update(i)):this._$Ek()}catch(e){throw t=!1,this._$Ek(),e}t&&this._$AE(i)}willUpdate(e){}_$AE(e){var t;null==(t=this._$ES)||t.forEach(e=>{var t;return null==(t=e.hostUpdated)?void 0:t.call(e)}),this.hasUpdated||(this.hasUpdated=!0,this.firstUpdated(e)),this.updated(e)}_$Ek(){this._$AL=new Map,this.isUpdatePending=!1}get updateComplete(){return this.getUpdateComplete()}getUpdateComplete(){return this._$E_}shouldUpdate(e){return!0}update(e){void 0!==this._$EC&&(this._$EC.forEach((e,t)=>this._$EO(t,this[t],e)),this._$EC=void 0),this._$Ek()}updated(e){}firstUpdated(e){}}y[f]=!0,y.elementProperties=new Map,y.elementStyles=[],y.shadowRootOptions={mode:"open"},null==m||m({ReactiveElement:y}),(null!=(ev=c.reactiveElementVersions)?ev:c.reactiveElementVersions=[]).push("1.6.3");let v=window,b=v.trustedTypes,w=b?b.createPolicy("lit-html",{createHTML:e=>e}):void 0,S="$lit$",$=`lit$${(Math.random()+"").slice(9)}$`,A="?"+$,E=`<${A}>`,M=document,k=()=>M.createComment(""),x=e=>null===e||"object"!=typeof e&&"function"!=typeof e,C=Array.isArray,T="[ 	\n\f\r]",D=/<(?:(!--|\/[^a-zA-Z])|(\/?[a-zA-Z][^>\s]*)|(\/?$))/g,P=/-->/g,R=/>/g,O=RegExp(`>|${T}(?:([^\\s"'>=/]+)(${T}*=${T}*(?:[^ 	
-\f\r"'\`<>=]|("|')|))|$)`,"g"),N=/'/g,H=/"/g,F=/^(?:script|style|textarea|title)$/i,I=e=>(t,...i)=>({_$litType$:e,strings:t,values:i}),U=I(1),z=(I(2),Symbol.for("lit-noChange")),L=Symbol.for("lit-nothing"),B=new WeakMap,j=M.createTreeWalker(M,129,null,!1);function q(e,t){if(!Array.isArray(e)||!e.hasOwnProperty("raw"))throw Error("invalid template strings array");return void 0!==w?w.createHTML(t):t}class W{constructor({strings:e,_$litType$:t},i){let r;this.parts=[];let s=0,a=0,n=e.length-1,o=this.parts,[l,h]=((e,t)=>{let i=e.length-1,r=[],s,a=2===t?"<svg>":"",n=D;for(let t=0;t<i;t++){let i=e[t],o,l,h=-1,c=0;for(;c<i.length&&(n.lastIndex=c,null!==(l=n.exec(i)));)c=n.lastIndex,n===D?"!--"===l[1]?n=P:void 0!==l[1]?n=R:void 0!==l[2]?(F.test(l[2])&&(s=RegExp("</"+l[2],"g")),n=O):void 0!==l[3]&&(n=O):n===O?">"===l[0]?(n=null!=s?s:D,h=-1):void 0===l[1]?h=-2:(h=n.lastIndex-l[2].length,o=l[1],n=void 0===l[3]?O:'"'===l[3]?H:N):n===H||n===N?n=O:n===P||n===R?n=D:(n=O,s=void 0);let u=n===O&&e[t+1].startsWith("/>")?" ":"";a+=n===D?i+E:h>=0?(r.push(o),i.slice(0,h)+S+i.slice(h)+$+u):i+$+(-2===h?(r.push(void 0),t):u)}return[q(e,a+(e[i]||"<?>")+(2===t?"</svg>":"")),r]})(e,t);if(this.el=W.createElement(l,i),j.currentNode=this.el.content,2===t){let e=this.el.content,t=e.firstChild;t.remove(),e.append(...t.childNodes)}for(;null!==(r=j.nextNode())&&o.length<n;){if(1===r.nodeType){if(r.hasAttributes()){let e=[];for(let t of r.getAttributeNames())if(t.endsWith(S)||t.startsWith($)){let i=h[a++];if(e.push(t),void 0!==i){let e=r.getAttribute(i.toLowerCase()+S).split($),t=/([.?@])?(.*)/.exec(i);o.push({type:1,index:s,name:t[2],strings:e,ctor:"."===t[1]?G:"?"===t[1]?J:"@"===t[1]?Q:Z})}else o.push({type:6,index:s})}for(let t of e)r.removeAttribute(t)}if(F.test(r.tagName)){let e=r.textContent.split($),t=e.length-1;if(t>0){r.textContent=b?b.emptyScript:"";for(let i=0;i<t;i++)r.append(e[i],k()),j.nextNode(),o.push({type:2,index:++s});r.append(e[t],k())}}}else if(8===r.nodeType)if(r.data===A)o.push({type:2,index:s});else{let e=-1;for(;-1!==(e=r.data.indexOf($,e+1));)o.push({type:7,index:s}),e+=$.length-1}s++}}static createElement(e,t){let i=M.createElement("template");return i.innerHTML=e,i}}function V(e,t,i=e,r){var s,a,n;if(t===z)return t;let o=void 0!==r?null==(s=i._$Co)?void 0:s[r]:i._$Cl,l=x(t)?void 0:t._$litDirective$;return(null==o?void 0:o.constructor)!==l&&(null==(a=null==o?void 0:o._$AO)||a.call(o,!1),void 0===l?o=void 0:(o=new l(e))._$AT(e,i,r),void 0!==r?(null!=(n=i._$Co)?n:i._$Co=[])[r]=o:i._$Cl=o),void 0!==o&&(t=V(e,o._$AS(e,t.values),o,r)),t}class Y{constructor(e,t){this._$AV=[],this._$AN=void 0,this._$AD=e,this._$AM=t}get parentNode(){return this._$AM.parentNode}get _$AU(){return this._$AM._$AU}u(e){var t;let{el:{content:i},parts:r}=this._$AD,s=(null!=(t=null==e?void 0:e.creationScope)?t:M).importNode(i,!0);j.currentNode=s;let a=j.nextNode(),n=0,o=0,l=r[0];for(;void 0!==l;){if(n===l.index){let t;2===l.type?t=new K(a,a.nextSibling,this,e):1===l.type?t=new l.ctor(a,l.name,l.strings,this,e):6===l.type&&(t=new ee(a,this,e)),this._$AV.push(t),l=r[++o]}n!==(null==l?void 0:l.index)&&(a=j.nextNode(),n++)}return j.currentNode=M,s}v(e){let t=0;for(let i of this._$AV)void 0!==i&&(void 0!==i.strings?(i._$AI(e,i,t),t+=i.strings.length-2):i._$AI(e[t])),t++}}class K{constructor(e,t,i,r){var s;this.type=2,this._$AH=L,this._$AN=void 0,this._$AA=e,this._$AB=t,this._$AM=i,this.options=r,this._$Cp=null==(s=null==r?void 0:r.isConnected)||s}get _$AU(){var e,t;return null!=(t=null==(e=this._$AM)?void 0:e._$AU)?t:this._$Cp}get parentNode(){let e=this._$AA.parentNode,t=this._$AM;return void 0!==t&&11===(null==e?void 0:e.nodeType)&&(e=t.parentNode),e}get startNode(){return this._$AA}get endNode(){return this._$AB}_$AI(e,t=this){let i;x(e=V(this,e,t))?e===L||null==e||""===e?(this._$AH!==L&&this._$AR(),this._$AH=L):e!==this._$AH&&e!==z&&this._(e):void 0!==e._$litType$?this.g(e):void 0!==e.nodeType?this.$(e):C(i=e)||"function"==typeof(null==i?void 0:i[Symbol.iterator])?this.T(e):this._(e)}k(e){return this._$AA.parentNode.insertBefore(e,this._$AB)}$(e){this._$AH!==e&&(this._$AR(),this._$AH=this.k(e))}_(e){this._$AH!==L&&x(this._$AH)?this._$AA.nextSibling.data=e:this.$(M.createTextNode(e)),this._$AH=e}g(e){var t;let{values:i,_$litType$:r}=e,s="number"==typeof r?this._$AC(e):(void 0===r.el&&(r.el=W.createElement(q(r.h,r.h[0]),this.options)),r);if((null==(t=this._$AH)?void 0:t._$AD)===s)this._$AH.v(i);else{let e=new Y(s,this),t=e.u(this.options);e.v(i),this.$(t),this._$AH=e}}_$AC(e){let t=B.get(e.strings);return void 0===t&&B.set(e.strings,t=new W(e)),t}T(e){C(this._$AH)||(this._$AH=[],this._$AR());let t=this._$AH,i,r=0;for(let s of e)r===t.length?t.push(i=new K(this.k(k()),this.k(k()),this,this.options)):i=t[r],i._$AI(s),r++;r<t.length&&(this._$AR(i&&i._$AB.nextSibling,r),t.length=r)}_$AR(e=this._$AA.nextSibling,t){var i;for(null==(i=this._$AP)||i.call(this,!1,!0,t);e&&e!==this._$AB;){let t=e.nextSibling;e.remove(),e=t}}setConnected(e){var t;void 0===this._$AM&&(this._$Cp=e,null==(t=this._$AP)||t.call(this,e))}}class Z{constructor(e,t,i,r,s){this.type=1,this._$AH=L,this._$AN=void 0,this.element=e,this.name=t,this._$AM=r,this.options=s,i.length>2||""!==i[0]||""!==i[1]?(this._$AH=Array(i.length-1).fill(new String),this.strings=i):this._$AH=L}get tagName(){return this.element.tagName}get _$AU(){return this._$AM._$AU}_$AI(e,t=this,i,r){let s=this.strings,a=!1;if(void 0===s)(a=!x(e=V(this,e,t,0))||e!==this._$AH&&e!==z)&&(this._$AH=e);else{let r,n,o=e;for(e=s[0],r=0;r<s.length-1;r++)(n=V(this,o[i+r],t,r))===z&&(n=this._$AH[r]),a||(a=!x(n)||n!==this._$AH[r]),n===L?e=L:e!==L&&(e+=(null!=n?n:"")+s[r+1]),this._$AH[r]=n}a&&!r&&this.j(e)}j(e){e===L?this.element.removeAttribute(this.name):this.element.setAttribute(this.name,null!=e?e:"")}}class G extends Z{constructor(){super(...arguments),this.type=3}j(e){this.element[this.name]=e===L?void 0:e}}let X=b?b.emptyScript:"";class J extends Z{constructor(){super(...arguments),this.type=4}j(e){e&&e!==L?this.element.setAttribute(this.name,X):this.element.removeAttribute(this.name)}}class Q extends Z{constructor(e,t,i,r,s){super(e,t,i,r,s),this.type=5}_$AI(e,t=this){var i;if((e=null!=(i=V(this,e,t,0))?i:L)===z)return;let r=this._$AH,s=e===L&&r!==L||e.capture!==r.capture||e.once!==r.once||e.passive!==r.passive,a=e!==L&&(r===L||s);s&&this.element.removeEventListener(this.name,this,r),a&&this.element.addEventListener(this.name,this,e),this._$AH=e}handleEvent(e){var t,i;"function"==typeof this._$AH?this._$AH.call(null!=(i=null==(t=this.options)?void 0:t.host)?i:this.element,e):this._$AH.handleEvent(e)}}class ee{constructor(e,t,i){this.element=e,this.type=6,this._$AN=void 0,this._$AM=t,this.options=i}get _$AU(){return this._$AM._$AU}_$AI(e){V(this,e)}}let et=v.litHtmlPolyfillSupport;null==et||et(W,K),(null!=(eb=v.litHtmlVersions)?eb:v.litHtmlVersions=[]).push("2.8.0");class ei extends y{constructor(){super(...arguments),this.renderOptions={host:this},this._$Do=void 0}createRenderRoot(){var e;let t=super.createRenderRoot();return null!=(e=this.renderOptions).renderBefore||(e.renderBefore=t.firstChild),t}update(e){let t=this.render();this.hasUpdated||(this.renderOptions.isConnected=this.isConnected),super.update(e),this._$Do=((e,t,i)=>{var r,s;let a=null!=(r=null==i?void 0:i.renderBefore)?r:t,n=a._$litPart$;if(void 0===n){let e=null!=(s=null==i?void 0:i.renderBefore)?s:null;a._$litPart$=n=new K(t.insertBefore(k(),e),e,void 0,null!=i?i:{})}return n._$AI(e),n})(t,this.renderRoot,this.renderOptions)}connectedCallback(){var e;super.connectedCallback(),null==(e=this._$Do)||e.setConnected(!0)}disconnectedCallback(){var e;super.disconnectedCallback(),null==(e=this._$Do)||e.setConnected(!1)}render(){return z}}ei.finalized=!0,ei._$litElement$=!0,null==(ew=globalThis.litElementHydrateSupport)||ew.call(globalThis,{LitElement:ei});let er=globalThis.litElementPolyfillSupport;function es(e){return(t,i)=>void 0!==i?void t.constructor.createProperty(i,e):"method"!==t.kind||!t.descriptor||"value"in t.descriptor?{kind:"field",key:Symbol(),placement:"own",descriptor:{},originalKey:t.key,initializer(){"function"==typeof t.initializer&&(this[t.key]=t.initializer.call(this))},finisher(i){i.createProperty(t.key,e)}}:{...t,finisher(i){i.createProperty(t.key,e)}}}function ea(e){return es({...e,state:!0})}null==er||er({LitElement:ei}),(null!=(eS=globalThis.litElementVersions)?eS:globalThis.litElementVersions=[]).push("3.3.3"),null==(e$=window.HTMLSlotElement)||e$.prototype.assignedElements;class en{constructor(e){}get _$AU(){return this._$AM._$AU}_$AT(e,t,i){this._$Ct=e,this._$AM=t,this._$Ci=i}_$AS(e,t){return this.update(e,t)}update(e,t){return this.render(...t)}}let eo=(e=class extends en{constructor(e){var t;if(super(e),1!==e.type||"class"!==e.name||(null==(t=e.strings)?void 0:t.length)>2)throw Error("`classMap()` can only be used in the `class` attribute and must be the only part in the attribute.")}render(e){return" "+Object.keys(e).filter(t=>e[t]).join(" ")+" "}update(e,[t]){var i,r;if(void 0===this.it){for(let r in this.it=new Set,void 0!==e.strings&&(this.nt=new Set(e.strings.join(" ").split(/\s/).filter(e=>""!==e))),t)!t[r]||(null==(i=this.nt)?void 0:i.has(r))||this.it.add(r);return this.render(t)}let s=e.element.classList;for(let e in this.it.forEach(e=>{e in t||(s.remove(e),this.it.delete(e))}),t){let i=!!t[e];i===this.it.has(e)||(null==(r=this.nt)?void 0:r.has(e))||(i?(s.add(e),this.it.add(e)):(s.remove(e),this.it.delete(e)))}return z}},(...t)=>({_$litDirective$:e,values:t})),el={debug:0,info:1,warn:2,error:3},eh="[custom-graph-card]",ec=(e,t,i)=>{if(el[e]<el.warn)return;let r=(console[e]??console.log).bind(console);i&&Object.keys(i).length?r(`${eh} ${t}`,i):r(`${eh} ${t}`)};class eu{constructor(e=ec){this._log=e,this._seen=new Set}warnOnce(e,t,i="warn"){this._seen.has(e)||(this._seen.add(e),this._log(i,t))}reset(){this._seen.clear()}}function ed(e){return(ed="function"==typeof Symbol&&"symbol"==typeof Symbol.iterator?function(e){return typeof e}:function(e){return e&&"function"==typeof Symbol&&e.constructor===Symbol&&e!==Symbol.prototype?"symbol":typeof e})(e)}function em(e,t){if(t.length<e)throw TypeError(e+" argument"+(e>1?"s":"")+" required, but only "+t.length+" present")}function e_(e){em(1,arguments);var t=Object.prototype.toString.call(e);return e instanceof Date||"object"===ed(e)&&"[object Date]"===t?new Date(e.getTime()):"number"==typeof e||"[object Number]"===t?new Date(e):(("string"==typeof e||"[object String]"===t)&&"u">typeof console&&(console.warn("Starting with v2.0.0-beta.1 date-fns doesn't accept strings as date arguments. Please use `parseISO` to parse strings. See: https://github.com/date-fns/date-fns/blob/master/docs/upgradeGuide.md#string-arguments"),console.warn(Error().stack)),new Date(0/0))}function ep(e){em(1,arguments);var t=e_(e);return t.setHours(0,0,0,0),t}function eg(e){em(1,arguments);var t=e_(e);return t.setHours(23,59,59,999),t}function ef(e){em(1,arguments);var t=e_(e);return t.setMinutes(0,0,0),t}function ey(e){if(null===e||!0===e||!1===e)return 0/0;var t=Number(e);return isNaN(t)?t:t<0?Math.ceil(t):Math.floor(t)}var ev,eb,ew,eS,e$,eA={};function eE(e,t){em(1,arguments);var i,r,s,a,n,o,l,h,c=ey(null!=(i=null!=(r=null!=(s=null!=(a=null==t?void 0:t.weekStartsOn)?a:null==t||null==(n=t.locale)||null==(o=n.options)?void 0:o.weekStartsOn)?s:eA.weekStartsOn)?r:null==(l=eA.locale)||null==(h=l.options)?void 0:h.weekStartsOn)?i:0);if(!(c>=0&&c<=6))throw RangeError("weekStartsOn must be between 0 and 6 inclusively");var u=e_(e),d=u.getDay();return u.setDate(u.getDate()-(7*(d<c)+d-c)),u.setHours(0,0,0,0),u}function eM(e){em(1,arguments);var t=e_(e);return t.setDate(1),t.setHours(0,0,0,0),t}function ek(e){em(1,arguments);var t=e_(e),i=t.getMonth();return t.setFullYear(t.getFullYear(),i+1,0),t.setHours(23,59,59,999),t}function ex(e){em(1,arguments);var t=e_(e),i=new Date(0);return i.setFullYear(t.getFullYear(),0,1),i.setHours(0,0,0,0),i}function eC(e,t){return em(2,arguments),new Date(e_(e).getTime()+ey(t))}function eT(e,t){return em(2,arguments),eC(e,36e5*ey(t))}function eD(e,t){em(2,arguments);var i=e_(e),r=ey(t);return isNaN(r)?new Date(0/0):(r&&i.setDate(i.getDate()+r),i)}function eP(e,t){return em(2,arguments),eD(e,7*ey(t))}function eR(e,t){em(2,arguments);var i=e_(e),r=ey(t);if(isNaN(r))return new Date(0/0);if(!r)return i;var s=i.getDate(),a=new Date(i.getTime());return(a.setMonth(i.getMonth()+r+1,0),s>=a.getDate())?a:(i.setFullYear(a.getFullYear(),a.getMonth(),s),i)}function eO(e,t){return em(2,arguments),eR(e,12*ey(t))}function eN(e,t){return em(2,arguments),eC(e,6e4*ey(t))}function eH(e,t){return em(2,arguments),eT(e,-ey(t))}function eF(e,t){return em(2,arguments),eD(e,-ey(t))}let eI={weekStartsOn:1},eU=(e,t)=>{switch(t){case"5minute":return eN(e,5);case"hour":default:return eT(e,1);case"day":return eD(e,1);case"week":return eP(e,1);case"month":return eR(e,1);case"year":return eO(e,1)}},ez=(e,t,i)=>{if(null===t||void 0===i||"raw"===i||"disabled"===i)return;if(t<e)return[e];let r=[],s=((e,t)=>{let i=new Date(e);switch(t){case"5minute":return i.setSeconds(0,0),i.setMinutes(5*Math.floor(i.getMinutes()/5)),i;case"hour":default:return i.setMinutes(0,0,0),i;case"day":return ep(i);case"week":return eE(i,eI);case"month":return eM(i);case"year":return ex(i)}})(e,i),a=0;for(;s.getTime()<=t&&a<2e5;){r.push(s.getTime());let e=eU(s,i);if(e.getTime()===s.getTime())break;s=e,a+=1}return r},eL={mode:"energy"},eB=["hour","day","week","month","year"],ej=()=>({start:ep(new Date),end:eg(new Date)}),eq=["hide_legend","expand_legend","legend_sort","show_tooltip","tooltip_precision","show_x_axis_pointer","show_y_axis_pointer","show_stack_sums","show_unit","color_cycle_dark"],eW=["show_in_legend","show_in_tooltip","hidden_by_default","pv_production_entity"],eV=(e,t,i)=>{let r=t.filter(t=>void 0!==e[t]);r.length&&ec("warn",`${i} uses unsupported option(s): ${r.join(", ")}. They are ignored.`)},eY=(e,t,i,r,s,a)=>e.callWS({type:"recorder/statistics_during_period",start_time:t.toISOString(),end_time:i?.toISOString(),statistic_ids:r,period:s,types:a}),eK=(e,t)=>!t.length||t.some(t=>e?.[t]?.length),eZ=e=>{let t;if(e)return Object.values(e).forEach(e=>{e?.forEach(e=>{let i=e.end??e.start;"number"==typeof i&&(t=void 0===t?i:Math.max(t,i))})}),t},eG=(e,t)=>{if(!e)return t;let i={...e};return Object.entries(t).forEach(([e,t])=>{let r=i[e];if(!r?.length){i[e]=t;return}let s=[...r],a=new Map;s.forEach((e,t)=>{a.set(e.end??e.start??t,t)}),t.forEach(e=>{let t=e.end??e.start,i=a.get(t);void 0!==i?s[i]=e:(s.push(e),a.set(t,s.length-1))}),s.sort((e,t)=>(e.end??e.start)-(t.end??t.start)),i[e]=s}),i},eX=(e,t,i)=>{let r={};return Object.entries(e).forEach(([e,s])=>{let a,n;if(!s?.length){r[e]=[];return}let o=[];s.forEach(e=>{let r=e.start??e.end,s=e.end??e.start;if(void 0!==r&&void 0!==s){if(null!==i&&r>i){n=n??e;return}if(s<t){a=e;return}o.push(e)}}),a&&o.unshift(a),n&&o.push(n),r[e]=o}),r},eJ={on:1,open:1,opening:1,true:1,off:0,closed:0,closing:0,false:0},eQ=new Set(["","unknown","unavailable"]),e0=e=>{let t={};return Object.entries(e).forEach(([e,i])=>{if(!Array.isArray(i)||!i.length){t[e]=[];return}let r=[...i].sort((e,t)=>(e.lc??e.lu??0)-(t.lc??t.lu??0)),s=new Set;t[e]=r.map(t=>{let i,r=("number"==typeof(i=t.lc??t.lu)?Math.round(1e3*i):void 0)??Date.now(),a=(e=>{let t=e.trim().toLowerCase();if(t in eJ)return eJ[t];if(eQ.has(t))return null;let i=Number(e);return Number.isFinite(i)?i:null})(t.s),n=t.s.trim().toLowerCase();return null!==a||eQ.has(n)||s.has(n)||(s.add(n),ec("warn",`Raw history for "${e}" contains the non-numeric state "${t.s}". It is rendered as a gap.`)),{start:r,end:r,change:a,sum:a,mean:a,min:a,max:a,state:a}})}),t},e1=(e,t,i)=>(void 0===i||!(i<=e))&&(void 0===t||!(t>=e+36e5));class e2{constructor(e,t){this._onData=e,this._onUnavailable=t,this._reportedUnavailable=!1}connect(e,t){this.disconnect(),this._attach(e,t?`_${t}`:e.config.version<"2026.4"?"_energy":`_energy_${e.panelUrl}`,0)}disconnect(){this._pollHandle&&(window.clearTimeout(this._pollHandle),this._pollHandle=void 0),this._unsubscribe&&(this._unsubscribe(),this._unsubscribe=void 0),this._reportedUnavailable=!1}_attach(e,t,i){let r,s,a=(r=e.connection,(s=r?.[t])&&"function"==typeof s.subscribe?s:void 0);if(a){this._reportedUnavailable=!1,this._unsubscribe=a.subscribe(e=>this._onData(e));return}if(i>=50){this._reportedUnavailable||(this._reportedUnavailable=!0,ec("warn","No energy date selection found on this dashboard. Falling back to the default range."),this._onUnavailable()),this._pollHandle=window.setTimeout(()=>this._attach(e,t,50),1e3);return}this._pollHandle=window.setTimeout(()=>this._attach(e,t,i+1),200)}}var e5={ceil:Math.ceil,round:Math.round,floor:Math.floor,trunc:function(e){return e<0?Math.ceil(e):Math.floor(e)}};function e6(e,t,i){em(2,arguments);var r,s=function(e,t){return em(2,arguments),e_(e).getTime()-e_(t).getTime()}(e,t)/36e5;return((r=null==i?void 0:i.roundingMethod)?e5[r]:e5.trunc)(s)}function e3(e){var t=new Date(Date.UTC(e.getFullYear(),e.getMonth(),e.getDate(),e.getHours(),e.getMinutes(),e.getSeconds(),e.getMilliseconds()));return t.setUTCFullYear(e.getFullYear()),e.getTime()-t.getTime()}function e4(e,t){var i=e.getFullYear()-t.getFullYear()||e.getMonth()-t.getMonth()||e.getDate()-t.getDate()||e.getHours()-t.getHours()||e.getMinutes()-t.getMinutes()||e.getSeconds()-t.getSeconds()||e.getMilliseconds()-t.getMilliseconds();return i<0?-1:i>0?1:i}function e9(e,t){em(2,arguments);var i=e_(e),r=e_(t),s=e4(i,r),a=Math.abs(function(e,t){em(2,arguments);var i=ep(e),r=ep(t);return Math.round((i.getTime()-e3(i)-(r.getTime()-e3(r)))/864e5)}(i,r));i.setDate(i.getDate()-s*a);var n=Number(e4(i,r)===-s),o=s*(a-n);return 0===o?0:o}let e8=(e,t,i,r)=>{let s=((e,t)=>{let i=t??new Date;if(2>=Math.max(e6(i,e),0))return"5minute";let r=Math.max(e9(i,e),0);return r>35?"month":r>2?"day":"hour"})(e,t),a=[],n=!1,o=e=>{!n&&e&&(a.includes(e)||a.push(e),"disabled"===e&&(n=!0))};if(r){let r,s,a;o(i?.energy_picker?.[s=Math.max(e6(r=t??new Date,e),0),a=Math.max(e9(r,e),0),s<=6?"hour":a<=1?"day":a<=7?"week":a<=35?"month":"year"])}else o(i?.manual);return o(s),o(i?.fallback),a.length?a:[s]},e7=e=>{if("disabled"===e)return 1/0;let t=new Date;if("raw"===e)return t.getTime()+6e4;let i=new Date(t);switch(e){case"5minute":return i.setMinutes(5*Math.ceil((t.getMinutes()+1)/5),0,0),i<=t&&i.setMinutes(i.getMinutes()+5),i.setMinutes(i.getMinutes()+2),i.getTime();case"hour":return i.setHours(i.getHours()+1,20,0,0),i<=t&&i.setHours(i.getHours()+1),i.getTime();case"day":return i.setDate(i.getDate()+1),i.setHours(0,30,0,0),i<=t&&i.setDate(i.getDate()+1),i.getTime();default:return t.getTime()+6048e5+36e5}},te="change",tt=(e,t)=>{var i,r,s;let a;return i=e*(t.multiply??1)+(t.add??0),r=t.clip_min,s=t.clip_max,a=i,void 0!==r&&(a=Math.max(a,r)),void 0!==s&&(a=Math.min(a,s)),a},ti=e=>e.source?e.source:e.calculation?"calculation":"statistic",tr=e=>e.statistic_id?.trim()||void 0,ts=e=>`calculation_${e}`,ta=e=>e.endsWith("--compare")?e.slice(0,-9):e,tn=(e,t)=>{let i=e.byTimestamp?.get(t);if(i&&null!==i.value)return e.lastKnown=i,i;let r=e.timeline;if(r?.length){for(;e.cursor<r.length&&r[e.cursor].timestamp<=t;){let t=r[e.cursor];null!==t.value&&(e.lastKnown=t),e.cursor+=1}return e.lastKnown}},to=(e,t,i,r,s,a)=>{if(!t.terms?.length)return;let n=e.name??e.statistic_id??`series_${r}`,o=new Set,l=t.terms.map(t=>{let r=t.statistic_id?.trim();if(!r)return{term:t,cursor:0,constant:tt(t.constant??0,t)};let s=t.stat_type??e.stat_type??te,l=i[r],h=new Map,c=[];return l?.length?(l.forEach(e=>{let i=e.end??e.start;if(void 0===i)return;let r=e[s],a={timestamp:i,value:"number"==typeof r&&Number.isFinite(r)?tt(r,t):null,start:e.start,end:e.end};h.set(i,a),c.push(a),o.add(i)}),c.sort((e,t)=>e.timestamp-t.timestamp)):a.warnOnce(`calc-missing-${n}-${r}`,`Calculation series "${n}" references "${r}" but no data was loaded. Missing values are treated as zero.`,"debug"),{term:t,byTimestamp:h,timeline:c.length?c:void 0,cursor:0}}),h=Array.from(o).sort((e,t)=>e-t),c=!h.length&&l.every(e=>void 0!==e.constant);if(!h.length&&!c)return;let u=t.initial_value??0,d=[],m=e=>{let t,i,r=u,s=!0;for(let o of l){let l;if(!s)break;if(void 0!==o.constant)l=o.constant;else{let r=tn(o,e);r&&null!==r.value?(t=t??r.start??e,i=i??r.end??e,l=r.value):(l=0,a.warnOnce(`calc-value-${n}-${o.term.statistic_id}`,`Missing value for "${o.term.statistic_id}" in calculation series "${n}". Using 0.`,"debug"))}switch(o.term.operation??"add"){case"subtract":r-=l;break;case"multiply":r*=l;break;case"divide":0===l?(s=!1,a.warnOnce(`calc-div0-${n}`,`Division by zero in calculation series "${n}". Affected points are rendered as gaps.`)):r/=l;break;default:r+=l}}let o=s&&Number.isFinite(r)?r:null;d.push({start:t??e,end:i??e,change:o,sum:o,mean:o,min:o,max:o,state:o})};return h.length?h.forEach(m):((e,t)=>{if(!e.start)return[];let i=new Set,r=e=>{"number"==typeof e&&Number.isFinite(e)&&i.add(e)},s=e.start.getTime(),a=e.end?.getTime();return r(s),r(a),e.period&&e.end&&ez(s,e.end.getTime(),e.period)?.forEach(r),Object.values(t).forEach(e=>{e?.forEach(e=>{r(e.start),r(e.end)})}),1===i.size&&void 0===a&&r(s+1),Array.from(i).sort((e,t)=>e-t)})(s,i).forEach(m),{values:d}},tl=["hour","day","week","month","year"],th=e=>(e=>{if(e&&Number.isInteger(e.value)&&0!==e.value&&tl.includes(e.unit))return{value:e.value,unit:e.unit}})(e.time_offset),tc=(e,t,i)=>{let r=t.value*i;switch(t.unit){case"hour":return eT(e,r);case"day":return eD(e,r);case"week":return eP(e,r);case"month":return eR(e,r);case"year":return eO(e,r);default:return e}},tu=(e,t,i)=>tc(new Date(e),t,i).getTime(),td=(e,t)=>e.map(e=>({...e,start:tu(e.start,t,-1),end:tu(e.end,t,-1)}));class tm extends Error{constructor(e){super(e),this.name="TimeoutError"}}let t_=(e,t,i)=>{let r;return Promise.race([e,new Promise((e,s)=>{r=window.setTimeout(()=>s(new tm(`${i} timed out after ${t} ms`)),t)})]).finally(()=>{void 0!==r&&window.clearTimeout(r)})};class tp{constructor(e,t){this._isActive=e,this._run=t,this._entries=new Map,this._parked=new Set}schedule(e,t=500){let i=this._entry(e);if(!this._isActive()){this._clearTimer(i),i.queued=!0,this._parked.add(e);return}if(i.inFlight){this._clearTimer(i),i.queued=!0;return}this._clearTimer(i),i.timeout=window.setTimeout(()=>{if(i.timeout=void 0,!this._isActive()){i.queued=!0,this._parked.add(e);return}this._execute(e,i)},t)}isRunning(e){return this._entry(e).inFlight}takeParked(){let e=Array.from(this._parked);return this._parked.clear(),e}pause(){this._entries.forEach(e=>this._clearTimer(e))}dispose(){this._entries.forEach(e=>{this._clearTimer(e),e.inFlight=!1,e.queued=!1}),this._parked.clear()}async _execute(e,t){t.inFlight=!0,t.queued=!1;try{await this._run(e)}finally{t.inFlight=!1,t.queued&&(t.queued=!1,this.schedule(e))}}_entry(e){let t=this._entries.get(e);return t||(t={inFlight:!1,queued:!1},this._entries.set(e,t)),t}_clearTimer(e){e.timeout&&(window.clearTimeout(e.timeout),e.timeout=void 0)}}let tg=()=>({metadata:{},calculated:new Map});class tf{constructor(e){this._onChange=e,this._energyFallbackActive=!1,this._main=tg(),this._compare=tg(),this._shiftedStatistics=new Map,this._shiftedMetadata=new Map,this._shiftedCalculated=new Map,this._statisticIds=[],this._statTypes=[],this._isLoading=!1,this._generations={main:0,compare:0},this._connected=!1,this._visible="u"<typeof document||"hidden"!==document.visibilityState,this._logger=new eu,this._handleVisibilityChange=()=>{let e="hidden"!==document.visibilityState;if(e!==this._visible){if(this._visible=e,!e){this._queue.pause(),this._clearTimer("_autoRefreshTimeout"),this._clearTimer("_liveHourTimeout"),this._teardownRawStream();return}this._clearTimer("_visibilityResumeTimeout"),this._visibilityResumeTimeout=window.setTimeout(()=>{if(this._visibilityResumeTimeout=void 0,!this._visible)return;let e=new Set(this._queue.takeParked());e.add("main"),this._comparePeriodStart&&e.add("compare"),e.forEach(e=>this._queue.schedule(e)),this._scheduleAutoRefresh()},200)}},this._queue=new tp(()=>this._visible,e=>this._runFetch(e)),this._energyBinding=new e2(e=>this._onEnergyRange(e),()=>this._onEnergyUnavailable())}connect(){this._connected||(this._connected=!0,"u">typeof document&&(document.addEventListener("visibilitychange",this._handleVisibilityChange),this._visible="hidden"!==document.visibilityState),this._sync())}disconnect(){this._connected=!1,"u">typeof document&&document.removeEventListener("visibilitychange",this._handleVisibilityChange),this._energyBinding.disconnect(),this._queue.dispose(),this._clearTimer("_autoRefreshTimeout"),this._clearTimer("_liveHourTimeout"),this._clearTimer("_visibilityResumeTimeout"),this._teardownRawStream()}setHass(e){let t=!this._hass;this._hass=e,t&&this._connected&&this._sync()}setConfig(e){let t=this._config;this._config=e,this._logger.reset(),t&&!e.aggregation?.compute_current_hour&&this._clearTimer("_liveHourTimeout"),this._connected&&this._sync(t)}get snapshot(){return{loading:this._isLoading,aggregationDisabled:"disabled"===this._main.aggregation,periodStart:this._periodStart,periodEnd:this._periodEnd,comparePeriodStart:this._comparePeriodStart,comparePeriodEnd:this._comparePeriodEnd,main:this._main,compare:this._compare,shiftedStatistics:this._shiftedStatistics,shiftedMetadata:this._shiftedMetadata,shiftedCalculated:this._shiftedCalculated}}get _timespan(){return this._config?.timespan??eL}get _usesEnergyPicker(){return"energy"===this._timespan.mode}_hasTimeOffsets(e=this._config){return!!e?.series.some(e=>th(e))}_shouldUseCompare(){return!(!this._usesEnergyPicker||!this._config||this._hasTimeOffsets())&&!1!==this._config.allow_compare}_sync(e){if(!this._hass||!this._config)return;let t=this._usesEnergyPicker,i=e?.timespan?.mode!==this._timespan.mode,r=e?.collection_key!==this._config.collection_key;t&&(i||r||!e)?this._energyBinding.connect(this._hass,this._config.collection_key):t||e?.timespan?.mode!=="energy"||(this._energyBinding.disconnect(),this._energyRange=void 0,this._energyCompareRange=void 0),this._shouldUseCompare()||this._clearCompare();let s=this._recalculatePeriod(),a=this._recalculateComparePeriod(),n=!!e&&JSON.stringify(e.series)!==JSON.stringify(this._config.series);(s||n)&&(this._teardownRawStream(),this._clearShifted()),(s||n||!this._main.statistics)&&this._queue.schedule("main"),this._comparePeriodStart&&(a||n||!this._compare.statistics)&&this._queue.schedule("compare")}_onEnergyRange(e){this._energyFallbackActive=!1,this._energyRange={start:e.start,end:e.end},this._shouldUseCompare()&&e.startCompare?this._energyCompareRange={start:e.startCompare,end:e.endCompare}:this._energyCompareRange=void 0;let t=this._recalculatePeriod(),i=this._recalculateComparePeriod();(t||!this._main.statistics)&&this._queue.schedule("main"),this._comparePeriodStart&&(i||!this._compare.statistics)&&this._queue.schedule("compare")}_onEnergyUnavailable(){this._energyFallbackActive=!0,(this._recalculatePeriod()||!this._main.statistics)&&this._queue.schedule("main")}_resolveRange(){let e=this._energyRange??(this._energyFallbackActive?ej():void 0);try{var t=this._timespan;switch(t.mode){case"energy":return e;case"relative":let i,r;return(i=t.period,eB.includes(i))?((e,t,i)=>{let r=(e=>{let t=new Date;switch(e){case"hour":return{start:ef(t),end:function(e){em(1,arguments);var t=e_(e);return t.setMinutes(59,59,999),t}(t)};case"day":return ej();case"week":return{start:eE(t,eI),end:function(e,t){em(1,arguments);var i,r,s,a,n,o,l,h,c=ey(null!=(i=null!=(r=null!=(s=null!=(a=null==t?void 0:t.weekStartsOn)?a:null==t||null==(n=t.locale)||null==(o=n.options)?void 0:o.weekStartsOn)?s:eA.weekStartsOn)?r:null==(l=eA.locale)||null==(h=l.options)?void 0:h.weekStartsOn)?i:0);if(!(c>=0&&c<=6))throw RangeError("weekStartsOn must be between 0 and 6 inclusively");var u=e_(e),d=u.getDay();return u.setDate(u.getDate()+((d<c?-7:0)+6-(d-c))),u.setHours(23,59,59,999),u}(t,eI)};case"month":return{start:eM(t),end:ek(t)};default:return{start:ex(t),end:function(e){em(1,arguments);var t=e_(e),i=t.getFullYear();return t.setFullYear(i+1,0,0),t.setHours(23,59,59,999),t}(t)}}})(e);switch(e){case"hour":{let e=eT(r.start,t);return{start:eT(e,-(i-1)),end:eT(r.end,t)}}case"day":{let e=eD(r.start,t);return{start:eD(e,-(i-1)),end:eD(r.end,t)}}case"week":{let e=eP(r.start,t);return{start:eP(e,-(i-1)),end:eP(r.end,t)}}case"month":{let e=eR(r.start,t);return{start:eR(e,-(i-1)),end:eR(r.end,t)}}default:{let e=eO(r.start,t);return{start:eO(e,-(i-1)),end:eO(r.end,t)}}}})(t.period,t.offset??0,"number"==typeof(r=t.count)&&Number.isInteger(r)&&r>=1?r:1):((e,t)=>{let i=(e=>{let t=new Date;switch(e){case"last_60_minutes":case"last_24_hours":return t.setSeconds(0,0),t;case"last_7_days":case"last_30_days":return t.getMinutes()>=20&&t.setHours(t.getHours()+1),t.setMinutes(20,0,0),t;case"last_12_months":return t.setHours(0,0,0,0),t;default:return t}})(e);switch(e){case"last_60_minutes":{let e=eT(i,t);return{start:eN(e,-60),end:e}}case"last_24_hours":{let e=eD(i,t);return{start:eH(e,24),end:e}}case"last_7_days":{let e=eD(i,t);return{start:eF(e,7),end:e}}case"last_30_days":{let e=eD(i,t);return{start:eF(e,30),end:e}}default:{let e=eR(i,t);return{start:function(e,t){return em(2,arguments),eR(e,-ey(t))}(e,12),end:e}}}})(t.period,t.offset??0);case"fixed":return((e,t)=>{let i=e?new Date(e):ep(new Date);if(Number.isNaN(i.getTime()))throw Error("Invalid start date in fixed timespan configuration");let r=t?new Date(t):eg(i);if(Number.isNaN(r.getTime()))throw Error("Invalid end date in fixed timespan configuration");return{start:i,end:r}})(t.start,t.end);default:return}}catch(e){ec("error","Invalid timespan configuration",{error:e instanceof Error?e.message:e});return}}_recalculatePeriod(){let e=this._resolveRange();if(!e)return!1;let t=this._periodStart?.getTime()!==e.start.getTime()||this._periodEnd?.getTime()!==e.end?.getTime();return t&&(this._periodStart=e.start,this._periodEnd=e.end,this._main.lastRawEnd=void 0),t}_recalculateComparePeriod(){let e=this._shouldUseCompare()?this._energyCompareRange:void 0;if(!e)return(!!this._comparePeriodStart||!!this._comparePeriodEnd)&&(this._clearCompare(),!0);let t=this._comparePeriodStart?.getTime()!==e.start.getTime()||this._comparePeriodEnd?.getTime()!==e.end?.getTime();return t&&(this._comparePeriodStart=e.start,this._comparePeriodEnd=e.end,this._compare=tg()),t}_clearCompare(){this._comparePeriodStart=void 0,this._comparePeriodEnd=void 0,this._compare=tg()}_clearShifted(){this._shiftedStatistics=new Map,this._shiftedMetadata=new Map,this._shiftedCalculated=new Map}_collectStatisticRequests(){let e=new Set,t=new Set;return this._config?.series.forEach(i=>{let r=i.stat_type??te;if(!th(i)){if("statistic"===ti(i)){let s=tr(i);s&&(e.add(s),t.add(r));return}i.calculation?.terms?.forEach(i=>{let s=i.statistic_id?.trim();s&&(e.add(s),t.add(i.stat_type??r))})}}),{ids:Array.from(e),types:t.size?Array.from(t):[te]}}async _runFetch(e){"live"===e?await this._loadLiveHour():await this._loadStatistics("compare"===e)}async _loadStatistics(e){let t=this._hass,i=this._config,r=e?this._comparePeriodStart:this._periodStart,s=e?this._comparePeriodEnd:this._periodEnd;if(!t||!i||!r||!this._visible)return;let a=e?this._compare:this._main,n={start:r.getTime(),end:s?.getTime()??null},{ids:o,types:l}=this._collectStatisticRequests();e||(this._statisticIds=o,this._statTypes=l);let h=e8(r,s,i.aggregation,this._usesEnergyPicker),c=e?"compare":"main";if("disabled"===h[0]){this._generations[c]+=1,this._applyDisabled(e,n);return}let u=++this._generations[c],d=!e&&!this._main.statistics;d&&(this._isLoading=!0,this._onChange());try{let i=await this._loadMetadata(t,o),d=await this._fetchWithPlan(t,h,r,s,o,l,e,n);if(u!==this._generations[c])return;if(a.metadata=i,a.range=n,a.aggregation=d.aggregation,"raw"===d.aggregation){let e=d.incremental&&a.statistics?eG(a.statistics,d.statistics):d.statistics;a.statistics=eX(e,n.start,n.end),a.lastRawEnd=eZ(a.statistics)}else a.statistics=d.statistics,a.lastRawEnd=void 0;if(this._rebuildCalculations(e),!e){if("raw"===d.aggregation?this._restartRawStream():this._teardownRawStream(),await this._loadShiftedSeries(r,s,u),u!==this._generations.main)return;this._scheduleAutoRefresh(),this._scheduleLiveHour()}}catch(t){u===this._generations[c]&&(ec("error","Failed to load statistics",{compare:e,error:t instanceof Error?t.message:t}),e?this._compare=tg():(this._main=tg(),this._clearShifted()))}finally{u===this._generations[c]&&d&&(this._isLoading=!1),this._onChange()}}_applyDisabled(e,t){let i=tg();i.range=t,i.aggregation="disabled",e?this._compare=i:(this._main=i,this._clearShifted(),this._clearTimer("_autoRefreshTimeout"),this._clearTimer("_liveHourTimeout")),this._isLoading=!1,this._onChange()}async _loadMetadata(e,t){if(!t.length)return{};try{let i=await t_(e.callWS({type:"recorder/get_statistics_metadata",statistic_ids:t}),6e4,"getStatisticsMetadata"),r={};return i.forEach(e=>{r[e.statistic_id]=e}),r}catch(e){return e instanceof tm||ec("warn","Failed to load statistics metadata",{error:e instanceof Error?e.message:e}),{}}}async _fetchWithPlan(e,t,i,r,s,a,n,o){if(!s.length)return{statistics:{},aggregation:t[0],incremental:!1};let l={},h=t[0],c=!1;for(let u=0;u<t.length;u++){let d=t[u];if(h=d,"disabled"===d)return{statistics:{},aggregation:d,incremental:!1};try{if("raw"===d){let t=(n?this._compare:this._main).lastRawEnd,a=void 0!==t&&(null===o.end||t<o.end)?new Date(Math.max(i.getTime(),t-6e4)):i;c=a!==i,l=await this._fetchRawStatistics(e,a,r,s)}else l=await t_(eY(e,i,r,s,d,a),6e4,`fetchStatistics:${d}`),c=!1;if(eK(l,s))return{statistics:l,aggregation:d,incremental:c};u<t.length-1&&ec("warn",`Aggregation "${d}" returned no data. Trying "${t[u+1]}".`)}catch(e){ec("error",`Failed to load statistics for aggregation "${d}"`,{error:e instanceof Error?e.message:e})}}return{statistics:l,aggregation:h,incremental:c}}async _fetchRawStatistics(e,t,i,r){var s;let a,n=i?Math.max(6e4,(i.getTime()-t.getTime())*.1):6e4,o=new Date(t.getTime()-n),l=i?new Date(i.getTime()+n):void 0;return e0(await t_((s=this._config?.aggregation?.raw_options,a={type:"history/history_during_period",start_time:o.toISOString(),minimal_response:!0,no_attributes:!0},l&&(a.end_time=l.toISOString()),s?.significant_changes_only!==void 0&&(a.significant_changes_only=s.significant_changes_only),r.length&&(a.entity_ids=r),e.callWS(a)),6e4,"fetchRawHistoryStates"))}_buildShiftedGroups(e,t){let i=new Map;return this._config?.series.forEach((r,s)=>{let a=th(r);if(!a)return;let n=ti(r),o=tr(r);if("statistic"===n&&!o||"calculation"===n&&!r.calculation?.terms?.length)return;let l=tc(e,a,1),h=t?tc(t,a,1):void 0,c=`${a.value}:${a.unit}`,u=i.get(c)??{key:c,sourceStart:l,sourceEnd:h,offset:a,statisticSeries:[],calculationSeries:[]};"statistic"===n&&o?u.statisticSeries.push({index:s,statisticId:o}):u.calculationSeries.push({index:s,series:r}),i.set(c,u)}),Array.from(i.values())}_shiftedGroupRequests(e){let t=new Set,i=new Set;return e.statisticSeries.forEach(({index:e,statisticId:r})=>{t.add(r),i.add(this._config?.series[e].stat_type??te)}),e.calculationSeries.forEach(({series:e})=>{let r=e.stat_type??te;e.calculation?.terms?.forEach(e=>{let s=e.statistic_id?.trim();s&&(t.add(s),i.add(e.stat_type??r))})}),{ids:Array.from(t),types:i.size?Array.from(i):[te]}}async _loadShiftedSeries(e,t,i){let r=this._hass,s=r?this._buildShiftedGroups(e,t):[];if(!r||!s.length)return void this._clearShifted();let a=new Map,n=new Map,o=new Map;for(let e of s){let{ids:t,types:s}=this._shiftedGroupRequests(e),l=e8(e.sourceStart,e.sourceEnd,this._config?.aggregation,this._usesEnergyPicker).filter(e=>"raw"!==e);if(!l.length||"disabled"===l[0]){this._logger.warnOnce(`shifted-unsupported-${e.key}`,"Series time offset requires aggregated statistics; raw history and disabled ranges are skipped.");continue}let h=await this._loadMetadata(r,t),c=await this._fetchWithPlan(r,l,e.sourceStart,e.sourceEnd,t,s,!1,{start:e.sourceStart.getTime(),end:e.sourceEnd?.getTime()??null});if(i!==this._generations.main)return;"disabled"!==c.aggregation&&(e.statisticSeries.forEach(({index:t,statisticId:i})=>{let r=c.statistics[i];r?.length&&(a.set(t,td(r,e.offset)),n.set(t,h[i]))}),e.calculationSeries.forEach(({index:t,series:i})=>{let r=to(i,i.calculation,c.statistics,t,{start:e.sourceStart,end:e.sourceEnd,period:c.aggregation},this._logger);r?.values.length&&o.set(ts(t),td(r.values,e.offset))}))}this._shiftedStatistics=a,this._shiftedMetadata=n,this._shiftedCalculated=o}_rebuildCalculations(e){let t=e?this._compare:this._main,i=new Map;this._config?.series.forEach((r,s)=>{if(!r.calculation||"calculation"!==ti(r)||!e&&th(r))return;let a=to(r,r.calculation,t.statistics??{},s,{start:e?this._comparePeriodStart:this._periodStart,end:e?this._comparePeriodEnd:this._periodEnd,period:t.aggregation},this._logger);a&&i.set(ts(s),a.values)}),t.calculated=i}_shouldUseRawStream(){return this._visible&&!!this._hass&&"raw"===this._main.aggregation&&this._statisticIds.length>0}async _restartRawStream(){var e,t,i,r,s;let a;if(await this._teardownRawStream(),!this._shouldUseRawStream()||!this._hass)return;let n=this._main.range?.start??Date.now(),o=void 0!==this._main.lastRawEnd?Math.max(this._main.lastRawEnd-6e4,n):n;this._rawStreamUnsub=(e=this._hass,t=new Date(o),i=this._statisticIds,r=e=>{e?.states&&Object.keys(e.states).length&&this._applyRawStreamStates(e.states)},s=this._config?.aggregation?.raw_options,a={type:"history/stream",entity_ids:i,start_time:t.toISOString(),minimal_response:!0,no_attributes:!0},s?.significant_changes_only!==void 0&&(a.significant_changes_only=s.significant_changes_only),e.connection.subscribeMessage(r,a)).catch(e=>{ec("error","Failed to subscribe to the raw history stream",{error:e instanceof Error?e.message:e}),this._rawStreamUnsub=void 0,this._queue.schedule("main")})}async _teardownRawStream(){let e=this._rawStreamUnsub;if(this._rawStreamUnsub=void 0,e)try{let t=await e;"function"==typeof t&&await t()}catch(e){ec("warn","Failed to unsubscribe from the raw history stream",{error:e instanceof Error?e.message:e})}}_applyRawStreamStates(e){if(!this._shouldUseRawStream())return;let t=e0(e);if(!Object.values(t).some(e=>e?.length))return;let i=this._main.range,r=eG(this._main.statistics,t);this._main.statistics=i?eX(r,i.start,i.end):r,this._main.lastRawEnd=eZ(this._main.statistics),this._rebuildCalculations(!1),this._onChange()}_applyRollingWindowShift(){if(!this._main.statistics||!this._periodStart)return;let e={start:this._periodStart.getTime(),end:this._periodEnd?.getTime()??null};this._main.statistics=eX(this._main.statistics,e.start,e.end),this._main.range=e,this._main.lastRawEnd=eZ(this._main.statistics),this._rebuildCalculations(!1),this._onChange()}_shouldComputeCurrentHour(){if(!this._config?.aggregation?.compute_current_hour||"hour"!==this._main.aggregation||!this._periodStart)return!1;let e=new Date;return!(this._periodStart>e)&&(!this._periodEnd||this._periodEnd>ef(e))}_scheduleLiveHour(){if(this._clearTimer("_liveHourTimeout"),!this._shouldComputeCurrentHour())return;this._queue.schedule("live",250);let e=Math.max(e7("5minute")-Date.now(),3e4);this._liveHourTimeout=window.setTimeout(()=>{this._liveHourTimeout=void 0,this._scheduleLiveHour()},e)}async _loadLiveHour(){let e=this._hass;if(!e||!this._visible||!this._shouldComputeCurrentHour())return;let t=this._main.statistics;if(!t||!this._statisticIds.length)return;let i=((e,t)=>{let i=new Date,r=i.getTime(),s=ef(i).getTime(),a=eH(new Date(s),1).getTime(),n=e?.getTime(),o=Math.max(a,n??a);if(!(r<=o))return{fetchStart:o,fetchEnd:r,currentHourStart:s,previousHourStart:a,periodStartMs:n,periodEndMs:t?.getTime(),nowMs:r}})(this._periodStart,this._periodEnd);if(i)try{let r,s=await t_(eY(e,new Date(i.fetchStart),new Date(i.fetchEnd),this._statisticIds,"5minute",this._statTypes),6e4,"fetchStatistics:liveHour"),a=((e,t,i,r)=>{let s=[];if(e1(i.currentHourStart,i.periodStartMs,i.periodEndMs)&&s.push(i.currentHourStart),i.previousHourStart>=i.fetchStart&&e1(i.previousHourStart,i.periodStartMs,i.periodEndMs)&&s.push(i.previousHourStart),!s.length)return;let a={},n=!1;return r.forEach(r=>{let o=t[r]??[],l=e[r]??[],h=[];s.forEach(e=>{let t=Math.min(e+36e5,i.periodEndMs??e+36e5,i.nowMs),r=l.find(t=>3e4>Math.abs(t.start-e));if(e===i.currentHourStart){if(r&&r.end>=e+354e4)return}else if(r)return;let s=((e,t,i)=>{let r=e.filter(e=>e.start>=t&&e.start<i);if(!r.length)return;let s=0,a=0,n=!1,o=!1,l=0,h=0,c=null,u=null,d=null;r.forEach(e=>{let t=Math.max(0,(e.end??e.start+3e5)-e.start);"number"==typeof e.change&&Number.isFinite(e.change)&&(s+=e.change,n=!0),"number"==typeof e.sum&&Number.isFinite(e.sum)&&(a+=e.sum,o=!0),"number"==typeof e.min&&Number.isFinite(e.min)&&(c=null===c?e.min:Math.min(c,e.min)),"number"==typeof e.max&&Number.isFinite(e.max)&&(u=null===u?e.max:Math.max(u,e.max));let i="number"==typeof e.mean&&Number.isFinite(e.mean)?e.mean:"number"==typeof e.state&&Number.isFinite(e.state)?e.state:void 0;void 0!==i&&t>0&&(l+=i*t,h+=t),"number"==typeof e.state&&Number.isFinite(e.state)&&(d=e.state)});let m={start:t,end:i};return n&&(m.change=s),o&&(m.sum=a),null!==c&&(m.min=c),null!==u&&(m.max=u),h>0?m.mean=l/h:null!==d&&(m.mean=d),null!==d&&(m.state=d),m})(o,e,t);s&&h.push(s)}),h.length&&(h.sort((e,t)=>e.start-t.start),a[r]=h,n=!0)}),n?a:void 0})(t,s,i,this._statisticIds);if(!a)return;this._main.statistics=(r={...t},Object.entries(a).forEach(([e,t])=>{if(!t?.length)return;let i=new Set(t.map(e=>e.start)),s=(r[e]??[]).filter(e=>!i.has(e.start));r[e]=[...s,...t].sort((e,t)=>e.start-t.start)}),r),this._rebuildCalculations(!1),this._onChange()}catch(e){ec("error","Failed to load the current-hour estimate",{error:e instanceof Error?e.message:e})}}_scheduleAutoRefresh(){if(this._clearTimer("_autoRefreshTimeout"),!this._visible||!this._config||!this._periodStart)return;let e=this._timespan;if("fixed"===e.mode){let t=e.end?new Date(e.end):null;if(!t||t<=new Date)return}let t=this._main.aggregation??"hour";if("disabled"===t)return;let i=e7(t)-Date.now();Number.isFinite(i)&&(this._autoRefreshTimeout=window.setTimeout(()=>{this._autoRefreshTimeout=void 0,this._runAutoRefresh(t)},Math.max(i,6e4)))}_runAutoRefresh(e){let t;if(!this._visible)return;let i=this._recalculatePeriod(),r=this._recalculateComparePeriod(),s=!("relative"===(t=this._timespan).mode&&t.period.startsWith("last_"))||i;"raw"===e&&this._rawStreamUnsub&&(i&&this._applyRollingWindowShift(),s=!1),s&&this._queue.schedule("main"),this._comparePeriodStart&&(r||s)&&this._queue.schedule("compare"),this._scheduleAutoRefresh()}_clearTimer(e){let t=this[e];t&&(window.clearTimeout(t),this[e]=void 0)}}let ty=(e,t,i)=>new Intl.NumberFormat(t?.locale?.language??"en-US",{maximumFractionDigits:2,...i}).format(e),tv=(e,t,i)=>{let r,s,a,{locale:n,timeZone:o}=(r=i?.locale?.language??"en-US",s=i?.locale,"server"===(a=s?.time_zone)&&(a=i?.config?.time_zone),a&&"local"!==a&&"system"!==a||(a=void 0),{locale:r,timeZone:a});try{return new Intl.DateTimeFormat(n,{...t,timeZone:o}).format(e)}catch{return e.toLocaleDateString()}},tb=e=>Math.max(0,Math.min(1,Number.isFinite(e)?e:1)),tw=e=>{let t=e.trim();if(t.startsWith("#")){let e;return 3===(e=t.replace("#","").trim()).length||4===e.length?{r:parseInt(e[0]+e[0],16),g:parseInt(e[1]+e[1],16),b:parseInt(e[2]+e[2],16)}:6===e.length||8===e.length?{r:parseInt(e.substring(0,2),16),g:parseInt(e.substring(2,4),16),b:parseInt(e.substring(4,6),16)}:null}if(t.startsWith("rgb")){let e;return(e=t.trim().match(/rgba?\(\s*([\d.]+)\s*,\s*([\d.]+)\s*,\s*([\d.]+)(?:\s*,\s*[\d.]+\s*)?\)/i))?{r:Number(e[1]),g:Number(e[2]),b:Number(e[3])}:null}return null},tS=e=>{if("string"!=typeof e)return;let t=e.trim(),i=t.match(/rgba?\(([^)]+)\)/i);if(i){let e=i[1].split(",").map(e=>e.trim());if(4===e.length){let t=Number(e[3]);return Number.isFinite(t)?t:void 0}if(3===e.length)return 1}if(t.startsWith("#")){let e=t.slice(1);if(8===e.length)return parseInt(e.slice(6,8),16)/255;if(4===e.length)return parseInt(e.slice(3,4).repeat(2),16)/255}},t$=(e,t)=>{let i=tw(e);return i?`rgba(${i.r}, ${i.g}, ${i.b}, ${tb(t)})`:e.trim()},tA=(e,t)=>{if(void 0===t||t>=1)return e;let i=tw(e);return i?`rgba(${i.r}, ${i.g}, ${i.b}, ${t})`:e},tE=(e,t)=>{let i=e=>"string"==typeof e&&""!==e.trim()?e.trim():void 0,r="object"==typeof e&&null!==e,s=i(r?e.light:e),a=r?i(e.dark):void 0;return t?a??s:s},tM=(e,t)=>{let i=e.trim();return!i||i.startsWith("#")||i.startsWith("rgb")?i:(i.startsWith("var(")&&i.endsWith(")")&&(i=i.slice(4,-1).trim()),t.getPropertyValue(i)?.trim()||i)},tk=["--energy-grid-consumption-color","--energy-grid-return-color","--energy-solar-color","--energy-battery-in-color","--energy-battery-out-color","--energy-gas-color","--energy-water-color","--energy-non-fossil-color"],tx=({hass:e,configSeries:t,statistics:i,metadata:r,calculatedData:s,colorCycle:a,darkMode:n,computedStyle:o,logger:l})=>{let h,c,u=a.length?a:tk,d=[],m=new Map,_=new Map,p=[],g=(h=new Map,t.forEach((e,t)=>{let i=e.chart_type??"bar",r=e.stack?.trim();if("line"!==i&&"step"!==i||!r)return;let s="right"===e.y_axis?"right":"left",a=`${s}:${r}`;h.set(a,[...h.get(a)??[],t])}),c=new Map,h.forEach(e=>{e.forEach((t,i)=>{c.set(t,e[e.length-i-1])})}),c);return t.forEach((t,a)=>{var h,c;let f,y,v=ti(t),b="statistic"===v?tr(t):void 0,w="calculation"===v?ts(a):void 0;if(w){if(f=s.get(w),!f?.length)return void l.warnOnce(`calculation-empty-${a}`,`Calculation series "${t.name??w}" produced no data.`,"debug")}else if(!b)return void l.warnOnce(`series-misconfigured-${a}`,`Series at index ${a} has no valid data source.`);else if(f=i[b],!f?.length)return void l.warnOnce(`statistics-empty-${b}`,`No statistics available for "${b}".`,"debug");let S=t.chart_type??"bar",$="step"===S,A="line"===S||$,E=t.name?t.name:b?e.states[b]?.attributes.friendly_name??r[b]?.name??b:`Series ${a+1}`,M=tM(tE(t.color,n)??tE(u[a%u.length],n)??tk[a%tk.length],o),k="number"==typeof t.line_opacity?tb(t.line_opacity):void 0,x=b??w??`series_${a}`,C=t.stat_type??te,T=`${x}:${C}:${S}:${a}`;m.set(T,t);let D=(h=f,y=t.stat_type??te,h.map(e=>{let i=e[y],r=e.start??e.end;return"number"==typeof i&&Number.isFinite(i)?[r,tt(i,t)]:[r,null]}));if(A){let e,i,r,s,n=t$(M,k??.85),o="number"==typeof t.fill_opacity?tb(t.fill_opacity):.15,h=t$(M,o),u="number"==typeof t.smooth?tb(t.smooth):t.smooth,m={id:T,name:E,type:"line",data:D,showSymbol:!1,smooth:!$&&(u??!0),stack:t.stack,yAxisIndex:+("right"===t.y_axis),z:g.get(a)??a,lineStyle:{width:t.line_width??1.5,color:n,type:t.line_style??"solid"},itemStyle:{color:n,borderColor:n},legendHoverLink:!1,emphasis:{disabled:!0},color:n};$&&(m.step="end"),!0===t.fill&&(m.areaStyle={color:!0===t.gradient_fill?(c="number"==typeof t.fill_opacity?o:.75,e=0,i=0,D.forEach(([,t])=>{"number"==typeof t&&Number.isFinite(t)&&(e=Math.min(e,t),i=Math.max(i,t))}),r=t$(M,c),s=t$(M,c/3),{type:"linear",x:0,y:0,x2:0,y2:1,colorStops:0===i&&0===e?[{offset:0,color:s},{offset:1,color:s}]:e>=0?[{offset:0,color:r},{offset:1,color:s}]:i<=0?[{offset:0,color:s},{offset:1,color:r}]:[{offset:0,color:r},{offset:tb(i/(i-e)),color:s},{offset:1,color:r}],global:!1}):h}),d.push(m),_.has(E)?l.warnOnce(`duplicate-name-${E}`,`Multiple series are named "${E}". fill_to_series references are ambiguous.`):_.set(E,{id:T,name:E,config:t,dataPoints:D,lineColor:n,fillColor:h,series:m});let f=t.fill_to_series?.trim();f&&p.push({sourceName:E,targetName:f})}else{let e=t$(M,"number"==typeof t.fill_opacity?tb(t.fill_opacity):.5),i=t$(M,k??1),r={id:T,name:E,type:"bar",data:D,stack:t.stack,yAxisIndex:+("right"===t.y_axis),z:a,itemStyle:{color:e,borderColor:i},legendHoverLink:!1,emphasis:{disabled:!0},color:e,barMaxWidth:50};t.fill_to_series&&l.warnOnce(`fill-bar-${E}`,`Series "${E}" is a bar chart and cannot use fill_to_series.`),d.push(r)}}),p.forEach(({sourceName:e,targetName:t})=>{let i=_.get(e),r=_.get(t);if(i){if(i.config.stack)return void l.warnOnce(`fill-source-stack-${e}`,`Series "${e}" combines stacking with fill_to_series, which is not supported.`);if(!r)return void l.warnOnce(`fill-target-missing-${e}-${t}`,`fill_to_series of "${e}" references "${t}", which is not an existing line series.`);if(r.config.stack)return void l.warnOnce(`fill-target-stack-${t}`,`Series "${t}" uses stacking and cannot be a fill target.`);if(i.name===r.name)return void l.warnOnce(`fill-self-${e}`,`Series "${e}" references itself in fill_to_series.`);d.push(...((e,t,i)=>{let r=e=>{let t=new Map;return e.forEach(([e,i])=>t.set(e,i)),t},s=r(e.dataPoints),a=r(t.dataPoints),n=Array.from(new Set([...s.keys(),...a.keys()])).sort((e,t)=>e-t),o=[],l=[],h=!1;if(n.forEach(e=>{let t=s.get(e),i=a.get(e);if(void 0===t||void 0===i||null===t||null===i){o.push([e,i??null]),l.push([e,null]);return}let r=t-i;if(r<0){h=!0,o.push([e,i]),l.push([e,0]);return}o.push([e,i]),l.push([e,r])}),!l.some(([,e])=>"number"==typeof e&&e>0))return[];h&&i.warnOnce(`fill-clamped-${e.name}-${t.name}`,`"${e.name}" dropped below "${t.name}". Negative differences were clamped to zero.`);let c=`__fill_${e.id}`,u="number"==typeof e.series.z?e.series.z:2,d="number"==typeof t.series.z?t.series.z:2,m=u-.1<0?u+.1:u-.1,_=Math.max(Math.min(m-.01,d-.1),0),p={type:"line",stack:c,stackStrategy:"all",showSymbol:!1,silent:!0,legendHoverLink:!1,emphasis:{disabled:!0},yAxisIndex:e.series.yAxisIndex};return[{...p,id:`${e.id}__fill_base`,name:`${e.name}__fill_base`,data:o,smooth:t.series.smooth,lineStyle:{width:0,color:t.lineColor},areaStyle:{opacity:0},yAxisIndex:t.series.yAxisIndex,z:_},{...p,id:`${e.id}__fill_area`,name:`${e.name}__fill_area`,data:l,smooth:e.series.smooth,lineStyle:{width:0,color:e.lineColor},areaStyle:{color:e.fillColor},itemStyle:{color:e.fillColor},z:m}]})(i,r,l))}}),{series:d,configById:m}},tC="__realValue",tT=e=>{if(Array.isArray(e)){let t="number"==typeof e[1]?e[1]:null;return{value:[e[0],t]}}if(e&&Array.isArray(e.value)){let[t,i]=e.value;return{...e,value:[t,"number"==typeof i?i:null]}}},tD=(e,t,i)=>{let r="string"==typeof e.id?e.id:void 0;if(!r||!t[tC])return;let s=i.configById.get(r);if(s?.show_value_labels!==!0)return;if(s.stack?.trim())return void i.logger.warnOnce(`value-label-stacked-${ta(r)}`,`Value labels are ignored for the stacked bar series "${e.name??r}".`);let a=t.value[1];if("number"!=typeof a||0===a){t.label={show:!1};return}let n="number"==typeof s.value_label_precision&&Number.isFinite(s.value_label_precision)?Math.max(0,Math.min(20,Math.trunc(s.value_label_precision))):0;t.label={show:!0,position:a>0?"top":"bottom",formatter:i.formatValue(a,n),color:i.valueLabelColor,fontSize:11,distance:4},e.labelLayout={...e.labelLayout??{},hideOverlap:!0}};function tP(e,t){em(2,arguments);var i=e_(e),r=e_(t),s=i.getTime()-r.getTime();return s<0?-1:s>0?1:s}class tR{assignCurrent(e,t){let i=e.id??`bar_${t}`,r=this._baseKeyFor(e.stack);this._baseKeyBySeriesId.set(i,r);let s=this._resolveZ(r,e.z);e.z=s,e.stack=`${r}--current`,this._ensurePlaceholder(r,s,"current")}assignCompare(e,t){let i=this._baseKeyBySeriesId.get(t)??this._baseKeyFor(e.stack);this._baseKeyBySeriesId.set(t,i);let r=this._resolveZ(i,e.z);e.z=r,e.stack=`${i}--compare`,this._ensurePlaceholder(i,r,"compare")}placeholders(){return this._order.map(e=>this._placeholderByBase.get(e)).filter(e=>void 0!==e)}_baseKeyFor(e){let t=e?.trim();return t||(this._generatedStacks+=1,`series-${this._generatedStacks}`)}_resolveZ(e,t){let i="number"==typeof t&&Number.isFinite(t)?Math.max(t,10):10,r=Math.max(this._zByBase.get(e)??i,i);return this._zByBase.set(e,r),r}_ensurePlaceholder(e,t,i){let r=Math.max(t-3,0),s=this._placeholderByBase.get(e);if(s){s.stack=`${e}--${i}`,s.z=r;return}this._order.push(e),this._placeholderByBase.set(e,{id:`${e}--placeholder`,type:"bar",stack:`${e}--${i}`,data:[],silent:!0,itemStyle:{color:"transparent",borderColor:"transparent",borderWidth:0},emphasis:{disabled:!0},barMaxWidth:50,z:r})}constructor(){this._baseKeyBySeriesId=new Map,this._placeholderByBase=new Map,this._zByBase=new Map,this._order=[],this._generatedStacks=0}}let tO=e=>{let t=Array.isArray(e)?e:e?.value;if(!Array.isArray(t)||"number"!=typeof t[0])return;let i="number"==typeof t[1]?t[1]:null;return[t[0],i]},tN=(e,t)=>{let i=null,r=1/0;return e.forEach(e=>{Array.isArray(e.data)&&e.data.forEach(e=>{let s=tO(e);if(!s)return;let a=Math.abs(s[0]-t);a<r&&(r=a,i=s[0])})}),i},tH="__selection_marker",tF=/__fill_(base|area)$/u,tI=e=>{let t=e??{},i="number"==typeof t.opacity?t.opacity:1;return{...t,opacity:.5*i}};class tU{constructor(e,t){this._onPick=e,this._logger=t,this._onZrClick=e=>{let t=this._chart;if(!t)return;let i=[e.offsetX,e.offsetY];if("function"==typeof t.containPixel&&!t.containPixel({gridIndex:0},i))return;let r=t.convertFromPixel({xAxisIndex:0},i[0]),s=Array.isArray(r)?r[0]:r;"number"==typeof s&&Number.isFinite(s)&&this._onPick(s)}}get hooked(){return void 0!==this._chart}attach(e){let t=e?.chart;t&&"function"==typeof t.getZr?t!==this._chart&&(this.detach(),this._chart=t,this._zr=t.getZr(),this._zr?.on("click",this._onZrClick)):this._logger.warnOnce("no-chart-instance","<ha-chart-base> exposes no chart instance; falling back to chart-click.")}detach(){this._zr?.off("click",this._onZrClick),this._zr=void 0,this._chart=void 0}handleChartClick(e){if(this.hooked)return;let t=e.detail,i=Array.isArray(t?.value)?t?.value[0]:void 0;"number"==typeof i&&Number.isFinite(i)&&this._onPick(i)}}console.info("%c CUSTOM-GRAPH-CARD %c 0.0.1 ","background-color: #000000; color: #4CAF50; font-weight: bold;","background-color: #666666; color: #FFFFFF; font-weight: bold;");class tz extends ei{setConfig(e){this._config=(e=>{if(!e.series||!Array.isArray(e.series)||!e.series.length)throw Error("At least one series must be configured");return eV(e,eq,"The card"),e.series.forEach((e,t)=>{if(!e)return void ec("warn",`Series at index ${t} is empty and is ignored.`);eV(e,eW,`Series ${t}`),"forecast"===e.source&&ec("warn",`Series ${t} uses "source: forecast", which this card does not support. The series is skipped.`);let i=!!e.statistic_id?.trim(),r=!!e.calculation;if(i&&r&&ec("warn",`Series ${t} defines both statistic_id and calculation. The calculation wins.`),i||r||ec("warn",`Series ${t} defines neither statistic_id nor calculation and is skipped.`),r){let i=e.calculation?.terms??[];i.length||ec("warn",`The calculation of series ${t} has no terms and is skipped.`),i.forEach((e,i)=>{void 0===e.statistic_id&&void 0===e.constant&&ec("warn",`Calculation term ${i} of series ${t} has neither statistic_id nor constant and is ignored.`)})}}),{...e,timespan:e.timespan??eL,allow_compare:e.allow_compare??!0,series:e.series.filter(e=>!!e&&"forecast"!==e.source)}})(e),this._logger.reset(),this._renderedRange=void 0,this._clearSelection(),this._controller.setConfig(this._config)}static getStubConfig(){return{type:"custom:custom-graph-card",series:[]}}getCardSize(){return 5}getGridOptions(){let e=!!this._config?.title?.trim();return{columns:12,min_columns:6,rows:e?5:4,min_rows:e?4:3}}connectedCallback(){super.connectedCallback(),this._controller.connect()}disconnectedCallback(){super.disconnectedCallback(),this._controller.disconnect(),this._selectionInput.detach(),void 0!==this._animationFrame&&(cancelAnimationFrame(this._animationFrame),this._animationFrame=void 0)}shouldUpdate(e){if(!e.has("hass")||e.size>1)return!0;let t=e.get("hass");return!t||t.connected!==this.hass?.connected||t.themes!==this.hass?.themes||t.locale!==this.hass?.locale}willUpdate(e){e.has("hass")&&this.hass&&this._controller.setHass(this.hass)}updated(e){super.updated(e),this._evaluateSectionLayout();let t=this._isDarkMode(),i=t!==this._darkMode;this._darkMode=t,(e.has("_config")||i)&&this._rebuildChart()}firstUpdated(){this._evaluateSectionLayout()}_onData(){let e=this._controller.snapshot;this._loading=e.loading,this._disabled=e.aggregationDisabled,this._rebuildChart()}_evaluateSectionLayout(){if(!this.isConnected)return;let e=this.layout;this._usesSectionLayout="grid"===e}_onPick(e){let t=tN(this._assembledSeries,e);null!==t&&(this._selectedX=t===this._selection?.bucket?null:t,this._rebuildChart())}_clearSelection(){this._selectedX=null,this._selection=null,this._selectedRange=void 0}_dropSelectionOnRangeChange(e){null!==this._selectedX&&this._selectedRange&&(this._selectedRange.start!==e.start||this._selectedRange.end!==e.end)&&this._clearSelection()}_emitSelection(e){let t=e?.start??null,i=e?.end??null;(t!==this._emitted.start||i!==this._emitted.end)&&(this._emitted={start:t,end:i},this.dispatchEvent(new CustomEvent("custom-graph-selection",{detail:{start:t,end:i,startTime:null===t?null:new Date(t).toISOString(),endTime:null===i?null:new Date(i).toISOString()},bubbles:!0,composed:!0})))}_rebuildChart(){var e;let t;if(!this.hass||!this._config)return;let i=this._controller.snapshot;i.periodStart&&this._dropSelectionOnRangeChange({start:i.periodStart.getTime(),end:i.periodEnd?.getTime()??null});let r=(({hass:e,config:t,snapshot:i,computedStyle:r,darkMode:s,logger:a,selectedX:n=null})=>{var o,l;let h,c,u,d,m,{periodStart:_,periodEnd:p}=i;if(!_||!i.main.statistics||!i.main.range||i.main.range.start!==_.getTime()||(i.main.range.end??null)!==(p?.getTime()??null))return;let g=(h={...i.main.statistics??{}},c={...i.main.metadata},u=new Map(i.main.calculated),i.shiftedCalculated.forEach((e,t)=>u.set(t,e)),d=t.series.map((t,r)=>{let s=tr(t);if(!th(t)||!s)return t;let a=`__time_offset_${r}__${s}`;h[a]=i.shiftedStatistics.get(r)??[];let n=i.shiftedMetadata.get(r)??i.main.metadata[s];return n&&(c[a]={...n,statistic_id:a}),{...t,statistic_id:a,name:t.name??e.states[s]?.attributes.friendly_name??n?.name??s}}),{statistics:h,metadata:c,configSeries:d,calculated:u}),f=t.color_cycle??[],y=tx({hass:e,configSeries:g.configSeries,statistics:g.statistics,metadata:g.metadata,calculatedData:g.calculated,colorCycle:f,darkMode:s,computedStyle:r,logger:a}),v=new Map(y.configById),b=new tR;y.series.forEach((e,t)=>{"bar"===e.type&&b.assignCurrent(e,t)});let w=[];if(i.comparePeriodStart&&i.compare.statistics&&i.compare.range?.start===i.comparePeriodStart.getTime()&&(i.compare.range?.end??null)===(i.comparePeriodEnd?.getTime()??null)&&i.comparePeriodStart){let t=tx({hass:e,configSeries:g.configSeries,statistics:i.compare.statistics,metadata:i.compare.metadata,calculatedData:i.compare.calculated,colorCycle:f,darkMode:s,computedStyle:r,logger:a}),n=((e,t)=>{let i=function(e,t){em(2,arguments);var i=e_(e),r=e_(t),s=tP(i,r),a=Math.abs(function(e,t){em(2,arguments);var i=e_(e),r=e_(t);return i.getFullYear()-r.getFullYear()}(i,r));i.setFullYear(1584),r.setFullYear(1584);var n=tP(i,r)===-s,o=s*(a-Number(n));return 0===o?0:o}(e,t);if(0!==i&&e.getTime()===ex(e).getTime())return e=>eO(new Date(e),i).getTime();let r=function(e,t){em(2,arguments);var i,r=e_(e),s=e_(t),a=tP(r,s),n=Math.abs(function(e,t){em(2,arguments);var i=e_(e),r=e_(t);return 12*(i.getFullYear()-r.getFullYear())+(i.getMonth()-r.getMonth())}(r,s));if(n<1)i=0;else{1===r.getMonth()&&r.getDate()>27&&r.setDate(30),r.setMonth(r.getMonth()-a*n);var o=tP(r,s)===-a;(function(e){em(1,arguments);var t=e_(e);return eg(t).getTime()===ek(t).getTime()})(e_(e))&&1===n&&1===tP(e,s)&&(o=!1),i=a*(n-Number(o))}return 0===i?0:i}(e,t);if(0!==r&&e.getTime()===eM(e).getTime())return e=>eR(new Date(e),r).getTime();let s=e9(e,t);if(0!==s&&e.getTime()===ep(e).getTime())return e=>eD(new Date(e),s).getTime();let a=e.getTime()-t.getTime();return e=>e+a})(_,i.comparePeriodStart);t.series.forEach((e,i)=>{let a=e.id??`compare_${i}`,o=`${a}--compare`,l={...e,id:o,name:`${e.name??a} (compare)`};Array.isArray(l.data)&&(l.data=l.data.map(e=>{let t=tO(e);if(!t)return e;let i=[n(t[0]),t[1]];return Array.isArray(e)?i:{...e,value:i}}));let h=t.configById.get(a)??t.configById.get(a.replace(/__fill_(base|area)$/u,""));h&&v.set(o,h);let c=tE(h?.compare_color,s),u=c?tM(c,r):void 0;"bar"===l.type?b.assignCompare(l,a):l.stack?.trim()?l.stack=`${l.stack.trim()}--compare`:l.stack=`${o}--stack`,((e,t)=>{if(t?.trim()){let i=t.trim(),r=tA(i,tS(e.itemStyle?.color));if(e.itemStyle={...e.itemStyle??{},color:r},e.color=r,"bar"===e.type){e.itemStyle={...e.itemStyle,borderColor:r};return}let s=tA(i,tS(e.lineStyle?.color));if(e.lineStyle={...e.lineStyle??{},color:s},e.color=s,e.areaStyle){let t={...e.areaStyle};t.color=((e,t)=>{if(!(!t||"object"!=typeof t||Array.isArray(t))&&"linear"===t.type&&Array.isArray(t.colorStops))return{...t,colorStops:t.colorStops.map(t=>!t||"object"!=typeof t||Array.isArray(t)?t:{...t,color:tA(e,tS(t.color))})}})(i,t.color)??tA(i,tS(t.color)),e.areaStyle=t}e.connectNulls=!1;return}if("bar"===e.type)e.itemStyle={...e.itemStyle??{},opacity:.6};else{if(e.lineStyle={...e.lineStyle??{},opacity:.6},e.itemStyle={...e.itemStyle??{},opacity:.6},e.areaStyle){let t=e.areaStyle,i="number"==typeof t.opacity?t.opacity:.3;e.areaStyle={...t,opacity:.6*i}}e.connectNulls=!1}})(l,u),l.z=Math.max((l.z??0)-1,0),w.push(l)})}let S=[...b.placeholders(),...w,...y.series];if(!S.length)return;let $=p?.getTime()??i.main.range.end??null,A=ez(_.getTime(),$,i.main.aggregation);A?.length&&A.length&&S.forEach(e=>{if("line"!==e.type||!Array.isArray(e.data))return;let t=new Map;e.data.forEach(e=>{let i=tO(e);i&&t.set(i[0],i[1])}),e.data=A.map(e=>[e,t.get(e)??null])}),o={displayEnd:$,compareDisplayEnd:$,extendMain:"raw"===i.main.aggregation,extendCompare:"raw"===i.compare.aggregation,chartTypeOf:e=>v.get(ta(e??""))?.chart_type??v.get(e??"")?.chart_type,isCompare:e=>!!e&&e.endsWith("--compare")},m=Date.now(),S.forEach(e=>{if("line"!==e.type||!e.data?.length)return;let t=(e=>{if(!Array.isArray(e))return;let t=[];for(let i of e){if(!Array.isArray(i)||"number"!=typeof i[0])return;t.push(i)}return t})(e.data);if(!t)return;let i="string"==typeof e.id?e.id:void 0,r=o.isCompare(i);if("step"===o.chartTypeOf(i))return void((e,t)=>{if(!Number.isFinite(t)||!e.length)return;let i=-1;for(let r=e.length-1;r>=0;r--){let[s,a]=e[r];if(s<=t&&"number"==typeof a){i=r;break}}if(-1===i)return;let[r,s]=e[i];if(t<=r||"number"!=typeof s)return;for(let r=i+1;r<e.length&&!(e[r][0]>t);r++)null===e[r][1]&&(e[r][1]=s);let a=e.findIndex(([e])=>e>=t);-1===a?e.push([t,s]):e[a][0]===t?e[a][1]=e[a][1]??s:e.splice(a,0,[t,s])})(t,Math.min((r?o.compareDisplayEnd:o.displayEnd)??m,m));let s=r?o.compareDisplayEnd:o.displayEnd;(r?o.extendCompare:o.extendMain)&&null!==s&&!(s<=m)&&((e,t)=>{let i=-1,r=null;for(let s=e.length-1;s>=0;s--){let[a,n]=e[s];if(!(a>t)&&"number"==typeof n){i=s,r=n;break}}if(-1===i||null===r)return;for(let s=i+1;s<e.length&&!(e[s][0]>t);s++)null===e[s][1]&&(e[s][1]=r);if(e.some(e=>1e3>=Math.abs(e[0]-t)))return;let s=e.findIndex(e=>e[0]>t);-1===s?e.push([t,r]):e.splice(s,0,[t,r])})(t,m)}),((e,t)=>{let i=e.filter(e=>"bar"===e.type);if(!i.length)return;let r=new Set(t.buckets??[]);i.forEach(e=>{e.data?.forEach(e=>{let t=tT(e);t&&r.add(t.value[0])})});let s=Array.from(r).sort((e,t)=>e-t);i.forEach(e=>{let t={...e.itemStyle??{}},i=new Map;e.data?.forEach(e=>{let r=tT(e);r&&i.set(r.value[0],{...r,[tC]:!0,itemStyle:{...t,...r.itemStyle??{}}})}),e.data=s.map(e=>i.get(e)??{value:[e,0],itemStyle:{...t,borderWidth:0,borderRadius:[0,0,0,0]}}),e.itemStyle=t,e.barMaxWidth=e.barMaxWidth??50}),s.forEach((e,r)=>{let s=new Set,a=new Set;for(let e=i.length-1;e>=0;e--){let n=i[e],o=n.data?.[r];if(!o||!Array.isArray(o.value))continue;let l=o.value[1]??0,h=n.stack??`__stack_${e}`,c={...n.itemStyle??{},...o.itemStyle??{},borderRadius:[0,0,0,0]};if(!l){c.borderWidth=0,o.itemStyle=c;continue}l>0&&!s.has(h)?(c.borderRadius=[4,4,0,0],s.add(h)):l<0&&!a.has(h)&&(c.borderRadius=[0,0,4,4],a.add(h)),tD(n,o,t),o.itemStyle=c}})})(S,{buckets:A,configById:v,valueLabelColor:r.getPropertyValue("--primary-text-color").trim()||"#000",formatValue:(t,i)=>ty(t,e,{minimumFractionDigits:i,maximumFractionDigits:i}),logger:a});let E=((e,{series:t,buckets:i,aggregation:r,displayEnd:s})=>{let a;if(null===e)return null;let n=tN(t,e);if(null===n)return null;if(i?.length&&r&&"raw"!==r&&"disabled"!==r){let e=i.indexOf(n);if(e>=0){let t=e+1<i.length?i[e+1]:eU(new Date(n),r).getTime();return{bucket:n,start:n,end:t}}}return{bucket:n,start:n,end:(a=null,t.forEach(e=>{Array.isArray(e.data)&&e.data.forEach(e=>{let t=tO(e);t&&!(t[0]<=n)&&(null===a||t[0]<a)&&(a=t[0])})}),a??s)}})(n,{series:S,buckets:A,aggregation:i.main.aggregation,displayEnd:$});E&&(l=E.bucket,S.forEach(e=>{if(e.id!==tH)if("bar"===e.type)Array.isArray(e.data)&&(e.data=e.data.map(e=>{let t,i,r=tO(e);return r&&r[0]!==l?((t=Array.isArray(e)?{value:r}:{...e,value:r}).itemStyle=tI(t.itemStyle),(i=t.label)&&(t.label={...i,opacity:.5}),t):e}));else"line"===e.type&&((e,t)=>{let i=e.lineStyle,r=e.areaStyle;if(e.lineStyle=tI(i),e.itemStyle=tI(e.itemStyle),r&&(e.areaStyle=tI(r)),tF.test(String(e.id??"")))return;let s=((e,t)=>{if(!Array.isArray(e.data))return null;for(let i of e.data){let e=tO(i);if(e&&e[0]===t)return e[1]}return null})(e,t);if(null===s)return;let a=i?.color??e.color;e.markPoint={silent:!0,symbol:"circle",symbolSize:8,label:{show:!1},animation:!1,itemStyle:a?{color:a,opacity:1}:{opacity:1},data:[{coord:[t,s]}]}})(e,l)}),S.push((({period:e,computedStyle:t})=>{let i=t.getPropertyValue("--primary-color").trim()||"#03a9f4",r=t.getPropertyValue("--secondary-text-color").trim()||"#727272",s={id:tH,name:"selection",type:"line",data:[],silent:!0,animation:!1,z:0,xAxisIndex:0,yAxisIndex:0};return null===e.end?s.markLine={silent:!0,animation:!1,symbol:"none",label:{show:!1},lineStyle:{color:r,width:1,type:"dashed"},data:[{xAxis:e.start}]}:s.markArea={silent:!0,animation:!1,itemStyle:{color:i,opacity:.16},label:{show:!1},data:[[{xAxis:e.start},{xAxis:e.end}]]},s})({period:E,computedStyle:r})));let M={xAxis:(({start:e,end:t,aggregation:i,buckets:r,fallbackEnd:s,hass:a})=>{let n={id:"primary",type:"time",min:e,max:((e,t,i,r,s)=>{if(("month"===i||"year"===i)&&r&&r.length>1){let t=r[r.length-1];if(t>e.getTime())return t}if(!t)return s??e.getTime();let a=e9(t,e),n=new Date(t);return a>2&&0===n.getHours()&&(n=eH(n,1)),a>2&&n.setMinutes(0,0,0),a>35&&n.setDate(1),a>2&&n.setHours(0),n.getTime()})(e,t,i,r,s),axisPointer:{show:!1}};return"month"===i?(n.minInterval=24192e5,n.axisLabel={formatter:e=>{let t,i,r;return i=0===(t=new Date(e)).getMonth(),r=tv(t,i?{month:"long",year:"numeric"}:{month:"long"},a),i?`{bold|${r}}`:r}}):"year"===i&&(n.minInterval=31536e6,n.axisLabel={formatter:e=>tv(new Date(e),{year:"numeric"},a)}),[n,{id:"secondary",type:"time",show:!1}]})({start:_,end:p,aggregation:i.main.aggregation,buckets:A,fallbackEnd:i.main.range.end,hass:e}),yAxis:(({axes:e,seriesConfigs:t,series:i,hass:r})=>{let s=e.find(e=>"left"===e.id),a=e.find(e=>"right"===e.id),n=!!a||t.some(e=>"right"===e.y_axis),o=(e,t)=>{let s=e?.min,a=e?.max;if(e?.center_zero)if(void 0!==a)s=-a;else{let e=((e,t)=>{let i=e.filter(e=>(e.yAxisIndex??0)===t);if(!i.length)return;let r=1/0,s=-1/0,a=new Map;if(i.forEach(e=>{e.data?.forEach(t=>{let i=tO(t);if(!i||null===i[1]||!Number.isFinite(i[1]))return;let[n,o]=i;if(!e.stack){r=Math.min(r,o),s=Math.max(s,o);return}let l=a.get(e.stack)??new Map,h=l.get(n)??{positive:0,negative:0};o>=0?h.positive+=o:h.negative+=o,l.set(n,h),a.set(e.stack,l)})}),a.forEach(e=>{e.forEach(({positive:e,negative:t})=>{r=Math.min(r,t),s=Math.max(s,e)})}),Number.isFinite(r)&&Number.isFinite(s))return{min:r,max:s}})(i,t);if(e){let t=(e=>{if(0===e)return 1;let t=10**Math.floor(Math.log10(Math.abs(e))),i=Math.abs(e)/t;return([1,1.2,1.5,2,2.5,3,4,5,6,8,10].find(e=>e>=i)??10)*t})(Math.max(Math.abs(e.min),Math.abs(e.max)));s=-t,a=t}}return{type:e?.logarithmic_scale?"log":"value",name:e?.unit,nameGap:2*!!e?.unit,nameTextStyle:{align:"left"},position:0===t?"left":"right",min:s,max:a,splitLine:{show:!e?.hide_grid},axisLabel:{formatter:e=>ty(e,r)},scale:e?.fit_y_data??!1,axisPointer:{show:!1}}},l=[o(s,0)];return n&&l.push(o(a,1)),l})({axes:t.y_axes??[],seriesConfigs:t.series,series:S,hass:e}),grid:{top:15,left:1,right:1,bottom:0,containLabel:!0},legend:{show:!1},tooltip:{show:!1,showContent:!1,axisPointer:{type:"none"}}};return{series:S,options:M,hasData:S.some(e=>e.data?.some(e=>{let t=tO(e);return!!t&&null!==t[1]})),selection:E}})({hass:this.hass,config:this._config,snapshot:i,computedStyle:this.isConnected?getComputedStyle(this):getComputedStyle(document.documentElement),darkMode:this._isDarkMode(),logger:this._logger,selectedX:this._selectedX});if(!r){this._chartData=[],this._chartOptions=void 0,this._hasData=!1,this._assembledSeries=[],this._clearSelection(),this._emitSelection(null);return}let s={start:i.periodStart.getTime(),end:i.periodEnd?.getTime()??null};this._assembledSeries=r.series,this._selection=r.selection,this._selectedX=r.selection?.bucket??null,this._selectedRange=r.selection?s:void 0,this._emitSelection(r.selection);let a=!this._renderedRange||this._renderedRange.start!==s.start||this._renderedRange.end!==s.end;if(this._hasData=r.hasData,this._chartOptions={...r.options,animation:a},!a){this._chartData=r.series;return}this._chartData=(e=r.series,(t="function"==typeof structuredClone?structuredClone(e):JSON.parse(JSON.stringify(e))).forEach(e=>{Array.isArray(e.data)&&(e.data=e.data.map(e=>Array.isArray(e)?[e[0],null===e[1]?null:0]:e&&Array.isArray(e.value)?{...e,value:[e.value[0],null===e.value[1]?null:0]}:e))}),t),void 0!==this._animationFrame&&cancelAnimationFrame(this._animationFrame),this._animationFrame=requestAnimationFrame(()=>{this._animationFrame=void 0,this._chartData=r.series,this._renderedRange=s})}_isDarkMode(){return this.hass?.themes?.darkMode===!0}_localize(e,t){let i=this.hass?.localize?.(e);return i?.trim()?i:t}render(){if(!this.hass||!this._config)return L;let e=!!this._config.title?.trim();return U`
+/******************************************************************************
+Copyright (c) Microsoft Corporation.
+
+Permission to use, copy, modify, and/or distribute this software for any
+purpose with or without fee is hereby granted.
+
+THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH
+REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY
+AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT,
+INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM
+LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR
+OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
+PERFORMANCE OF THIS SOFTWARE.
+***************************************************************************** */
+/* global Reflect, Promise, SuppressedError, Symbol, Iterator */
+
+
+function __decorate(decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+}
+
+typeof SuppressedError === "function" ? SuppressedError : function (error, suppressed, message) {
+    var e = new Error(message);
+    return e.name = "SuppressedError", e.error = error, e.suppressed = suppressed, e;
+};
+
+/**
+ * @license
+ * Copyright 2019 Google LLC
+ * SPDX-License-Identifier: BSD-3-Clause
+ */
+const t$3=window,e$5=t$3.ShadowRoot&&(void 0===t$3.ShadyCSS||t$3.ShadyCSS.nativeShadow)&&"adoptedStyleSheets"in Document.prototype&&"replace"in CSSStyleSheet.prototype,s$3=Symbol(),n$5=new WeakMap;let o$4 = class o{constructor(t,e,n){if(this._$cssResult$=true,n!==s$3)throw Error("CSSResult is not constructable. Use `unsafeCSS` or `css` instead.");this.cssText=t,this.t=e;}get styleSheet(){let t=this.o;const s=this.t;if(e$5&&void 0===t){const e=void 0!==s&&1===s.length;e&&(t=n$5.get(s)),void 0===t&&((this.o=t=new CSSStyleSheet).replaceSync(this.cssText),e&&n$5.set(s,t));}return t}toString(){return this.cssText}};const r$2=t=>new o$4("string"==typeof t?t:t+"",void 0,s$3),i$3=(t,...e)=>{const n=1===t.length?t[0]:e.reduce(((e,s,n)=>e+(t=>{if(true===t._$cssResult$)return t.cssText;if("number"==typeof t)return t;throw Error("Value passed to 'css' function must be a 'css' function result: "+t+". Use 'unsafeCSS' to pass non-literal values, but take care to ensure page security.")})(s)+t[n+1]),t[0]);return new o$4(n,t,s$3)},S$1=(s,n)=>{e$5?s.adoptedStyleSheets=n.map((t=>t instanceof CSSStyleSheet?t:t.styleSheet)):n.forEach((e=>{const n=document.createElement("style"),o=t$3.litNonce;void 0!==o&&n.setAttribute("nonce",o),n.textContent=e.cssText,s.appendChild(n);}));},c$1=e$5?t=>t:t=>t instanceof CSSStyleSheet?(t=>{let e="";for(const s of t.cssRules)e+=s.cssText;return r$2(e)})(t):t;
+
+/**
+ * @license
+ * Copyright 2017 Google LLC
+ * SPDX-License-Identifier: BSD-3-Clause
+ */var s$2;const e$4=window,r$1=e$4.trustedTypes,h$1=r$1?r$1.emptyScript:"",o$3=e$4.reactiveElementPolyfillSupport,n$4={toAttribute(t,i){switch(i){case Boolean:t=t?h$1:null;break;case Object:case Array:t=null==t?t:JSON.stringify(t);}return t},fromAttribute(t,i){let s=t;switch(i){case Boolean:s=null!==t;break;case Number:s=null===t?null:Number(t);break;case Object:case Array:try{s=JSON.parse(t);}catch(t){s=null;}}return s}},a$1=(t,i)=>i!==t&&(i==i||t==t),l$2={attribute:true,type:String,converter:n$4,reflect:false,hasChanged:a$1},d$1="finalized";let u$1 = class u extends HTMLElement{constructor(){super(),this._$Ei=new Map,this.isUpdatePending=false,this.hasUpdated=false,this._$El=null,this._$Eu();}static addInitializer(t){var i;this.finalize(),(null!==(i=this.h)&&void 0!==i?i:this.h=[]).push(t);}static get observedAttributes(){this.finalize();const t=[];return this.elementProperties.forEach(((i,s)=>{const e=this._$Ep(s,i);void 0!==e&&(this._$Ev.set(e,s),t.push(e));})),t}static createProperty(t,i=l$2){if(i.state&&(i.attribute=false),this.finalize(),this.elementProperties.set(t,i),!i.noAccessor&&!this.prototype.hasOwnProperty(t)){const s="symbol"==typeof t?Symbol():"__"+t,e=this.getPropertyDescriptor(t,s,i);void 0!==e&&Object.defineProperty(this.prototype,t,e);}}static getPropertyDescriptor(t,i,s){return {get(){return this[i]},set(e){const r=this[t];this[i]=e,this.requestUpdate(t,r,s);},configurable:true,enumerable:true}}static getPropertyOptions(t){return this.elementProperties.get(t)||l$2}static finalize(){if(this.hasOwnProperty(d$1))return  false;this[d$1]=true;const t=Object.getPrototypeOf(this);if(t.finalize(),void 0!==t.h&&(this.h=[...t.h]),this.elementProperties=new Map(t.elementProperties),this._$Ev=new Map,this.hasOwnProperty("properties")){const t=this.properties,i=[...Object.getOwnPropertyNames(t),...Object.getOwnPropertySymbols(t)];for(const s of i)this.createProperty(s,t[s]);}return this.elementStyles=this.finalizeStyles(this.styles),true}static finalizeStyles(i){const s=[];if(Array.isArray(i)){const e=new Set(i.flat(1/0).reverse());for(const i of e)s.unshift(c$1(i));}else void 0!==i&&s.push(c$1(i));return s}static _$Ep(t,i){const s=i.attribute;return  false===s?void 0:"string"==typeof s?s:"string"==typeof t?t.toLowerCase():void 0}_$Eu(){var t;this._$E_=new Promise((t=>this.enableUpdating=t)),this._$AL=new Map,this._$Eg(),this.requestUpdate(),null===(t=this.constructor.h)||void 0===t||t.forEach((t=>t(this)));}addController(t){var i,s;(null!==(i=this._$ES)&&void 0!==i?i:this._$ES=[]).push(t),void 0!==this.renderRoot&&this.isConnected&&(null===(s=t.hostConnected)||void 0===s||s.call(t));}removeController(t){var i;null===(i=this._$ES)||void 0===i||i.splice(this._$ES.indexOf(t)>>>0,1);}_$Eg(){this.constructor.elementProperties.forEach(((t,i)=>{this.hasOwnProperty(i)&&(this._$Ei.set(i,this[i]),delete this[i]);}));}createRenderRoot(){var t;const s=null!==(t=this.shadowRoot)&&void 0!==t?t:this.attachShadow(this.constructor.shadowRootOptions);return S$1(s,this.constructor.elementStyles),s}connectedCallback(){var t;void 0===this.renderRoot&&(this.renderRoot=this.createRenderRoot()),this.enableUpdating(true),null===(t=this._$ES)||void 0===t||t.forEach((t=>{var i;return null===(i=t.hostConnected)||void 0===i?void 0:i.call(t)}));}enableUpdating(t){}disconnectedCallback(){var t;null===(t=this._$ES)||void 0===t||t.forEach((t=>{var i;return null===(i=t.hostDisconnected)||void 0===i?void 0:i.call(t)}));}attributeChangedCallback(t,i,s){this._$AK(t,s);}_$EO(t,i,s=l$2){var e;const r=this.constructor._$Ep(t,s);if(void 0!==r&&true===s.reflect){const h=(void 0!==(null===(e=s.converter)||void 0===e?void 0:e.toAttribute)?s.converter:n$4).toAttribute(i,s.type);this._$El=t,null==h?this.removeAttribute(r):this.setAttribute(r,h),this._$El=null;}}_$AK(t,i){var s;const e=this.constructor,r=e._$Ev.get(t);if(void 0!==r&&this._$El!==r){const t=e.getPropertyOptions(r),h="function"==typeof t.converter?{fromAttribute:t.converter}:void 0!==(null===(s=t.converter)||void 0===s?void 0:s.fromAttribute)?t.converter:n$4;this._$El=r,this[r]=h.fromAttribute(i,t.type),this._$El=null;}}requestUpdate(t,i,s){let e=true;void 0!==t&&(((s=s||this.constructor.getPropertyOptions(t)).hasChanged||a$1)(this[t],i)?(this._$AL.has(t)||this._$AL.set(t,i),true===s.reflect&&this._$El!==t&&(void 0===this._$EC&&(this._$EC=new Map),this._$EC.set(t,s))):e=false),!this.isUpdatePending&&e&&(this._$E_=this._$Ej());}async _$Ej(){this.isUpdatePending=true;try{await this._$E_;}catch(t){Promise.reject(t);}const t=this.scheduleUpdate();return null!=t&&await t,!this.isUpdatePending}scheduleUpdate(){return this.performUpdate()}performUpdate(){var t;if(!this.isUpdatePending)return;this.hasUpdated,this._$Ei&&(this._$Ei.forEach(((t,i)=>this[i]=t)),this._$Ei=void 0);let i=false;const s=this._$AL;try{i=this.shouldUpdate(s),i?(this.willUpdate(s),null===(t=this._$ES)||void 0===t||t.forEach((t=>{var i;return null===(i=t.hostUpdate)||void 0===i?void 0:i.call(t)})),this.update(s)):this._$Ek();}catch(t){throw i=false,this._$Ek(),t}i&&this._$AE(s);}willUpdate(t){}_$AE(t){var i;null===(i=this._$ES)||void 0===i||i.forEach((t=>{var i;return null===(i=t.hostUpdated)||void 0===i?void 0:i.call(t)})),this.hasUpdated||(this.hasUpdated=true,this.firstUpdated(t)),this.updated(t);}_$Ek(){this._$AL=new Map,this.isUpdatePending=false;}get updateComplete(){return this.getUpdateComplete()}getUpdateComplete(){return this._$E_}shouldUpdate(t){return  true}update(t){ void 0!==this._$EC&&(this._$EC.forEach(((t,i)=>this._$EO(i,this[i],t))),this._$EC=void 0),this._$Ek();}updated(t){}firstUpdated(t){}};u$1[d$1]=true,u$1.elementProperties=new Map,u$1.elementStyles=[],u$1.shadowRootOptions={mode:"open"},null==o$3||o$3({ReactiveElement:u$1}),(null!==(s$2=e$4.reactiveElementVersions)&&void 0!==s$2?s$2:e$4.reactiveElementVersions=[]).push("1.6.3");
+
+/**
+ * @license
+ * Copyright 2017 Google LLC
+ * SPDX-License-Identifier: BSD-3-Clause
+ */
+var t$2;const i$2=window,s$1=i$2.trustedTypes,e$3=s$1?s$1.createPolicy("lit-html",{createHTML:t=>t}):void 0,o$2="$lit$",n$3=`lit$${(Math.random()+"").slice(9)}$`,l$1="?"+n$3,h=`<${l$1}>`,r=document,u=()=>r.createComment(""),d=t=>null===t||"object"!=typeof t&&"function"!=typeof t,c=Array.isArray,v=t=>c(t)||"function"==typeof(null==t?void 0:t[Symbol.iterator]),a="[ \t\n\f\r]",f=/<(?:(!--|\/[^a-zA-Z])|(\/?[a-zA-Z][^>\s]*)|(\/?$))/g,_=/-->/g,m=/>/g,p=RegExp(`>|${a}(?:([^\\s"'>=/]+)(${a}*=${a}*(?:[^ \t\n\f\r"'\`<>=]|("|')|))|$)`,"g"),g=/'/g,$=/"/g,y=/^(?:script|style|textarea|title)$/i,w=t=>(i,...s)=>({_$litType$:t,strings:i,values:s}),x=w(1),T=Symbol.for("lit-noChange"),A=Symbol.for("lit-nothing"),E=new WeakMap,C=r.createTreeWalker(r,129,null,false);function P(t,i){if(!Array.isArray(t)||!t.hasOwnProperty("raw"))throw Error("invalid template strings array");return void 0!==e$3?e$3.createHTML(i):i}const V=(t,i)=>{const s=t.length-1,e=[];let l,r=2===i?"<svg>":"",u=f;for(let i=0;i<s;i++){const s=t[i];let d,c,v=-1,a=0;for(;a<s.length&&(u.lastIndex=a,c=u.exec(s),null!==c);)a=u.lastIndex,u===f?"!--"===c[1]?u=_:void 0!==c[1]?u=m:void 0!==c[2]?(y.test(c[2])&&(l=RegExp("</"+c[2],"g")),u=p):void 0!==c[3]&&(u=p):u===p?">"===c[0]?(u=null!=l?l:f,v=-1):void 0===c[1]?v=-2:(v=u.lastIndex-c[2].length,d=c[1],u=void 0===c[3]?p:'"'===c[3]?$:g):u===$||u===g?u=p:u===_||u===m?u=f:(u=p,l=void 0);const w=u===p&&t[i+1].startsWith("/>")?" ":"";r+=u===f?s+h:v>=0?(e.push(d),s.slice(0,v)+o$2+s.slice(v)+n$3+w):s+n$3+(-2===v?(e.push(void 0),i):w);}return [P(t,r+(t[s]||"<?>")+(2===i?"</svg>":"")),e]};class N{constructor({strings:t,_$litType$:i},e){let h;this.parts=[];let r=0,d=0;const c=t.length-1,v=this.parts,[a,f]=V(t,i);if(this.el=N.createElement(a,e),C.currentNode=this.el.content,2===i){const t=this.el.content,i=t.firstChild;i.remove(),t.append(...i.childNodes);}for(;null!==(h=C.nextNode())&&v.length<c;){if(1===h.nodeType){if(h.hasAttributes()){const t=[];for(const i of h.getAttributeNames())if(i.endsWith(o$2)||i.startsWith(n$3)){const s=f[d++];if(t.push(i),void 0!==s){const t=h.getAttribute(s.toLowerCase()+o$2).split(n$3),i=/([.?@])?(.*)/.exec(s);v.push({type:1,index:r,name:i[2],strings:t,ctor:"."===i[1]?H:"?"===i[1]?L:"@"===i[1]?z:k});}else v.push({type:6,index:r});}for(const i of t)h.removeAttribute(i);}if(y.test(h.tagName)){const t=h.textContent.split(n$3),i=t.length-1;if(i>0){h.textContent=s$1?s$1.emptyScript:"";for(let s=0;s<i;s++)h.append(t[s],u()),C.nextNode(),v.push({type:2,index:++r});h.append(t[i],u());}}}else if(8===h.nodeType)if(h.data===l$1)v.push({type:2,index:r});else {let t=-1;for(;-1!==(t=h.data.indexOf(n$3,t+1));)v.push({type:7,index:r}),t+=n$3.length-1;}r++;}}static createElement(t,i){const s=r.createElement("template");return s.innerHTML=t,s}}function S(t,i,s=t,e){var o,n,l,h;if(i===T)return i;let r=void 0!==e?null===(o=s._$Co)||void 0===o?void 0:o[e]:s._$Cl;const u=d(i)?void 0:i._$litDirective$;return (null==r?void 0:r.constructor)!==u&&(null===(n=null==r?void 0:r._$AO)||void 0===n||n.call(r,false),void 0===u?r=void 0:(r=new u(t),r._$AT(t,s,e)),void 0!==e?(null!==(l=(h=s)._$Co)&&void 0!==l?l:h._$Co=[])[e]=r:s._$Cl=r),void 0!==r&&(i=S(t,r._$AS(t,i.values),r,e)),i}class M{constructor(t,i){this._$AV=[],this._$AN=void 0,this._$AD=t,this._$AM=i;}get parentNode(){return this._$AM.parentNode}get _$AU(){return this._$AM._$AU}u(t){var i;const{el:{content:s},parts:e}=this._$AD,o=(null!==(i=null==t?void 0:t.creationScope)&&void 0!==i?i:r).importNode(s,true);C.currentNode=o;let n=C.nextNode(),l=0,h=0,u=e[0];for(;void 0!==u;){if(l===u.index){let i;2===u.type?i=new R(n,n.nextSibling,this,t):1===u.type?i=new u.ctor(n,u.name,u.strings,this,t):6===u.type&&(i=new Z(n,this,t)),this._$AV.push(i),u=e[++h];}l!==(null==u?void 0:u.index)&&(n=C.nextNode(),l++);}return C.currentNode=r,o}v(t){let i=0;for(const s of this._$AV) void 0!==s&&(void 0!==s.strings?(s._$AI(t,s,i),i+=s.strings.length-2):s._$AI(t[i])),i++;}}class R{constructor(t,i,s,e){var o;this.type=2,this._$AH=A,this._$AN=void 0,this._$AA=t,this._$AB=i,this._$AM=s,this.options=e,this._$Cp=null===(o=null==e?void 0:e.isConnected)||void 0===o||o;}get _$AU(){var t,i;return null!==(i=null===(t=this._$AM)||void 0===t?void 0:t._$AU)&&void 0!==i?i:this._$Cp}get parentNode(){let t=this._$AA.parentNode;const i=this._$AM;return void 0!==i&&11===(null==t?void 0:t.nodeType)&&(t=i.parentNode),t}get startNode(){return this._$AA}get endNode(){return this._$AB}_$AI(t,i=this){t=S(this,t,i),d(t)?t===A||null==t||""===t?(this._$AH!==A&&this._$AR(),this._$AH=A):t!==this._$AH&&t!==T&&this._(t):void 0!==t._$litType$?this.g(t):void 0!==t.nodeType?this.$(t):v(t)?this.T(t):this._(t);}k(t){return this._$AA.parentNode.insertBefore(t,this._$AB)}$(t){this._$AH!==t&&(this._$AR(),this._$AH=this.k(t));}_(t){this._$AH!==A&&d(this._$AH)?this._$AA.nextSibling.data=t:this.$(r.createTextNode(t)),this._$AH=t;}g(t){var i;const{values:s,_$litType$:e}=t,o="number"==typeof e?this._$AC(t):(void 0===e.el&&(e.el=N.createElement(P(e.h,e.h[0]),this.options)),e);if((null===(i=this._$AH)||void 0===i?void 0:i._$AD)===o)this._$AH.v(s);else {const t=new M(o,this),i=t.u(this.options);t.v(s),this.$(i),this._$AH=t;}}_$AC(t){let i=E.get(t.strings);return void 0===i&&E.set(t.strings,i=new N(t)),i}T(t){c(this._$AH)||(this._$AH=[],this._$AR());const i=this._$AH;let s,e=0;for(const o of t)e===i.length?i.push(s=new R(this.k(u()),this.k(u()),this,this.options)):s=i[e],s._$AI(o),e++;e<i.length&&(this._$AR(s&&s._$AB.nextSibling,e),i.length=e);}_$AR(t=this._$AA.nextSibling,i){var s;for(null===(s=this._$AP)||void 0===s||s.call(this,false,true,i);t&&t!==this._$AB;){const i=t.nextSibling;t.remove(),t=i;}}setConnected(t){var i;void 0===this._$AM&&(this._$Cp=t,null===(i=this._$AP)||void 0===i||i.call(this,t));}}class k{constructor(t,i,s,e,o){this.type=1,this._$AH=A,this._$AN=void 0,this.element=t,this.name=i,this._$AM=e,this.options=o,s.length>2||""!==s[0]||""!==s[1]?(this._$AH=Array(s.length-1).fill(new String),this.strings=s):this._$AH=A;}get tagName(){return this.element.tagName}get _$AU(){return this._$AM._$AU}_$AI(t,i=this,s,e){const o=this.strings;let n=false;if(void 0===o)t=S(this,t,i,0),n=!d(t)||t!==this._$AH&&t!==T,n&&(this._$AH=t);else {const e=t;let l,h;for(t=o[0],l=0;l<o.length-1;l++)h=S(this,e[s+l],i,l),h===T&&(h=this._$AH[l]),n||(n=!d(h)||h!==this._$AH[l]),h===A?t=A:t!==A&&(t+=(null!=h?h:"")+o[l+1]),this._$AH[l]=h;}n&&!e&&this.j(t);}j(t){t===A?this.element.removeAttribute(this.name):this.element.setAttribute(this.name,null!=t?t:"");}}class H extends k{constructor(){super(...arguments),this.type=3;}j(t){this.element[this.name]=t===A?void 0:t;}}const I=s$1?s$1.emptyScript:"";class L extends k{constructor(){super(...arguments),this.type=4;}j(t){t&&t!==A?this.element.setAttribute(this.name,I):this.element.removeAttribute(this.name);}}class z extends k{constructor(t,i,s,e,o){super(t,i,s,e,o),this.type=5;}_$AI(t,i=this){var s;if((t=null!==(s=S(this,t,i,0))&&void 0!==s?s:A)===T)return;const e=this._$AH,o=t===A&&e!==A||t.capture!==e.capture||t.once!==e.once||t.passive!==e.passive,n=t!==A&&(e===A||o);o&&this.element.removeEventListener(this.name,this,e),n&&this.element.addEventListener(this.name,this,t),this._$AH=t;}handleEvent(t){var i,s;"function"==typeof this._$AH?this._$AH.call(null!==(s=null===(i=this.options)||void 0===i?void 0:i.host)&&void 0!==s?s:this.element,t):this._$AH.handleEvent(t);}}class Z{constructor(t,i,s){this.element=t,this.type=6,this._$AN=void 0,this._$AM=i,this.options=s;}get _$AU(){return this._$AM._$AU}_$AI(t){S(this,t);}}const B=i$2.litHtmlPolyfillSupport;null==B||B(N,R),(null!==(t$2=i$2.litHtmlVersions)&&void 0!==t$2?t$2:i$2.litHtmlVersions=[]).push("2.8.0");const D=(t,i,s)=>{var e,o;const n=null!==(e=null==s?void 0:s.renderBefore)&&void 0!==e?e:i;let l=n._$litPart$;if(void 0===l){const t=null!==(o=null==s?void 0:s.renderBefore)&&void 0!==o?o:null;n._$litPart$=l=new R(i.insertBefore(u(),t),t,void 0,null!=s?s:{});}return l._$AI(t),l};
+
+/**
+ * @license
+ * Copyright 2017 Google LLC
+ * SPDX-License-Identifier: BSD-3-Clause
+ */var l,o$1;class s extends u$1{constructor(){super(...arguments),this.renderOptions={host:this},this._$Do=void 0;}createRenderRoot(){var t,e;const i=super.createRenderRoot();return null!==(t=(e=this.renderOptions).renderBefore)&&void 0!==t||(e.renderBefore=i.firstChild),i}update(t){const i=this.render();this.hasUpdated||(this.renderOptions.isConnected=this.isConnected),super.update(t),this._$Do=D(i,this.renderRoot,this.renderOptions);}connectedCallback(){var t;super.connectedCallback(),null===(t=this._$Do)||void 0===t||t.setConnected(true);}disconnectedCallback(){var t;super.disconnectedCallback(),null===(t=this._$Do)||void 0===t||t.setConnected(false);}render(){return T}}s.finalized=true,s._$litElement$=true,null===(l=globalThis.litElementHydrateSupport)||void 0===l||l.call(globalThis,{LitElement:s});const n$2=globalThis.litElementPolyfillSupport;null==n$2||n$2({LitElement:s});(null!==(o$1=globalThis.litElementVersions)&&void 0!==o$1?o$1:globalThis.litElementVersions=[]).push("3.3.3");
+
+/**
+ * @license
+ * Copyright 2017 Google LLC
+ * SPDX-License-Identifier: BSD-3-Clause
+ */
+const e$2=e=>n=>"function"==typeof n?((e,n)=>(customElements.define(e,n),n))(e,n):((e,n)=>{const{kind:t,elements:s}=n;return {kind:t,elements:s,finisher(n){customElements.define(e,n);}}})(e,n);
+
+/**
+ * @license
+ * Copyright 2017 Google LLC
+ * SPDX-License-Identifier: BSD-3-Clause
+ */
+const i$1=(i,e)=>"method"===e.kind&&e.descriptor&&!("value"in e.descriptor)?{...e,finisher(n){n.createProperty(e.key,i);}}:{kind:"field",key:Symbol(),placement:"own",descriptor:{},originalKey:e.key,initializer(){"function"==typeof e.initializer&&(this[e.key]=e.initializer.call(this));},finisher(n){n.createProperty(e.key,i);}},e$1=(i,e,n)=>{e.constructor.createProperty(n,i);};function n$1(n){return (t,o)=>void 0!==o?e$1(n,t,o):i$1(n,t)}
+
+/**
+ * @license
+ * Copyright 2017 Google LLC
+ * SPDX-License-Identifier: BSD-3-Clause
+ */function t$1(t){return n$1({...t,state:true})}
+
+/**
+ * @license
+ * Copyright 2021 Google LLC
+ * SPDX-License-Identifier: BSD-3-Clause
+ */var n;null!=(null===(n=window.HTMLSlotElement)||void 0===n?void 0:n.prototype.assignedElements)?(o,n)=>o.assignedElements(n):(o,n)=>o.assignedNodes(n).filter((o=>o.nodeType===Node.ELEMENT_NODE));
+
+/**
+ * @license
+ * Copyright 2017 Google LLC
+ * SPDX-License-Identifier: BSD-3-Clause
+ */
+const t={ATTRIBUTE:1},e=t=>(...e)=>({_$litDirective$:t,values:e});class i{constructor(t){}get _$AU(){return this._$AM._$AU}_$AT(t,e,i){this._$Ct=t,this._$AM=e,this._$Ci=i;}_$AS(t,e){return this.update(t,e)}update(t,e){return this.render(...e)}}
+
+/**
+ * @license
+ * Copyright 2018 Google LLC
+ * SPDX-License-Identifier: BSD-3-Clause
+ */const o=e(class extends i{constructor(t$1){var i;if(super(t$1),t$1.type!==t.ATTRIBUTE||"class"!==t$1.name||(null===(i=t$1.strings)||void 0===i?void 0:i.length)>2)throw Error("`classMap()` can only be used in the `class` attribute and must be the only part in the attribute.")}render(t){return " "+Object.keys(t).filter((i=>t[i])).join(" ")+" "}update(i,[s]){var r,o;if(void 0===this.it){this.it=new Set,void 0!==i.strings&&(this.nt=new Set(i.strings.join(" ").split(/\s/).filter((t=>""!==t))));for(const t in s)s[t]&&!(null===(r=this.nt)||void 0===r?void 0:r.has(t))&&this.it.add(t);return this.render(s)}const e=i.element.classList;this.it.forEach((t=>{t in s||(e.remove(t),this.it.delete(t));}));for(const t in s){const i=!!s[t];i===this.it.has(t)||(null===(o=this.nt)||void 0===o?void 0:o.has(t))||(i?(e.add(t),this.it.add(t)):(e.remove(t),this.it.delete(t)));}return T}});
+
+const LEVEL_ORDER = {
+    debug: 0,
+    info: 1,
+    warn: 2,
+    error: 3,
+};
+const LOG_PREFIX = "[custom-graph-card]";
+/** Minimum level that reaches the browser console. */
+const ACTIVE_LEVEL = "warn";
+const log = (level, message, details) => {
+    if (LEVEL_ORDER[level] < LEVEL_ORDER[ACTIVE_LEVEL]) {
+        return;
+    }
+    const consoleRecord = console;
+    const write = (consoleRecord[level] ?? console.log).bind(console);
+    if (details && Object.keys(details).length) {
+        write(`${LOG_PREFIX} ${message}`, details);
+    }
+    else {
+        write(`${LOG_PREFIX} ${message}`);
+    }
+};
+/** Deduplicates repeated diagnostics so a redraw loop cannot flood the console. */
+class OnceLogger {
+    constructor(_log = log) {
+        this._log = _log;
+        this._seen = new Set();
+    }
+    warnOnce(key, message, level = "warn") {
+        if (this._seen.has(key)) {
+            return;
+        }
+        this._seen.add(key);
+        this._log(level, message);
+    }
+    reset() {
+        this._seen.clear();
+    }
+}
+
+function _typeof(o) {
+  "@babel/helpers - typeof";
+
+  return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (o) {
+    return typeof o;
+  } : function (o) {
+    return o && "function" == typeof Symbol && o.constructor === Symbol && o !== Symbol.prototype ? "symbol" : typeof o;
+  }, _typeof(o);
+}
+
+function toInteger(dirtyNumber) {
+  if (dirtyNumber === null || dirtyNumber === true || dirtyNumber === false) {
+    return NaN;
+  }
+  var number = Number(dirtyNumber);
+  if (isNaN(number)) {
+    return number;
+  }
+  return number < 0 ? Math.ceil(number) : Math.floor(number);
+}
+
+function requiredArgs(required, args) {
+  if (args.length < required) {
+    throw new TypeError(required + ' argument' + (required > 1 ? 's' : '') + ' required, but only ' + args.length + ' present');
+  }
+}
+
+/**
+ * @name toDate
+ * @category Common Helpers
+ * @summary Convert the given argument to an instance of Date.
+ *
+ * @description
+ * Convert the given argument to an instance of Date.
+ *
+ * If the argument is an instance of Date, the function returns its clone.
+ *
+ * If the argument is a number, it is treated as a timestamp.
+ *
+ * If the argument is none of the above, the function returns Invalid Date.
+ *
+ * **Note**: *all* Date arguments passed to any *date-fns* function is processed by `toDate`.
+ *
+ * @param {Date|Number} argument - the value to convert
+ * @returns {Date} the parsed date in the local time zone
+ * @throws {TypeError} 1 argument required
+ *
+ * @example
+ * // Clone the date:
+ * const result = toDate(new Date(2014, 1, 11, 11, 30, 30))
+ * //=> Tue Feb 11 2014 11:30:30
+ *
+ * @example
+ * // Convert the timestamp to date:
+ * const result = toDate(1392098430000)
+ * //=> Tue Feb 11 2014 11:30:30
+ */
+function toDate(argument) {
+  requiredArgs(1, arguments);
+  var argStr = Object.prototype.toString.call(argument);
+
+  // Clone the date
+  if (argument instanceof Date || _typeof(argument) === 'object' && argStr === '[object Date]') {
+    // Prevent the date to lose the milliseconds when passed to new Date() in IE10
+    return new Date(argument.getTime());
+  } else if (typeof argument === 'number' || argStr === '[object Number]') {
+    return new Date(argument);
+  } else {
+    if ((typeof argument === 'string' || argStr === '[object String]') && typeof console !== 'undefined') {
+      // eslint-disable-next-line no-console
+      console.warn("Starting with v2.0.0-beta.1 date-fns doesn't accept strings as date arguments. Please use `parseISO` to parse strings. See: https://github.com/date-fns/date-fns/blob/master/docs/upgradeGuide.md#string-arguments");
+      // eslint-disable-next-line no-console
+      console.warn(new Error().stack);
+    }
+    return new Date(NaN);
+  }
+}
+
+/**
+ * @name addDays
+ * @category Day Helpers
+ * @summary Add the specified number of days to the given date.
+ *
+ * @description
+ * Add the specified number of days to the given date.
+ *
+ * @param {Date|Number} date - the date to be changed
+ * @param {Number} amount - the amount of days to be added. Positive decimals will be rounded using `Math.floor`, decimals less than zero will be rounded using `Math.ceil`.
+ * @returns {Date} - the new date with the days added
+ * @throws {TypeError} - 2 arguments required
+ *
+ * @example
+ * // Add 10 days to 1 September 2014:
+ * const result = addDays(new Date(2014, 8, 1), 10)
+ * //=> Thu Sep 11 2014 00:00:00
+ */
+function addDays(dirtyDate, dirtyAmount) {
+  requiredArgs(2, arguments);
+  var date = toDate(dirtyDate);
+  var amount = toInteger(dirtyAmount);
+  if (isNaN(amount)) {
+    return new Date(NaN);
+  }
+  if (!amount) {
+    // If 0 days, no-op to avoid changing times in the hour before end of DST
+    return date;
+  }
+  date.setDate(date.getDate() + amount);
+  return date;
+}
+
+/**
+ * @name addMonths
+ * @category Month Helpers
+ * @summary Add the specified number of months to the given date.
+ *
+ * @description
+ * Add the specified number of months to the given date.
+ *
+ * @param {Date|Number} date - the date to be changed
+ * @param {Number} amount - the amount of months to be added. Positive decimals will be rounded using `Math.floor`, decimals less than zero will be rounded using `Math.ceil`.
+ * @returns {Date} the new date with the months added
+ * @throws {TypeError} 2 arguments required
+ *
+ * @example
+ * // Add 5 months to 1 September 2014:
+ * const result = addMonths(new Date(2014, 8, 1), 5)
+ * //=> Sun Feb 01 2015 00:00:00
+ */
+function addMonths(dirtyDate, dirtyAmount) {
+  requiredArgs(2, arguments);
+  var date = toDate(dirtyDate);
+  var amount = toInteger(dirtyAmount);
+  if (isNaN(amount)) {
+    return new Date(NaN);
+  }
+  if (!amount) {
+    // If 0 months, no-op to avoid changing times in the hour before end of DST
+    return date;
+  }
+  var dayOfMonth = date.getDate();
+
+  // The JS Date object supports date math by accepting out-of-bounds values for
+  // month, day, etc. For example, new Date(2020, 0, 0) returns 31 Dec 2019 and
+  // new Date(2020, 13, 1) returns 1 Feb 2021.  This is *almost* the behavior we
+  // want except that dates will wrap around the end of a month, meaning that
+  // new Date(2020, 13, 31) will return 3 Mar 2021 not 28 Feb 2021 as desired. So
+  // we'll default to the end of the desired month by adding 1 to the desired
+  // month and using a date of 0 to back up one day to the end of the desired
+  // month.
+  var endOfDesiredMonth = new Date(date.getTime());
+  endOfDesiredMonth.setMonth(date.getMonth() + amount + 1, 0);
+  var daysInMonth = endOfDesiredMonth.getDate();
+  if (dayOfMonth >= daysInMonth) {
+    // If we're already at the end of the month, then this is the correct date
+    // and we're done.
+    return endOfDesiredMonth;
+  } else {
+    // Otherwise, we now know that setting the original day-of-month value won't
+    // cause an overflow, so set the desired day-of-month. Note that we can't
+    // just set the date of `endOfDesiredMonth` because that object may have had
+    // its time changed in the unusual case where where a DST transition was on
+    // the last day of the month and its local time was in the hour skipped or
+    // repeated next to a DST transition.  So we use `date` instead which is
+    // guaranteed to still have the original time.
+    date.setFullYear(endOfDesiredMonth.getFullYear(), endOfDesiredMonth.getMonth(), dayOfMonth);
+    return date;
+  }
+}
+
+/**
+ * @name addMilliseconds
+ * @category Millisecond Helpers
+ * @summary Add the specified number of milliseconds to the given date.
+ *
+ * @description
+ * Add the specified number of milliseconds to the given date.
+ *
+ * @param {Date|Number} date - the date to be changed
+ * @param {Number} amount - the amount of milliseconds to be added. Positive decimals will be rounded using `Math.floor`, decimals less than zero will be rounded using `Math.ceil`.
+ * @returns {Date} the new date with the milliseconds added
+ * @throws {TypeError} 2 arguments required
+ *
+ * @example
+ * // Add 750 milliseconds to 10 July 2014 12:45:30.000:
+ * const result = addMilliseconds(new Date(2014, 6, 10, 12, 45, 30, 0), 750)
+ * //=> Thu Jul 10 2014 12:45:30.750
+ */
+function addMilliseconds(dirtyDate, dirtyAmount) {
+  requiredArgs(2, arguments);
+  var timestamp = toDate(dirtyDate).getTime();
+  var amount = toInteger(dirtyAmount);
+  return new Date(timestamp + amount);
+}
+
+var MILLISECONDS_IN_HOUR = 3600000;
+
+/**
+ * @name addHours
+ * @category Hour Helpers
+ * @summary Add the specified number of hours to the given date.
+ *
+ * @description
+ * Add the specified number of hours to the given date.
+ *
+ * @param {Date|Number} date - the date to be changed
+ * @param {Number} amount - the amount of hours to be added. Positive decimals will be rounded using `Math.floor`, decimals less than zero will be rounded using `Math.ceil`.
+ * @returns {Date} the new date with the hours added
+ * @throws {TypeError} 2 arguments required
+ *
+ * @example
+ * // Add 2 hours to 10 July 2014 23:00:00:
+ * const result = addHours(new Date(2014, 6, 10, 23, 0), 2)
+ * //=> Fri Jul 11 2014 01:00:00
+ */
+function addHours(dirtyDate, dirtyAmount) {
+  requiredArgs(2, arguments);
+  var amount = toInteger(dirtyAmount);
+  return addMilliseconds(dirtyDate, amount * MILLISECONDS_IN_HOUR);
+}
+
+var defaultOptions = {};
+function getDefaultOptions() {
+  return defaultOptions;
+}
+
+/**
+ * @name startOfWeek
+ * @category Week Helpers
+ * @summary Return the start of a week for the given date.
+ *
+ * @description
+ * Return the start of a week for the given date.
+ * The result will be in the local timezone.
+ *
+ * @param {Date|Number} date - the original date
+ * @param {Object} [options] - an object with options.
+ * @param {Locale} [options.locale=defaultLocale] - the locale object. See [Locale]{@link https://date-fns.org/docs/Locale}
+ * @param {0|1|2|3|4|5|6} [options.weekStartsOn=0] - the index of the first day of the week (0 - Sunday)
+ * @returns {Date} the start of a week
+ * @throws {TypeError} 1 argument required
+ * @throws {RangeError} `options.weekStartsOn` must be between 0 and 6
+ *
+ * @example
+ * // The start of a week for 2 September 2014 11:55:00:
+ * const result = startOfWeek(new Date(2014, 8, 2, 11, 55, 0))
+ * //=> Sun Aug 31 2014 00:00:00
+ *
+ * @example
+ * // If the week starts on Monday, the start of the week for 2 September 2014 11:55:00:
+ * const result = startOfWeek(new Date(2014, 8, 2, 11, 55, 0), { weekStartsOn: 1 })
+ * //=> Mon Sep 01 2014 00:00:00
+ */
+function startOfWeek(dirtyDate, options) {
+  var _ref, _ref2, _ref3, _options$weekStartsOn, _options$locale, _options$locale$optio, _defaultOptions$local, _defaultOptions$local2;
+  requiredArgs(1, arguments);
+  var defaultOptions = getDefaultOptions();
+  var weekStartsOn = toInteger((_ref = (_ref2 = (_ref3 = (_options$weekStartsOn = options === null || options === void 0 ? void 0 : options.weekStartsOn) !== null && _options$weekStartsOn !== void 0 ? _options$weekStartsOn : options === null || options === void 0 ? void 0 : (_options$locale = options.locale) === null || _options$locale === void 0 ? void 0 : (_options$locale$optio = _options$locale.options) === null || _options$locale$optio === void 0 ? void 0 : _options$locale$optio.weekStartsOn) !== null && _ref3 !== void 0 ? _ref3 : defaultOptions.weekStartsOn) !== null && _ref2 !== void 0 ? _ref2 : (_defaultOptions$local = defaultOptions.locale) === null || _defaultOptions$local === void 0 ? void 0 : (_defaultOptions$local2 = _defaultOptions$local.options) === null || _defaultOptions$local2 === void 0 ? void 0 : _defaultOptions$local2.weekStartsOn) !== null && _ref !== void 0 ? _ref : 0);
+
+  // Test if weekStartsOn is between 0 and 6 _and_ is not NaN
+  if (!(weekStartsOn >= 0 && weekStartsOn <= 6)) {
+    throw new RangeError('weekStartsOn must be between 0 and 6 inclusively');
+  }
+  var date = toDate(dirtyDate);
+  var day = date.getDay();
+  var diff = (day < weekStartsOn ? 7 : 0) + day - weekStartsOn;
+  date.setDate(date.getDate() - diff);
+  date.setHours(0, 0, 0, 0);
+  return date;
+}
+
+/**
+ * Google Chrome as of 67.0.3396.87 introduced timezones with offset that includes seconds.
+ * They usually appear for dates that denote time before the timezones were introduced
+ * (e.g. for 'Europe/Prague' timezone the offset is GMT+00:57:44 before 1 October 1891
+ * and GMT+01:00:00 after that date)
+ *
+ * Date#getTimezoneOffset returns the offset in minutes and would return 57 for the example above,
+ * which would lead to incorrect calculations.
+ *
+ * This function returns the timezone offset in milliseconds that takes seconds in account.
+ */
+function getTimezoneOffsetInMilliseconds(date) {
+  var utcDate = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate(), date.getHours(), date.getMinutes(), date.getSeconds(), date.getMilliseconds()));
+  utcDate.setUTCFullYear(date.getFullYear());
+  return date.getTime() - utcDate.getTime();
+}
+
+/**
+ * @name startOfDay
+ * @category Day Helpers
+ * @summary Return the start of a day for the given date.
+ *
+ * @description
+ * Return the start of a day for the given date.
+ * The result will be in the local timezone.
+ *
+ * @param {Date|Number} date - the original date
+ * @returns {Date} the start of a day
+ * @throws {TypeError} 1 argument required
+ *
+ * @example
+ * // The start of a day for 2 September 2014 11:55:00:
+ * const result = startOfDay(new Date(2014, 8, 2, 11, 55, 0))
+ * //=> Tue Sep 02 2014 00:00:00
+ */
+function startOfDay(dirtyDate) {
+  requiredArgs(1, arguments);
+  var date = toDate(dirtyDate);
+  date.setHours(0, 0, 0, 0);
+  return date;
+}
+
+var MILLISECONDS_IN_DAY = 86400000;
+
+/**
+ * @name differenceInCalendarDays
+ * @category Day Helpers
+ * @summary Get the number of calendar days between the given dates.
+ *
+ * @description
+ * Get the number of calendar days between the given dates. This means that the times are removed
+ * from the dates and then the difference in days is calculated.
+ *
+ * @param {Date|Number} dateLeft - the later date
+ * @param {Date|Number} dateRight - the earlier date
+ * @returns {Number} the number of calendar days
+ * @throws {TypeError} 2 arguments required
+ *
+ * @example
+ * // How many calendar days are between
+ * // 2 July 2011 23:00:00 and 2 July 2012 00:00:00?
+ * const result = differenceInCalendarDays(
+ *   new Date(2012, 6, 2, 0, 0),
+ *   new Date(2011, 6, 2, 23, 0)
+ * )
+ * //=> 366
+ * // How many calendar days are between
+ * // 2 July 2011 23:59:00 and 3 July 2011 00:01:00?
+ * const result = differenceInCalendarDays(
+ *   new Date(2011, 6, 3, 0, 1),
+ *   new Date(2011, 6, 2, 23, 59)
+ * )
+ * //=> 1
+ */
+function differenceInCalendarDays(dirtyDateLeft, dirtyDateRight) {
+  requiredArgs(2, arguments);
+  var startOfDayLeft = startOfDay(dirtyDateLeft);
+  var startOfDayRight = startOfDay(dirtyDateRight);
+  var timestampLeft = startOfDayLeft.getTime() - getTimezoneOffsetInMilliseconds(startOfDayLeft);
+  var timestampRight = startOfDayRight.getTime() - getTimezoneOffsetInMilliseconds(startOfDayRight);
+
+  // Round the number of days to the nearest integer
+  // because the number of milliseconds in a day is not constant
+  // (e.g. it's different in the day of the daylight saving time clock shift)
+  return Math.round((timestampLeft - timestampRight) / MILLISECONDS_IN_DAY);
+}
+
+var MILLISECONDS_IN_MINUTE = 60000;
+
+/**
+ * @name addMinutes
+ * @category Minute Helpers
+ * @summary Add the specified number of minutes to the given date.
+ *
+ * @description
+ * Add the specified number of minutes to the given date.
+ *
+ * @param {Date|Number} date - the date to be changed
+ * @param {Number} amount - the amount of minutes to be added. Positive decimals will be rounded using `Math.floor`, decimals less than zero will be rounded using `Math.ceil`.
+ * @returns {Date} the new date with the minutes added
+ * @throws {TypeError} 2 arguments required
+ *
+ * @example
+ * // Add 30 minutes to 10 July 2014 12:00:00:
+ * const result = addMinutes(new Date(2014, 6, 10, 12, 0), 30)
+ * //=> Thu Jul 10 2014 12:30:00
+ */
+function addMinutes(dirtyDate, dirtyAmount) {
+  requiredArgs(2, arguments);
+  var amount = toInteger(dirtyAmount);
+  return addMilliseconds(dirtyDate, amount * MILLISECONDS_IN_MINUTE);
+}
+
+/**
+ * @name addWeeks
+ * @category Week Helpers
+ * @summary Add the specified number of weeks to the given date.
+ *
+ * @description
+ * Add the specified number of week to the given date.
+ *
+ * @param {Date|Number} date - the date to be changed
+ * @param {Number} amount - the amount of weeks to be added. Positive decimals will be rounded using `Math.floor`, decimals less than zero will be rounded using `Math.ceil`.
+ * @returns {Date} the new date with the weeks added
+ * @throws {TypeError} 2 arguments required
+ *
+ * @example
+ * // Add 4 weeks to 1 September 2014:
+ * const result = addWeeks(new Date(2014, 8, 1), 4)
+ * //=> Mon Sep 29 2014 00:00:00
+ */
+function addWeeks(dirtyDate, dirtyAmount) {
+  requiredArgs(2, arguments);
+  var amount = toInteger(dirtyAmount);
+  var days = amount * 7;
+  return addDays(dirtyDate, days);
+}
+
+/**
+ * @name addYears
+ * @category Year Helpers
+ * @summary Add the specified number of years to the given date.
+ *
+ * @description
+ * Add the specified number of years to the given date.
+ *
+ * @param {Date|Number} date - the date to be changed
+ * @param {Number} amount - the amount of years to be added. Positive decimals will be rounded using `Math.floor`, decimals less than zero will be rounded using `Math.ceil`.
+ * @returns {Date} the new date with the years added
+ * @throws {TypeError} 2 arguments required
+ *
+ * @example
+ * // Add 5 years to 1 September 2014:
+ * const result = addYears(new Date(2014, 8, 1), 5)
+ * //=> Sun Sep 01 2019 00:00:00
+ */
+function addYears(dirtyDate, dirtyAmount) {
+  requiredArgs(2, arguments);
+  var amount = toInteger(dirtyAmount);
+  return addMonths(dirtyDate, amount * 12);
+}
+
+/**
+ * @name compareAsc
+ * @category Common Helpers
+ * @summary Compare the two dates and return -1, 0 or 1.
+ *
+ * @description
+ * Compare the two dates and return 1 if the first date is after the second,
+ * -1 if the first date is before the second or 0 if dates are equal.
+ *
+ * @param {Date|Number} dateLeft - the first date to compare
+ * @param {Date|Number} dateRight - the second date to compare
+ * @returns {Number} the result of the comparison
+ * @throws {TypeError} 2 arguments required
+ *
+ * @example
+ * // Compare 11 February 1987 and 10 July 1989:
+ * const result = compareAsc(new Date(1987, 1, 11), new Date(1989, 6, 10))
+ * //=> -1
+ *
+ * @example
+ * // Sort the array of dates:
+ * const result = [
+ *   new Date(1995, 6, 2),
+ *   new Date(1987, 1, 11),
+ *   new Date(1989, 6, 10)
+ * ].sort(compareAsc)
+ * //=> [
+ * //   Wed Feb 11 1987 00:00:00,
+ * //   Mon Jul 10 1989 00:00:00,
+ * //   Sun Jul 02 1995 00:00:00
+ * // ]
+ */
+function compareAsc(dirtyDateLeft, dirtyDateRight) {
+  requiredArgs(2, arguments);
+  var dateLeft = toDate(dirtyDateLeft);
+  var dateRight = toDate(dirtyDateRight);
+  var diff = dateLeft.getTime() - dateRight.getTime();
+  if (diff < 0) {
+    return -1;
+  } else if (diff > 0) {
+    return 1;
+    // Return 0 if diff is 0; return NaN if diff is NaN
+  } else {
+    return diff;
+  }
+}
+
+/**
+ * Days in 1 week.
+ *
+ * @name daysInWeek
+ * @constant
+ * @type {number}
+ * @default
+ */
+
+/**
+ * Milliseconds in 1 hour
+ *
+ * @name millisecondsInHour
+ * @constant
+ * @type {number}
+ * @default
+ */
+var millisecondsInHour = 3600000;
+
+/**
+ * @name differenceInCalendarMonths
+ * @category Month Helpers
+ * @summary Get the number of calendar months between the given dates.
+ *
+ * @description
+ * Get the number of calendar months between the given dates.
+ *
+ * @param {Date|Number} dateLeft - the later date
+ * @param {Date|Number} dateRight - the earlier date
+ * @returns {Number} the number of calendar months
+ * @throws {TypeError} 2 arguments required
+ *
+ * @example
+ * // How many calendar months are between 31 January 2014 and 1 September 2014?
+ * const result = differenceInCalendarMonths(
+ *   new Date(2014, 8, 1),
+ *   new Date(2014, 0, 31)
+ * )
+ * //=> 8
+ */
+function differenceInCalendarMonths(dirtyDateLeft, dirtyDateRight) {
+  requiredArgs(2, arguments);
+  var dateLeft = toDate(dirtyDateLeft);
+  var dateRight = toDate(dirtyDateRight);
+  var yearDiff = dateLeft.getFullYear() - dateRight.getFullYear();
+  var monthDiff = dateLeft.getMonth() - dateRight.getMonth();
+  return yearDiff * 12 + monthDiff;
+}
+
+/**
+ * @name differenceInCalendarYears
+ * @category Year Helpers
+ * @summary Get the number of calendar years between the given dates.
+ *
+ * @description
+ * Get the number of calendar years between the given dates.
+ *
+ * @param {Date|Number} dateLeft - the later date
+ * @param {Date|Number} dateRight - the earlier date
+ * @returns {Number} the number of calendar years
+ * @throws {TypeError} 2 arguments required
+ *
+ * @example
+ * // How many calendar years are between 31 December 2013 and 11 February 2015?
+ * const result = differenceInCalendarYears(
+ *   new Date(2015, 1, 11),
+ *   new Date(2013, 11, 31)
+ * )
+ * //=> 2
+ */
+function differenceInCalendarYears(dirtyDateLeft, dirtyDateRight) {
+  requiredArgs(2, arguments);
+  var dateLeft = toDate(dirtyDateLeft);
+  var dateRight = toDate(dirtyDateRight);
+  return dateLeft.getFullYear() - dateRight.getFullYear();
+}
+
+// for accurate equality comparisons of UTC timestamps that end up
+// having the same representation in local time, e.g. one hour before
+// DST ends vs. the instant that DST ends.
+function compareLocalAsc(dateLeft, dateRight) {
+  var diff = dateLeft.getFullYear() - dateRight.getFullYear() || dateLeft.getMonth() - dateRight.getMonth() || dateLeft.getDate() - dateRight.getDate() || dateLeft.getHours() - dateRight.getHours() || dateLeft.getMinutes() - dateRight.getMinutes() || dateLeft.getSeconds() - dateRight.getSeconds() || dateLeft.getMilliseconds() - dateRight.getMilliseconds();
+  if (diff < 0) {
+    return -1;
+  } else if (diff > 0) {
+    return 1;
+    // Return 0 if diff is 0; return NaN if diff is NaN
+  } else {
+    return diff;
+  }
+}
+
+/**
+ * @name differenceInDays
+ * @category Day Helpers
+ * @summary Get the number of full days between the given dates.
+ *
+ * @description
+ * Get the number of full day periods between two dates. Fractional days are
+ * truncated towards zero.
+ *
+ * One "full day" is the distance between a local time in one day to the same
+ * local time on the next or previous day. A full day can sometimes be less than
+ * or more than 24 hours if a daylight savings change happens between two dates.
+ *
+ * To ignore DST and only measure exact 24-hour periods, use this instead:
+ * `Math.floor(differenceInHours(dateLeft, dateRight)/24)|0`.
+ *
+ *
+ * @param {Date|Number} dateLeft - the later date
+ * @param {Date|Number} dateRight - the earlier date
+ * @returns {Number} the number of full days according to the local timezone
+ * @throws {TypeError} 2 arguments required
+ *
+ * @example
+ * // How many full days are between
+ * // 2 July 2011 23:00:00 and 2 July 2012 00:00:00?
+ * const result = differenceInDays(
+ *   new Date(2012, 6, 2, 0, 0),
+ *   new Date(2011, 6, 2, 23, 0)
+ * )
+ * //=> 365
+ * // How many full days are between
+ * // 2 July 2011 23:59:00 and 3 July 2011 00:01:00?
+ * const result = differenceInDays(
+ *   new Date(2011, 6, 3, 0, 1),
+ *   new Date(2011, 6, 2, 23, 59)
+ * )
+ * //=> 0
+ * // How many full days are between
+ * // 1 March 2020 0:00 and 1 June 2020 0:00 ?
+ * // Note: because local time is used, the
+ * // result will always be 92 days, even in
+ * // time zones where DST starts and the
+ * // period has only 92*24-1 hours.
+ * const result = differenceInDays(
+ *   new Date(2020, 5, 1),
+ *   new Date(2020, 2, 1)
+ * )
+//=> 92
+ */
+function differenceInDays(dirtyDateLeft, dirtyDateRight) {
+  requiredArgs(2, arguments);
+  var dateLeft = toDate(dirtyDateLeft);
+  var dateRight = toDate(dirtyDateRight);
+  var sign = compareLocalAsc(dateLeft, dateRight);
+  var difference = Math.abs(differenceInCalendarDays(dateLeft, dateRight));
+  dateLeft.setDate(dateLeft.getDate() - sign * difference);
+
+  // Math.abs(diff in full days - diff in calendar days) === 1 if last calendar day is not full
+  // If so, result must be decreased by 1 in absolute value
+  var isLastDayNotFull = Number(compareLocalAsc(dateLeft, dateRight) === -sign);
+  var result = sign * (difference - isLastDayNotFull);
+  // Prevent negative zero
+  return result === 0 ? 0 : result;
+}
+
+/**
+ * @name differenceInMilliseconds
+ * @category Millisecond Helpers
+ * @summary Get the number of milliseconds between the given dates.
+ *
+ * @description
+ * Get the number of milliseconds between the given dates.
+ *
+ * @param {Date|Number} dateLeft - the later date
+ * @param {Date|Number} dateRight - the earlier date
+ * @returns {Number} the number of milliseconds
+ * @throws {TypeError} 2 arguments required
+ *
+ * @example
+ * // How many milliseconds are between
+ * // 2 July 2014 12:30:20.600 and 2 July 2014 12:30:21.700?
+ * const result = differenceInMilliseconds(
+ *   new Date(2014, 6, 2, 12, 30, 21, 700),
+ *   new Date(2014, 6, 2, 12, 30, 20, 600)
+ * )
+ * //=> 1100
+ */
+function differenceInMilliseconds(dateLeft, dateRight) {
+  requiredArgs(2, arguments);
+  return toDate(dateLeft).getTime() - toDate(dateRight).getTime();
+}
+
+var roundingMap = {
+  ceil: Math.ceil,
+  round: Math.round,
+  floor: Math.floor,
+  trunc: function trunc(value) {
+    return value < 0 ? Math.ceil(value) : Math.floor(value);
+  } // Math.trunc is not supported by IE
+};
+
+var defaultRoundingMethod = 'trunc';
+function getRoundingMethod(method) {
+  return roundingMap[defaultRoundingMethod];
+}
+
+/**
+ * @name differenceInHours
+ * @category Hour Helpers
+ * @summary Get the number of hours between the given dates.
+ *
+ * @description
+ * Get the number of hours between the given dates.
+ *
+ * @param {Date|Number} dateLeft - the later date
+ * @param {Date|Number} dateRight - the earlier date
+ * @param {Object} [options] - an object with options.
+ * @param {String} [options.roundingMethod='trunc'] - a rounding method (`ceil`, `floor`, `round` or `trunc`)
+ * @returns {Number} the number of hours
+ * @throws {TypeError} 2 arguments required
+ *
+ * @example
+ * // How many hours are between 2 July 2014 06:50:00 and 2 July 2014 19:00:00?
+ * const result = differenceInHours(
+ *   new Date(2014, 6, 2, 19, 0),
+ *   new Date(2014, 6, 2, 6, 50)
+ * )
+ * //=> 12
+ */
+function differenceInHours(dateLeft, dateRight, options) {
+  requiredArgs(2, arguments);
+  var diff = differenceInMilliseconds(dateLeft, dateRight) / millisecondsInHour;
+  return getRoundingMethod()(diff);
+}
+
+/**
+ * @name endOfDay
+ * @category Day Helpers
+ * @summary Return the end of a day for the given date.
+ *
+ * @description
+ * Return the end of a day for the given date.
+ * The result will be in the local timezone.
+ *
+ * @param {Date|Number} date - the original date
+ * @returns {Date} the end of a day
+ * @throws {TypeError} 1 argument required
+ *
+ * @example
+ * // The end of a day for 2 September 2014 11:55:00:
+ * const result = endOfDay(new Date(2014, 8, 2, 11, 55, 0))
+ * //=> Tue Sep 02 2014 23:59:59.999
+ */
+function endOfDay(dirtyDate) {
+  requiredArgs(1, arguments);
+  var date = toDate(dirtyDate);
+  date.setHours(23, 59, 59, 999);
+  return date;
+}
+
+/**
+ * @name endOfMonth
+ * @category Month Helpers
+ * @summary Return the end of a month for the given date.
+ *
+ * @description
+ * Return the end of a month for the given date.
+ * The result will be in the local timezone.
+ *
+ * @param {Date|Number} date - the original date
+ * @returns {Date} the end of a month
+ * @throws {TypeError} 1 argument required
+ *
+ * @example
+ * // The end of a month for 2 September 2014 11:55:00:
+ * const result = endOfMonth(new Date(2014, 8, 2, 11, 55, 0))
+ * //=> Tue Sep 30 2014 23:59:59.999
+ */
+function endOfMonth(dirtyDate) {
+  requiredArgs(1, arguments);
+  var date = toDate(dirtyDate);
+  var month = date.getMonth();
+  date.setFullYear(date.getFullYear(), month + 1, 0);
+  date.setHours(23, 59, 59, 999);
+  return date;
+}
+
+/**
+ * @name isLastDayOfMonth
+ * @category Month Helpers
+ * @summary Is the given date the last day of a month?
+ *
+ * @description
+ * Is the given date the last day of a month?
+ *
+ * @param {Date|Number} date - the date to check
+ * @returns {Boolean} the date is the last day of a month
+ * @throws {TypeError} 1 argument required
+ *
+ * @example
+ * // Is 28 February 2014 the last day of a month?
+ * const result = isLastDayOfMonth(new Date(2014, 1, 28))
+ * //=> true
+ */
+function isLastDayOfMonth(dirtyDate) {
+  requiredArgs(1, arguments);
+  var date = toDate(dirtyDate);
+  return endOfDay(date).getTime() === endOfMonth(date).getTime();
+}
+
+/**
+ * @name differenceInMonths
+ * @category Month Helpers
+ * @summary Get the number of full months between the given dates.
+ *
+ * @description
+ * Get the number of full months between the given dates using trunc as a default rounding method.
+ *
+ * @param {Date|Number} dateLeft - the later date
+ * @param {Date|Number} dateRight - the earlier date
+ * @returns {Number} the number of full months
+ * @throws {TypeError} 2 arguments required
+ *
+ * @example
+ * // How many full months are between 31 January 2014 and 1 September 2014?
+ * const result = differenceInMonths(new Date(2014, 8, 1), new Date(2014, 0, 31))
+ * //=> 7
+ */
+function differenceInMonths(dirtyDateLeft, dirtyDateRight) {
+  requiredArgs(2, arguments);
+  var dateLeft = toDate(dirtyDateLeft);
+  var dateRight = toDate(dirtyDateRight);
+  var sign = compareAsc(dateLeft, dateRight);
+  var difference = Math.abs(differenceInCalendarMonths(dateLeft, dateRight));
+  var result;
+
+  // Check for the difference of less than month
+  if (difference < 1) {
+    result = 0;
+  } else {
+    if (dateLeft.getMonth() === 1 && dateLeft.getDate() > 27) {
+      // This will check if the date is end of Feb and assign a higher end of month date
+      // to compare it with Jan
+      dateLeft.setDate(30);
+    }
+    dateLeft.setMonth(dateLeft.getMonth() - sign * difference);
+
+    // Math.abs(diff in full months - diff in calendar months) === 1 if last calendar month is not full
+    // If so, result must be decreased by 1 in absolute value
+    var isLastMonthNotFull = compareAsc(dateLeft, dateRight) === -sign;
+
+    // Check for cases of one full calendar month
+    if (isLastDayOfMonth(toDate(dirtyDateLeft)) && difference === 1 && compareAsc(dirtyDateLeft, dateRight) === 1) {
+      isLastMonthNotFull = false;
+    }
+    result = sign * (difference - Number(isLastMonthNotFull));
+  }
+
+  // Prevent negative zero
+  return result === 0 ? 0 : result;
+}
+
+/**
+ * @name differenceInYears
+ * @category Year Helpers
+ * @summary Get the number of full years between the given dates.
+ *
+ * @description
+ * Get the number of full years between the given dates.
+ *
+ * @param {Date|Number} dateLeft - the later date
+ * @param {Date|Number} dateRight - the earlier date
+ * @returns {Number} the number of full years
+ * @throws {TypeError} 2 arguments required
+ *
+ * @example
+ * // How many full years are between 31 December 2013 and 11 February 2015?
+ * const result = differenceInYears(new Date(2015, 1, 11), new Date(2013, 11, 31))
+ * //=> 1
+ */
+function differenceInYears(dirtyDateLeft, dirtyDateRight) {
+  requiredArgs(2, arguments);
+  var dateLeft = toDate(dirtyDateLeft);
+  var dateRight = toDate(dirtyDateRight);
+  var sign = compareAsc(dateLeft, dateRight);
+  var difference = Math.abs(differenceInCalendarYears(dateLeft, dateRight));
+
+  // Set both dates to a valid leap year for accurate comparison when dealing
+  // with leap days
+  dateLeft.setFullYear(1584);
+  dateRight.setFullYear(1584);
+
+  // Math.abs(diff in full years - diff in calendar years) === 1 if last calendar year is not full
+  // If so, result must be decreased by 1 in absolute value
+  var isLastYearNotFull = compareAsc(dateLeft, dateRight) === -sign;
+  var result = sign * (difference - Number(isLastYearNotFull));
+  // Prevent negative zero
+  return result === 0 ? 0 : result;
+}
+
+/**
+ * @name startOfMonth
+ * @category Month Helpers
+ * @summary Return the start of a month for the given date.
+ *
+ * @description
+ * Return the start of a month for the given date.
+ * The result will be in the local timezone.
+ *
+ * @param {Date|Number} date - the original date
+ * @returns {Date} the start of a month
+ * @throws {TypeError} 1 argument required
+ *
+ * @example
+ * // The start of a month for 2 September 2014 11:55:00:
+ * const result = startOfMonth(new Date(2014, 8, 2, 11, 55, 0))
+ * //=> Mon Sep 01 2014 00:00:00
+ */
+function startOfMonth(dirtyDate) {
+  requiredArgs(1, arguments);
+  var date = toDate(dirtyDate);
+  date.setDate(1);
+  date.setHours(0, 0, 0, 0);
+  return date;
+}
+
+/**
+ * @name endOfYear
+ * @category Year Helpers
+ * @summary Return the end of a year for the given date.
+ *
+ * @description
+ * Return the end of a year for the given date.
+ * The result will be in the local timezone.
+ *
+ * @param {Date|Number} date - the original date
+ * @returns {Date} the end of a year
+ * @throws {TypeError} 1 argument required
+ *
+ * @example
+ * // The end of a year for 2 September 2014 11:55:00:
+ * const result = endOfYear(new Date(2014, 8, 2, 11, 55, 00))
+ * //=> Wed Dec 31 2014 23:59:59.999
+ */
+function endOfYear(dirtyDate) {
+  requiredArgs(1, arguments);
+  var date = toDate(dirtyDate);
+  var year = date.getFullYear();
+  date.setFullYear(year + 1, 0, 0);
+  date.setHours(23, 59, 59, 999);
+  return date;
+}
+
+/**
+ * @name startOfYear
+ * @category Year Helpers
+ * @summary Return the start of a year for the given date.
+ *
+ * @description
+ * Return the start of a year for the given date.
+ * The result will be in the local timezone.
+ *
+ * @param {Date|Number} date - the original date
+ * @returns {Date} the start of a year
+ * @throws {TypeError} 1 argument required
+ *
+ * @example
+ * // The start of a year for 2 September 2014 11:55:00:
+ * const result = startOfYear(new Date(2014, 8, 2, 11, 55, 00))
+ * //=> Wed Jan 01 2014 00:00:00
+ */
+function startOfYear(dirtyDate) {
+  requiredArgs(1, arguments);
+  var cleanDate = toDate(dirtyDate);
+  var date = new Date(0);
+  date.setFullYear(cleanDate.getFullYear(), 0, 1);
+  date.setHours(0, 0, 0, 0);
+  return date;
+}
+
+/**
+ * @name endOfHour
+ * @category Hour Helpers
+ * @summary Return the end of an hour for the given date.
+ *
+ * @description
+ * Return the end of an hour for the given date.
+ * The result will be in the local timezone.
+ *
+ * @param {Date|Number} date - the original date
+ * @returns {Date} the end of an hour
+ * @throws {TypeError} 1 argument required
+ *
+ * @example
+ * // The end of an hour for 2 September 2014 11:55:00:
+ * const result = endOfHour(new Date(2014, 8, 2, 11, 55))
+ * //=> Tue Sep 02 2014 11:59:59.999
+ */
+function endOfHour(dirtyDate) {
+  requiredArgs(1, arguments);
+  var date = toDate(dirtyDate);
+  date.setMinutes(59, 59, 999);
+  return date;
+}
+
+/**
+ * @name endOfWeek
+ * @category Week Helpers
+ * @summary Return the end of a week for the given date.
+ *
+ * @description
+ * Return the end of a week for the given date.
+ * The result will be in the local timezone.
+ *
+ * @param {Date|Number} date - the original date
+ * @param {Object} [options] - an object with options.
+ * @param {Locale} [options.locale=defaultLocale] - the locale object. See [Locale]{@link https://date-fns.org/docs/Locale}
+ * @param {0|1|2|3|4|5|6} [options.weekStartsOn=0] - the index of the first day of the week (0 - Sunday)
+ * @returns {Date} the end of a week
+ * @throws {TypeError} 1 argument required
+ * @throws {RangeError} `options.weekStartsOn` must be between 0 and 6
+ *
+ * @example
+ * // The end of a week for 2 September 2014 11:55:00:
+ * const result = endOfWeek(new Date(2014, 8, 2, 11, 55, 0))
+ * //=> Sat Sep 06 2014 23:59:59.999
+ *
+ * @example
+ * // If the week starts on Monday, the end of the week for 2 September 2014 11:55:00:
+ * const result = endOfWeek(new Date(2014, 8, 2, 11, 55, 0), { weekStartsOn: 1 })
+ * //=> Sun Sep 07 2014 23:59:59.999
+ */
+function endOfWeek(dirtyDate, options) {
+  var _ref, _ref2, _ref3, _options$weekStartsOn, _options$locale, _options$locale$optio, _defaultOptions$local, _defaultOptions$local2;
+  requiredArgs(1, arguments);
+  var defaultOptions = getDefaultOptions();
+  var weekStartsOn = toInteger((_ref = (_ref2 = (_ref3 = (_options$weekStartsOn = options === null || options === void 0 ? void 0 : options.weekStartsOn) !== null && _options$weekStartsOn !== void 0 ? _options$weekStartsOn : options === null || options === void 0 ? void 0 : (_options$locale = options.locale) === null || _options$locale === void 0 ? void 0 : (_options$locale$optio = _options$locale.options) === null || _options$locale$optio === void 0 ? void 0 : _options$locale$optio.weekStartsOn) !== null && _ref3 !== void 0 ? _ref3 : defaultOptions.weekStartsOn) !== null && _ref2 !== void 0 ? _ref2 : (_defaultOptions$local = defaultOptions.locale) === null || _defaultOptions$local === void 0 ? void 0 : (_defaultOptions$local2 = _defaultOptions$local.options) === null || _defaultOptions$local2 === void 0 ? void 0 : _defaultOptions$local2.weekStartsOn) !== null && _ref !== void 0 ? _ref : 0);
+
+  // Test if weekStartsOn is between 0 and 6 _and_ is not NaN
+  if (!(weekStartsOn >= 0 && weekStartsOn <= 6)) {
+    throw new RangeError('weekStartsOn must be between 0 and 6 inclusively');
+  }
+  var date = toDate(dirtyDate);
+  var day = date.getDay();
+  var diff = (day < weekStartsOn ? -7 : 0) + 6 - (day - weekStartsOn);
+  date.setDate(date.getDate() + diff);
+  date.setHours(23, 59, 59, 999);
+  return date;
+}
+
+/**
+ * @name startOfHour
+ * @category Hour Helpers
+ * @summary Return the start of an hour for the given date.
+ *
+ * @description
+ * Return the start of an hour for the given date.
+ * The result will be in the local timezone.
+ *
+ * @param {Date|Number} date - the original date
+ * @returns {Date} the start of an hour
+ * @throws {TypeError} 1 argument required
+ *
+ * @example
+ * // The start of an hour for 2 September 2014 11:55:00:
+ * const result = startOfHour(new Date(2014, 8, 2, 11, 55))
+ * //=> Tue Sep 02 2014 11:00:00
+ */
+function startOfHour(dirtyDate) {
+  requiredArgs(1, arguments);
+  var date = toDate(dirtyDate);
+  date.setMinutes(0, 0, 0);
+  return date;
+}
+
+/**
+ * @name subDays
+ * @category Day Helpers
+ * @summary Subtract the specified number of days from the given date.
+ *
+ * @description
+ * Subtract the specified number of days from the given date.
+ *
+ * @param {Date|Number} date - the date to be changed
+ * @param {Number} amount - the amount of days to be subtracted. Positive decimals will be rounded using `Math.floor`, decimals less than zero will be rounded using `Math.ceil`.
+ * @returns {Date} the new date with the days subtracted
+ * @throws {TypeError} 2 arguments required
+ *
+ * @example
+ * // Subtract 10 days from 1 September 2014:
+ * const result = subDays(new Date(2014, 8, 1), 10)
+ * //=> Fri Aug 22 2014 00:00:00
+ */
+function subDays(dirtyDate, dirtyAmount) {
+  requiredArgs(2, arguments);
+  var amount = toInteger(dirtyAmount);
+  return addDays(dirtyDate, -amount);
+}
+
+/**
+ * @name subMonths
+ * @category Month Helpers
+ * @summary Subtract the specified number of months from the given date.
+ *
+ * @description
+ * Subtract the specified number of months from the given date.
+ *
+ * @param {Date|Number} date - the date to be changed
+ * @param {Number} amount - the amount of months to be subtracted. Positive decimals will be rounded using `Math.floor`, decimals less than zero will be rounded using `Math.ceil`.
+ * @returns {Date} the new date with the months subtracted
+ * @throws {TypeError} 2 arguments required
+ *
+ * @example
+ * // Subtract 5 months from 1 February 2015:
+ * const result = subMonths(new Date(2015, 1, 1), 5)
+ * //=> Mon Sep 01 2014 00:00:00
+ */
+function subMonths(dirtyDate, dirtyAmount) {
+  requiredArgs(2, arguments);
+  var amount = toInteger(dirtyAmount);
+  return addMonths(dirtyDate, -amount);
+}
+
+/**
+ * @name subHours
+ * @category Hour Helpers
+ * @summary Subtract the specified number of hours from the given date.
+ *
+ * @description
+ * Subtract the specified number of hours from the given date.
+ *
+ * @param {Date|Number} date - the date to be changed
+ * @param {Number} amount - the amount of hours to be subtracted. Positive decimals will be rounded using `Math.floor`, decimals less than zero will be rounded using `Math.ceil`.
+ * @returns {Date} the new date with the hours subtracted
+ * @throws {TypeError} 2 arguments required
+ *
+ * @example
+ * // Subtract 2 hours from 11 July 2014 01:00:00:
+ * const result = subHours(new Date(2014, 6, 11, 1, 0), 2)
+ * //=> Thu Jul 10 2014 23:00:00
+ */
+function subHours(dirtyDate, dirtyAmount) {
+  requiredArgs(2, arguments);
+  var amount = toInteger(dirtyAmount);
+  return addHours(dirtyDate, -amount);
+}
+
+/** Home Assistant's recorder buckets weeks starting on Monday. */
+const WEEK_OPTIONS = { weekStartsOn: 1 };
+const MAX_BUCKETS = 200_000;
+const advanceBucket = (date, period) => {
+    switch (period) {
+        case "5minute":
+            return addMinutes(date, 5);
+        case "hour":
+            return addHours(date, 1);
+        case "day":
+            return addDays(date, 1);
+        case "week":
+            return addWeeks(date, 1);
+        case "month":
+            return addMonths(date, 1);
+        case "year":
+            return addYears(date, 1);
+        default:
+            return addHours(date, 1);
+    }
+};
+const alignBucketStart = (start, period) => {
+    const date = new Date(start);
+    switch (period) {
+        case "5minute":
+            date.setSeconds(0, 0);
+            date.setMinutes(Math.floor(date.getMinutes() / 5) * 5);
+            return date;
+        case "hour":
+            date.setMinutes(0, 0, 0);
+            return date;
+        case "day":
+            return startOfDay(date);
+        case "week":
+            return startOfWeek(date, WEEK_OPTIONS);
+        case "month":
+            return startOfMonth(date);
+        case "year":
+            return startOfYear(date);
+        default:
+            date.setMinutes(0, 0, 0);
+            return date;
+    }
+};
+/**
+ * Produces every bucket timestamp of the visible range. Line series are
+ * normalized onto this sequence so gaps stay gaps instead of being interpolated
+ * across, and bars share one common x position per bucket.
+ *
+ * Returns `undefined` when no fixed grid exists (open-ended range, raw history
+ * or disabled aggregation).
+ */
+const buildBucketSequence = (start, end, period) => {
+    if (end === null ||
+        period === undefined ||
+        period === "raw" ||
+        period === "disabled") {
+        return undefined;
+    }
+    if (end < start) {
+        return [start];
+    }
+    const buckets = [];
+    let cursor = alignBucketStart(start, period);
+    let iterations = 0;
+    while (cursor.getTime() <= end && iterations < MAX_BUCKETS) {
+        buckets.push(cursor.getTime());
+        const next = advanceBucket(cursor, period);
+        if (next.getTime() === cursor.getTime()) {
+            break;
+        }
+        cursor = next;
+        iterations += 1;
+    }
+    return buckets;
+};
+
+const DEFAULT_TIMESPAN = { mode: "energy" };
+const CALENDAR_PERIODS = [
+    "hour",
+    "day",
+    "week",
+    "month",
+    "year",
+];
+const isCalendarPeriod = (period) => CALENDAR_PERIODS.includes(period);
+const todayRange = () => ({
+    start: startOfDay(new Date()),
+    end: endOfDay(new Date()),
+});
+const normalizeCount = (count) => typeof count === "number" && Number.isInteger(count) && count >= 1 ? count : 1;
+/**
+ * Rolling windows are anchored to a rounded "now" so the range only moves when
+ * the aligned time advances - otherwise every render would refetch.
+ */
+const roundedNow = (period) => {
+    const now = new Date();
+    switch (period) {
+        case "last_60_minutes":
+        case "last_24_hours":
+            now.setSeconds(0, 0);
+            return now;
+        case "last_7_days":
+        case "last_30_days":
+            if (now.getMinutes() >= 20) {
+                now.setHours(now.getHours() + 1);
+            }
+            now.setMinutes(20, 0, 0);
+            return now;
+        case "last_12_months":
+            now.setHours(0, 0, 0, 0);
+            return now;
+        default:
+            return now;
+    }
+};
+const calendarBase = (period) => {
+    const now = new Date();
+    switch (period) {
+        case "hour":
+            return { start: startOfHour(now), end: endOfHour(now) };
+        case "day":
+            return todayRange();
+        case "week":
+            return {
+                start: startOfWeek(now, WEEK_OPTIONS),
+                end: endOfWeek(now, WEEK_OPTIONS),
+            };
+        case "month":
+            return { start: startOfMonth(now), end: endOfMonth(now) };
+        case "year":
+        default:
+            return { start: startOfYear(now), end: endOfYear(now) };
+    }
+};
+const resolveCalendarPeriod = (period, offset, count) => {
+    const base = calendarBase(period);
+    switch (period) {
+        case "hour": {
+            const endStart = addHours(base.start, offset);
+            return {
+                start: addHours(endStart, -(count - 1)),
+                end: addHours(base.end, offset),
+            };
+        }
+        case "day": {
+            const endStart = addDays(base.start, offset);
+            return {
+                start: addDays(endStart, -(count - 1)),
+                end: addDays(base.end, offset),
+            };
+        }
+        case "week": {
+            const endStart = addWeeks(base.start, offset);
+            return {
+                start: addWeeks(endStart, -(count - 1)),
+                end: addWeeks(base.end, offset),
+            };
+        }
+        case "month": {
+            const endStart = addMonths(base.start, offset);
+            return {
+                start: addMonths(endStart, -(count - 1)),
+                end: addMonths(base.end, offset),
+            };
+        }
+        case "year":
+        default: {
+            const endStart = addYears(base.start, offset);
+            return {
+                start: addYears(endStart, -(count - 1)),
+                end: addYears(base.end, offset),
+            };
+        }
+    }
+};
+const resolveRollingPeriod = (period, offset) => {
+    const now = roundedNow(period);
+    switch (period) {
+        case "last_60_minutes": {
+            const end = addHours(now, offset);
+            return { start: addMinutes(end, -60), end };
+        }
+        case "last_24_hours": {
+            const end = addDays(now, offset);
+            return { start: subHours(end, 24), end };
+        }
+        case "last_7_days": {
+            const end = addDays(now, offset);
+            return { start: subDays(end, 7), end };
+        }
+        case "last_30_days": {
+            const end = addDays(now, offset);
+            return { start: subDays(end, 30), end };
+        }
+        case "last_12_months":
+        default: {
+            const end = addMonths(now, offset);
+            return { start: subMonths(end, 12), end };
+        }
+    }
+};
+const resolveFixedPeriod = (start, end) => {
+    const startDate = start ? new Date(start) : startOfDay(new Date());
+    if (Number.isNaN(startDate.getTime())) {
+        throw new Error("Invalid start date in fixed timespan configuration");
+    }
+    const endDate = end ? new Date(end) : endOfDay(startDate);
+    if (Number.isNaN(endDate.getTime())) {
+        throw new Error("Invalid end date in fixed timespan configuration");
+    }
+    return { start: startDate, end: endDate };
+};
+/**
+ * Resolves the visible range for the configured timespan mode.
+ *
+ * `energyRange` carries the range published by the energy date picker; it is
+ * `undefined` while no picker has been found yet.
+ */
+const resolveTimespan = (timespan, energyRange) => {
+    switch (timespan.mode) {
+        case "energy":
+            return energyRange;
+        case "relative":
+            return isCalendarPeriod(timespan.period)
+                ? resolveCalendarPeriod(timespan.period, timespan.offset ?? 0, normalizeCount(timespan.count))
+                : resolveRollingPeriod(timespan.period, timespan.offset ?? 0);
+        case "fixed":
+            return resolveFixedPeriod(timespan.start, timespan.end);
+        default:
+            return undefined;
+    }
+};
+const isRollingTimespan = (timespan) => timespan.mode === "relative" && timespan.period.startsWith("last_");
+
+/** Options that exist in comparable cards but are intentionally not supported. */
+const UNSUPPORTED_CARD_OPTIONS = [
+    "hide_legend",
+    "expand_legend",
+    "legend_sort",
+    "show_tooltip",
+    "tooltip_precision",
+    "show_x_axis_pointer",
+    "show_y_axis_pointer",
+    "show_stack_sums",
+    "show_unit",
+    "color_cycle_dark",
+];
+const UNSUPPORTED_SERIES_OPTIONS = [
+    "show_in_legend",
+    "show_in_tooltip",
+    "hidden_by_default",
+    "pv_production_entity",
+];
+const warnUnsupported = (target, keys, context) => {
+    const found = keys.filter((key) => target[key] !== undefined);
+    if (found.length) {
+        log("warn", `${context} uses unsupported option(s): ${found.join(", ")}. They are ignored.`);
+    }
+};
+/**
+ * Validates a card configuration and returns it with defaults applied.
+ *
+ * Only a missing series list is fatal - everything else is reported as a
+ * warning so a single broken series cannot take down the whole dashboard.
+ */
+const normalizeConfig = (config) => {
+    if (!config.series || !Array.isArray(config.series) || !config.series.length) {
+        throw new Error("At least one series must be configured");
+    }
+    warnUnsupported(config, UNSUPPORTED_CARD_OPTIONS, "The card");
+    config.series.forEach((series, index) => {
+        if (!series) {
+            log("warn", `Series at index ${index} is empty and is ignored.`);
+            return;
+        }
+        warnUnsupported(series, UNSUPPORTED_SERIES_OPTIONS, `Series ${index}`);
+        if (series.source === "forecast") {
+            log("warn", `Series ${index} uses "source: forecast", which this card does not support. The series is skipped.`);
+        }
+        const hasStatistic = !!series.statistic_id?.trim();
+        const hasCalculation = !!series.calculation;
+        if (hasStatistic && hasCalculation) {
+            log("warn", `Series ${index} defines both statistic_id and calculation. The calculation wins.`);
+        }
+        if (!hasStatistic && !hasCalculation) {
+            log("warn", `Series ${index} defines neither statistic_id nor calculation and is skipped.`);
+        }
+        if (hasCalculation) {
+            const terms = series.calculation?.terms ?? [];
+            if (!terms.length) {
+                log("warn", `The calculation of series ${index} has no terms and is skipped.`);
+            }
+            terms.forEach((term, termIndex) => {
+                if (term.statistic_id === undefined && term.constant === undefined) {
+                    log("warn", `Calculation term ${termIndex} of series ${index} has neither statistic_id nor constant and is ignored.`);
+                }
+            });
+        }
+    });
+    return {
+        ...config,
+        timespan: config.timespan ?? DEFAULT_TIMESPAN,
+        allow_compare: config.allow_compare ?? true,
+        series: config.series.filter((series) => !!series && series.source !== "forecast"),
+    };
+};
+
+const fetchStatisticsMetadata = (hass, statisticIds) => hass.callWS({
+    type: "recorder/get_statistics_metadata",
+    statistic_ids: statisticIds,
+});
+const fetchStatistics = (hass, startTime, endTime, statisticIds, period, types) => hass.callWS({
+    type: "recorder/statistics_during_period",
+    start_time: startTime.toISOString(),
+    end_time: endTime?.toISOString(),
+    statistic_ids: statisticIds,
+    period,
+    types,
+});
+/** `true` when at least one of the requested ids returned samples. */
+const statisticsHaveData = (statistics, ids) => {
+    if (!ids.length) {
+        return true;
+    }
+    return ids.some((id) => statistics?.[id]?.length);
+};
+const maxStatisticsEnd = (statistics) => {
+    if (!statistics) {
+        return undefined;
+    }
+    let maxEnd;
+    Object.values(statistics).forEach((entries) => {
+        entries?.forEach((entry) => {
+            const end = entry.end ?? entry.start;
+            if (typeof end === "number") {
+                maxEnd = maxEnd === undefined ? end : Math.max(maxEnd, end);
+            }
+        });
+    });
+    return maxEnd;
+};
+/** Merges freshly streamed samples into an existing set, keyed by bucket end. */
+const mergeStatistics = (base, patch) => {
+    if (!base) {
+        return patch;
+    }
+    const merged = { ...base };
+    Object.entries(patch).forEach(([id, entries]) => {
+        const existing = merged[id];
+        if (!existing?.length) {
+            merged[id] = entries;
+            return;
+        }
+        const combined = [...existing];
+        const indexByKey = new Map();
+        combined.forEach((entry, idx) => {
+            indexByKey.set(entry.end ?? entry.start ?? idx, idx);
+        });
+        entries.forEach((entry) => {
+            const key = entry.end ?? entry.start;
+            const idx = indexByKey.get(key);
+            if (idx !== undefined) {
+                combined[idx] = entry;
+            }
+            else {
+                combined.push(entry);
+                indexByKey.set(key, combined.length - 1);
+            }
+        });
+        combined.sort((a, b) => (a.end ?? a.start) - (b.end ?? b.start));
+        merged[id] = combined;
+    });
+    return merged;
+};
+/**
+ * Restricts samples to the visible range. One sample before and after the range
+ * is kept so line and step charts still reach both edges of the chart.
+ */
+const trimStatisticsToRange = (statistics, start, end) => {
+    const trimmed = {};
+    Object.entries(statistics).forEach(([id, entries]) => {
+        if (!entries?.length) {
+            trimmed[id] = [];
+            return;
+        }
+        let pre;
+        let post;
+        const inRange = [];
+        entries.forEach((entry) => {
+            const entryStart = entry.start ?? entry.end;
+            const entryEnd = entry.end ?? entry.start;
+            if (entryStart === undefined || entryEnd === undefined) {
+                return;
+            }
+            if (end !== null && entryStart > end) {
+                post = post ?? entry;
+                return;
+            }
+            if (entryEnd < start) {
+                pre = entry;
+                return;
+            }
+            inRange.push(entry);
+        });
+        if (pre) {
+            inRange.unshift(pre);
+        }
+        if (post) {
+            inRange.push(post);
+        }
+        trimmed[id] = inRange;
+    });
+    return trimmed;
+};
+
+/** Binary-ish states that are rendered as 1/0 so they can be charted. */
+const BINARY_STATE_MAP = {
+    on: 1,
+    open: 1,
+    opening: 1,
+    true: 1,
+    off: 0,
+    closed: 0,
+    closing: 0,
+    false: 0,
+};
+const EMPTY_STATES = new Set(["", "unknown", "unavailable"]);
+const normalizeTimestamp = (value) => typeof value === "number" ? Math.round(value * 1000) : undefined;
+const normalizeStateValue = (raw) => {
+    const key = raw.trim().toLowerCase();
+    if (key in BINARY_STATE_MAP) {
+        return BINARY_STATE_MAP[key];
+    }
+    if (EMPTY_STATES.has(key)) {
+        return null;
+    }
+    const numeric = Number(raw);
+    return Number.isFinite(numeric) ? numeric : null;
+};
+const fetchRawHistoryStates = (hass, startTime, endTime, entityIds, options) => {
+    const payload = {
+        type: "history/history_during_period",
+        start_time: startTime.toISOString(),
+        minimal_response: true,
+        no_attributes: true,
+    };
+    if (endTime) {
+        payload.end_time = endTime.toISOString();
+    }
+    if (options?.significant_changes_only !== undefined) {
+        payload.significant_changes_only = options.significant_changes_only;
+    }
+    if (entityIds.length) {
+        payload.entity_ids = entityIds;
+    }
+    return hass.callWS(payload);
+};
+const subscribeRawHistoryStream = (hass, startTime, entityIds, onMessage, options) => {
+    const params = {
+        type: "history/stream",
+        entity_ids: entityIds,
+        start_time: startTime.toISOString(),
+        minimal_response: true,
+        no_attributes: true,
+    };
+    if (options?.significant_changes_only !== undefined) {
+        params.significant_changes_only = options.significant_changes_only;
+    }
+    return hass.connection.subscribeMessage(onMessage, params);
+};
+/**
+ * Projects recorder history states onto the statistics shape so the rest of the
+ * card can treat raw history exactly like an aggregated series.
+ */
+const historyStatesToStatistics = (history) => {
+    const statistics = {};
+    Object.entries(history).forEach(([entityId, states]) => {
+        if (!Array.isArray(states) || !states.length) {
+            statistics[entityId] = [];
+            return;
+        }
+        const sorted = [...states].sort((a, b) => (a.lc ?? a.lu ?? 0) - (b.lc ?? b.lu ?? 0));
+        const warned = new Set();
+        statistics[entityId] = sorted.map((entry) => {
+            const timestamp = normalizeTimestamp(entry.lc ?? entry.lu) ?? Date.now();
+            const numeric = normalizeStateValue(entry.s);
+            const normalizedState = entry.s.trim().toLowerCase();
+            if (numeric === null &&
+                !EMPTY_STATES.has(normalizedState) &&
+                !warned.has(normalizedState)) {
+                warned.add(normalizedState);
+                log("warn", `Raw history for "${entityId}" contains the non-numeric state "${entry.s}". It is rendered as a gap.`);
+            }
+            const value = {
+                start: timestamp,
+                end: timestamp,
+                change: numeric,
+                sum: numeric,
+                mean: numeric,
+                min: numeric,
+                max: numeric,
+                state: numeric,
+            };
+            return value;
+        });
+    });
+    return statistics;
+};
+
+const HOUR_MS$1 = 60 * 60 * 1000;
+const FIVE_MINUTES_MS = 5 * 60 * 1000;
+/**
+ * Time window of the 5-minute query that backs the current-hour estimate. The
+ * previous hour is included as well, because recorder may not have published
+ * its aggregate yet either.
+ */
+const computeLiveHourWindow = (periodStart, periodEnd) => {
+    const now = new Date();
+    const nowMs = now.getTime();
+    const currentHourStart = startOfHour(now).getTime();
+    const previousHourStart = subHours(new Date(currentHourStart), 1).getTime();
+    const periodStartMs = periodStart?.getTime();
+    const fetchStart = Math.max(previousHourStart, periodStartMs ?? previousHourStart);
+    if (nowMs <= fetchStart) {
+        return undefined;
+    }
+    return {
+        fetchStart,
+        fetchEnd: nowMs,
+        currentHourStart,
+        previousHourStart,
+        periodStartMs,
+        periodEndMs: periodEnd?.getTime(),
+        nowMs,
+    };
+};
+const hourIsVisible = (hourStart, periodStartMs, periodEndMs) => {
+    const hourEnd = hourStart + HOUR_MS$1;
+    if (periodEndMs !== undefined && periodEndMs <= hourStart) {
+        return false;
+    }
+    if (periodStartMs !== undefined && periodStartMs >= hourEnd) {
+        return false;
+    }
+    return true;
+};
+/** Rolls up 5-minute samples into a single hourly sample. */
+const aggregateToHour = (entries, hourStart, hourEnd) => {
+    const relevant = entries.filter((entry) => entry.start >= hourStart && entry.start < hourEnd);
+    if (!relevant.length) {
+        return undefined;
+    }
+    let changeTotal = 0;
+    let sumTotal = 0;
+    let hasChange = false;
+    let hasSum = false;
+    let meanWeighted = 0;
+    let meanWeight = 0;
+    let minValue = null;
+    let maxValue = null;
+    let lastState = null;
+    relevant.forEach((entry) => {
+        const entryEnd = entry.end ?? entry.start + FIVE_MINUTES_MS;
+        const duration = Math.max(0, entryEnd - entry.start);
+        if (typeof entry.change === "number" && Number.isFinite(entry.change)) {
+            changeTotal += entry.change;
+            hasChange = true;
+        }
+        if (typeof entry.sum === "number" && Number.isFinite(entry.sum)) {
+            sumTotal += entry.sum;
+            hasSum = true;
+        }
+        if (typeof entry.min === "number" && Number.isFinite(entry.min)) {
+            minValue = minValue === null ? entry.min : Math.min(minValue, entry.min);
+        }
+        if (typeof entry.max === "number" && Number.isFinite(entry.max)) {
+            maxValue = maxValue === null ? entry.max : Math.max(maxValue, entry.max);
+        }
+        const meanCandidate = typeof entry.mean === "number" && Number.isFinite(entry.mean)
+            ? entry.mean
+            : typeof entry.state === "number" && Number.isFinite(entry.state)
+                ? entry.state
+                : undefined;
+        if (meanCandidate !== undefined && duration > 0) {
+            meanWeighted += meanCandidate * duration;
+            meanWeight += duration;
+        }
+        if (typeof entry.state === "number" && Number.isFinite(entry.state)) {
+            lastState = entry.state;
+        }
+    });
+    const aggregated = { start: hourStart, end: hourEnd };
+    if (hasChange) {
+        aggregated.change = changeTotal;
+    }
+    if (hasSum) {
+        aggregated.sum = sumTotal;
+    }
+    if (minValue !== null) {
+        aggregated.min = minValue;
+    }
+    if (maxValue !== null) {
+        aggregated.max = maxValue;
+    }
+    if (meanWeight > 0) {
+        aggregated.mean = meanWeighted / meanWeight;
+    }
+    else if (lastState !== null) {
+        aggregated.mean = lastState;
+    }
+    if (lastState !== null) {
+        aggregated.state = lastState;
+    }
+    return aggregated;
+};
+/**
+ * Builds hourly samples for the hours recorder has not finalized yet. Hours
+ * that already have a complete aggregate are left untouched.
+ */
+const buildLiveHourPatch = (base, fiveMinuteStats, window, statisticIds) => {
+    const hours = [];
+    if (hourIsVisible(window.currentHourStart, window.periodStartMs, window.periodEndMs)) {
+        hours.push(window.currentHourStart);
+    }
+    if (window.previousHourStart >= window.fetchStart &&
+        hourIsVisible(window.previousHourStart, window.periodStartMs, window.periodEndMs)) {
+        hours.push(window.previousHourStart);
+    }
+    if (!hours.length) {
+        return undefined;
+    }
+    const patch = {};
+    let hasValues = false;
+    statisticIds.forEach((statisticId) => {
+        const entries = fiveMinuteStats[statisticId] ?? [];
+        const baseEntries = base[statisticId] ?? [];
+        const perId = [];
+        hours.forEach((hourStart) => {
+            const hourEnd = Math.min(hourStart + HOUR_MS$1, window.periodEndMs ?? hourStart + HOUR_MS$1, window.nowMs);
+            const existing = baseEntries.find((entry) => Math.abs(entry.start - hourStart) < 30_000);
+            if (hourStart === window.currentHourStart) {
+                const complete = existing && existing.end >= hourStart + 59 * 60 * 1000;
+                if (complete) {
+                    return;
+                }
+            }
+            else if (existing) {
+                return;
+            }
+            const aggregated = aggregateToHour(entries, hourStart, hourEnd);
+            if (aggregated) {
+                perId.push(aggregated);
+            }
+        });
+        if (perId.length) {
+            perId.sort((a, b) => a.start - b.start);
+            patch[statisticId] = perId;
+            hasValues = true;
+        }
+    });
+    return hasValues ? patch : undefined;
+};
+/** Replaces the patched hours inside a statistics set. */
+const applyLiveHourPatch = (base, patch) => {
+    const updated = { ...base };
+    Object.entries(patch).forEach(([statisticId, values]) => {
+        if (!values?.length) {
+            return;
+        }
+        const patchedStarts = new Set(values.map((item) => item.start));
+        const existing = (updated[statisticId] ?? []).filter((entry) => !patchedStarts.has(entry.start));
+        updated[statisticId] = [...existing, ...values].sort((a, b) => a.start - b.start);
+    });
+    return updated;
+};
+
+const POLL_INTERVAL_MS = 200;
+const RETRY_INTERVAL_MS = 1000;
+const MAX_ATTEMPTS = 50;
+const getCollectionKey = (hass, collectionKey) => {
+    if (collectionKey) {
+        return `_${collectionKey}`;
+    }
+    // Home Assistant 2026.4 scopes the default collection per dashboard panel.
+    return hass.config.version < "2026.4" ? "_energy" : `_energy_${hass.panelUrl}`;
+};
+const findCollection = (hass, key) => {
+    const connection = hass.connection;
+    const candidate = connection?.[key];
+    return candidate && typeof candidate.subscribe === "function"
+        ? candidate
+        : undefined;
+};
+/**
+ * Binds to the `energy-date-selection` collection of the dashboard.
+ *
+ * The collection is created by the date picker card, which may render after
+ * this card, so the binding retries for a while. When the picker never appears,
+ * `onUnavailable` lets the caller fall back to a default range.
+ */
+class EnergyCollectionBinding {
+    constructor(_onData, _onUnavailable) {
+        this._onData = _onData;
+        this._onUnavailable = _onUnavailable;
+        this._reportedUnavailable = false;
+    }
+    connect(hass, collectionKey) {
+        this.disconnect();
+        this._attach(hass, getCollectionKey(hass, collectionKey), 0);
+    }
+    disconnect() {
+        if (this._pollHandle) {
+            window.clearTimeout(this._pollHandle);
+            this._pollHandle = undefined;
+        }
+        if (this._unsubscribe) {
+            this._unsubscribe();
+            this._unsubscribe = undefined;
+        }
+        this._reportedUnavailable = false;
+    }
+    _attach(hass, key, attempt) {
+        const collection = findCollection(hass, key);
+        if (collection) {
+            this._reportedUnavailable = false;
+            this._unsubscribe = collection.subscribe((data) => this._onData(data));
+            return;
+        }
+        if (attempt >= MAX_ATTEMPTS) {
+            if (!this._reportedUnavailable) {
+                this._reportedUnavailable = true;
+                log("warn", "No energy date selection found on this dashboard. Falling back to the default range.");
+                this._onUnavailable();
+            }
+            this._pollHandle = window.setTimeout(() => this._attach(hass, key, MAX_ATTEMPTS), RETRY_INTERVAL_MS);
+            return;
+        }
+        this._pollHandle = window.setTimeout(() => this._attach(hass, key, attempt + 1), POLL_INTERVAL_MS);
+    }
+}
+
+/**
+ * Mirrors the interval the core energy cards pick for a given range length.
+ */
+const deriveAutoPeriod = (start, end) => {
+    const effectiveEnd = end ?? new Date();
+    const hours = Math.max(differenceInHours(effectiveEnd, start), 0);
+    if (hours <= 2) {
+        return "5minute";
+    }
+    const days = Math.max(differenceInDays(effectiveEnd, start), 0);
+    if (days > 35) {
+        return "month";
+    }
+    if (days > 2) {
+        return "day";
+    }
+    return "hour";
+};
+/** Classifies a range into the button the energy date picker would have used. */
+const getEnergyPickerRange = (start, end) => {
+    const effectiveEnd = end ?? new Date();
+    const hours = Math.max(differenceInHours(effectiveEnd, start), 0);
+    const days = Math.max(differenceInDays(effectiveEnd, start), 0);
+    if (hours <= 6) {
+        return "hour";
+    }
+    if (days <= 1) {
+        return "day";
+    }
+    if (days <= 7) {
+        return "week";
+    }
+    if (days <= 35) {
+        return "month";
+    }
+    return "year";
+};
+/**
+ * Builds the ordered list of intervals to try: the configured override first,
+ * then the automatic choice, then the configured fallback. Every entry after a
+ * `disabled` target is dropped, because `disabled` means "do not query at all".
+ */
+const resolveAggregationPlan = (start, end, aggregation, usesEnergyPicker) => {
+    const auto = deriveAutoPeriod(start, end);
+    const plan = [];
+    let stopped = false;
+    const push = (target) => {
+        if (stopped || !target) {
+            return;
+        }
+        if (!plan.includes(target)) {
+            plan.push(target);
+        }
+        if (target === "disabled") {
+            stopped = true;
+        }
+    };
+    if (usesEnergyPicker) {
+        push(aggregation?.energy_picker?.[getEnergyPickerRange(start, end)]);
+    }
+    else {
+        push(aggregation?.manual);
+    }
+    push(auto);
+    push(aggregation?.fallback);
+    return plan.length ? plan : [auto];
+};
+
+/**
+ * Returns the wall-clock time of the next refresh for an interval. The offsets
+ * mirror Home Assistant core: recorder needs a moment after a bucket closes
+ * before the aggregate is available.
+ */
+const getNextRefreshTime = (aggregation) => {
+    if (aggregation === "disabled") {
+        return Number.POSITIVE_INFINITY;
+    }
+    const now = new Date();
+    if (aggregation === "raw") {
+        return now.getTime() + 60 * 1000;
+    }
+    const next = new Date(now);
+    switch (aggregation) {
+        case "5minute": {
+            // Next 5-minute mark plus a 2 minute buffer.
+            next.setMinutes(Math.ceil((now.getMinutes() + 1) / 5) * 5, 0, 0);
+            if (next <= now) {
+                next.setMinutes(next.getMinutes() + 5);
+            }
+            next.setMinutes(next.getMinutes() + 2);
+            return next.getTime();
+        }
+        case "hour": {
+            next.setHours(next.getHours() + 1, 20, 0, 0);
+            if (next <= now) {
+                next.setHours(next.getHours() + 1);
+            }
+            return next.getTime();
+        }
+        case "day": {
+            next.setDate(next.getDate() + 1);
+            next.setHours(0, 30, 0, 0);
+            if (next <= now) {
+                next.setDate(next.getDate() + 1);
+            }
+            return next.getTime();
+        }
+        case "week":
+        case "month":
+        case "year":
+        default:
+            return now.getTime() + 7 * 24 * 60 * 60 * 1000 + 60 * 60 * 1000;
+    }
+};
+
+const DEFAULT_STAT_TYPE = "change";
+const clampValue = (value, min, max) => {
+    let result = value;
+    if (min !== undefined) {
+        result = Math.max(result, min);
+    }
+    if (max !== undefined) {
+        result = Math.min(result, max);
+    }
+    return result;
+};
+/** Applies `multiply`, `add` and the clip bounds in the documented order. */
+const transformValue = (value, transform) => clampValue(value * (transform.multiply ?? 1) + (transform.add ?? 0), transform.clip_min, transform.clip_max);
+const getSeriesSource = (series) => {
+    if (series.source) {
+        return series.source;
+    }
+    return series.calculation ? "calculation" : "statistic";
+};
+const getStatisticId = (series) => {
+    const id = series.statistic_id?.trim();
+    return id ? id : undefined;
+};
+/** Stable key of a calculation series inside the computed-data maps. */
+const calculationKey = (index) => `calculation_${index}`;
+const isCompareId = (id) => id.endsWith("--compare");
+const toCompareId = (id) => `${id}--compare`;
+const toBaseId = (id) => isCompareId(id) ? id.slice(0, -"--compare".length) : id;
+
+const resolveTermValue = (term, timestamp) => {
+    const direct = term.byTimestamp?.get(timestamp);
+    if (direct && direct.value !== null) {
+        term.lastKnown = direct;
+        return direct;
+    }
+    const timeline = term.timeline;
+    if (!timeline?.length) {
+        return undefined;
+    }
+    // The timeline is walked once per series: timestamps are processed in
+    // ascending order, so the cursor never has to move backwards.
+    while (term.cursor < timeline.length && timeline[term.cursor].timestamp <= timestamp) {
+        const candidate = timeline[term.cursor];
+        if (candidate.value !== null) {
+            term.lastKnown = candidate;
+        }
+        term.cursor += 1;
+    }
+    return term.lastKnown;
+};
+const buildResolvedTerms = (calculation, series, statistics, timestamps, logger, seriesLabel) => calculation.terms.map((term) => {
+    const statisticId = term.statistic_id?.trim();
+    if (!statisticId) {
+        return {
+            term,
+            cursor: 0,
+            constant: transformValue(term.constant ?? 0, term),
+        };
+    }
+    const statKey = term.stat_type ?? series.stat_type ?? DEFAULT_STAT_TYPE;
+    const raw = statistics[statisticId];
+    const byTimestamp = new Map();
+    const timeline = [];
+    if (!raw?.length) {
+        logger.warnOnce(`calc-missing-${seriesLabel}-${statisticId}`, `Calculation series "${seriesLabel}" references "${statisticId}" but no data was loaded. Missing values are treated as zero.`, "debug");
+    }
+    else {
+        raw.forEach((entry) => {
+            const timestamp = entry.end ?? entry.start;
+            if (timestamp === undefined) {
+                return;
+            }
+            const rawValue = entry[statKey];
+            const numeric = typeof rawValue === "number" && Number.isFinite(rawValue)
+                ? transformValue(rawValue, term)
+                : null;
+            const sample = {
+                timestamp,
+                value: numeric,
+                start: entry.start,
+                end: entry.end,
+            };
+            byTimestamp.set(timestamp, sample);
+            timeline.push(sample);
+            timestamps.add(timestamp);
+        });
+        timeline.sort((a, b) => a.timestamp - b.timestamp);
+    }
+    return {
+        term,
+        byTimestamp,
+        timeline: timeline.length ? timeline : undefined,
+        cursor: 0,
+    };
+});
+/**
+ * Synthesizes timestamps for calculations that only consist of constants, so a
+ * reference line spans the whole visible range instead of collapsing to a point.
+ */
+const constantTimestamps = (context, statistics) => {
+    if (!context.start) {
+        return [];
+    }
+    const seen = new Set();
+    const add = (value) => {
+        if (typeof value === "number" && Number.isFinite(value)) {
+            seen.add(value);
+        }
+    };
+    const startTs = context.start.getTime();
+    const endTs = context.end?.getTime();
+    add(startTs);
+    add(endTs);
+    if (context.period && context.end) {
+        buildBucketSequence(startTs, context.end.getTime(), context.period)?.forEach(add);
+    }
+    Object.values(statistics).forEach((entries) => {
+        entries?.forEach((entry) => {
+            add(entry.start);
+            add(entry.end);
+        });
+    });
+    if (seen.size === 1 && endTs === undefined) {
+        add(startTs + 1);
+    }
+    return Array.from(seen).sort((a, b) => a - b);
+};
+/**
+ * Evaluates a calculation series into statistics-shaped samples.
+ *
+ * Terms are applied sequentially starting from `initial_value`. Every statistic
+ * bucket contributed by any term becomes one output point; terms that have no
+ * sample at that exact timestamp reuse their last known value (and count as
+ * zero until they have one).
+ */
+const evaluateCalculation = (series, calculation, statistics, seriesIndex, context, logger) => {
+    if (!calculation.terms?.length) {
+        return undefined;
+    }
+    const seriesLabel = series.name ?? series.statistic_id ?? `series_${seriesIndex}`;
+    const timestampSet = new Set();
+    const terms = buildResolvedTerms(calculation, series, statistics, timestampSet, logger, seriesLabel);
+    const timestamps = Array.from(timestampSet).sort((a, b) => a - b);
+    const constantOnly = !timestamps.length && terms.every((item) => item.constant !== undefined);
+    if (!timestamps.length && !constantOnly) {
+        return undefined;
+    }
+    const initialValue = calculation.initial_value ?? 0;
+    const values = [];
+    const evaluateTimestamp = (timestamp) => {
+        let total = initialValue;
+        let start;
+        let end;
+        let valid = true;
+        for (const item of terms) {
+            if (!valid) {
+                break;
+            }
+            let termValue;
+            if (item.constant !== undefined) {
+                termValue = item.constant;
+            }
+            else {
+                const resolved = resolveTermValue(item, timestamp);
+                if (resolved && resolved.value !== null) {
+                    start = start ?? resolved.start ?? timestamp;
+                    end = end ?? resolved.end ?? timestamp;
+                    termValue = resolved.value;
+                }
+                else {
+                    termValue = 0;
+                    logger.warnOnce(`calc-value-${seriesLabel}-${item.term.statistic_id}`, `Missing value for "${item.term.statistic_id}" in calculation series "${seriesLabel}". Using 0.`, "debug");
+                }
+            }
+            switch (item.term.operation ?? "add") {
+                case "subtract":
+                    total -= termValue;
+                    break;
+                case "multiply":
+                    total *= termValue;
+                    break;
+                case "divide":
+                    if (termValue === 0) {
+                        valid = false;
+                        logger.warnOnce(`calc-div0-${seriesLabel}`, `Division by zero in calculation series "${seriesLabel}". Affected points are rendered as gaps.`);
+                    }
+                    else {
+                        total /= termValue;
+                    }
+                    break;
+                case "add":
+                default:
+                    total += termValue;
+                    break;
+            }
+        }
+        const numericTotal = valid && Number.isFinite(total) ? total : null;
+        values.push({
+            start: start ?? timestamp,
+            end: end ?? timestamp,
+            change: numericTotal,
+            sum: numericTotal,
+            mean: numericTotal,
+            min: numericTotal,
+            max: numericTotal,
+            state: numericTotal,
+        });
+    };
+    if (timestamps.length) {
+        timestamps.forEach(evaluateTimestamp);
+    }
+    else {
+        constantTimestamps(context, statistics).forEach(evaluateTimestamp);
+    }
+    return { values };
+};
+
+const UNITS = ["hour", "day", "week", "month", "year"];
+/** Ignores incomplete or zero offsets so they behave like "no offset". */
+const normalizeTimeOffset = (offset) => {
+    if (!offset) {
+        return undefined;
+    }
+    if (!Number.isInteger(offset.value) || offset.value === 0) {
+        return undefined;
+    }
+    if (!UNITS.includes(offset.unit)) {
+        return undefined;
+    }
+    return { value: offset.value, unit: offset.unit };
+};
+const getSeriesTimeOffset = (series) => normalizeTimeOffset(series.time_offset);
+/** `direction: 1` moves into the source range, `-1` back into the display range. */
+const shiftDate = (date, offset, direction) => {
+    const amount = offset.value * direction;
+    switch (offset.unit) {
+        case "hour":
+            return addHours(date, amount);
+        case "day":
+            return addDays(date, amount);
+        case "week":
+            return addWeeks(date, amount);
+        case "month":
+            return addMonths(date, amount);
+        case "year":
+            return addYears(date, amount);
+        default:
+            return date;
+    }
+};
+const shiftTimestamp = (timestamp, offset, direction) => shiftDate(new Date(timestamp), offset, direction).getTime();
+/** Projects source-range samples back onto the visible range. */
+const shiftStatisticValues = (values, offset) => values.map((entry) => ({
+    ...entry,
+    start: shiftTimestamp(entry.start, offset, -1),
+    end: shiftTimestamp(entry.end, offset, -1),
+}));
+/** Statistic id used for the shifted copy of a series inside the chart model. */
+const shiftedStatisticId = (index, statisticId) => `__time_offset_${index}__${statisticId}`;
+
+class TimeoutError extends Error {
+    constructor(message) {
+        super(message);
+        this.name = "TimeoutError";
+    }
+}
+const withTimeout = (promise, timeoutMs, context) => {
+    let handle;
+    const timeout = new Promise((_, reject) => {
+        handle = window.setTimeout(() => reject(new TimeoutError(`${context} timed out after ${timeoutMs} ms`)), timeoutMs);
+    });
+    return Promise.race([promise, timeout]).finally(() => {
+        if (handle !== undefined) {
+            window.clearTimeout(handle);
+        }
+    });
+};
+/**
+ * Debounces and serializes the loads of one target.
+ *
+ * While a request is running, further requests are collapsed into a single
+ * queued rerun. While the dashboard is hidden, requests are parked and replayed
+ * once it becomes visible again.
+ */
+class FetchQueue {
+    constructor(_isActive, _run) {
+        this._isActive = _isActive;
+        this._run = _run;
+        this._entries = new Map();
+        this._parked = new Set();
+    }
+    schedule(key, delayMs = 500) {
+        const entry = this._entry(key);
+        if (!this._isActive()) {
+            this._clearTimer(entry);
+            entry.queued = true;
+            this._parked.add(key);
+            return;
+        }
+        if (entry.inFlight) {
+            this._clearTimer(entry);
+            entry.queued = true;
+            return;
+        }
+        this._clearTimer(entry);
+        entry.timeout = window.setTimeout(() => {
+            entry.timeout = undefined;
+            if (!this._isActive()) {
+                entry.queued = true;
+                this._parked.add(key);
+                return;
+            }
+            void this._execute(key, entry);
+        }, delayMs);
+    }
+    isRunning(key) {
+        return this._entry(key).inFlight;
+    }
+    /** Keys that were requested while the queue was inactive. */
+    takeParked() {
+        const parked = Array.from(this._parked);
+        this._parked.clear();
+        return parked;
+    }
+    pause() {
+        this._entries.forEach((entry) => this._clearTimer(entry));
+    }
+    dispose() {
+        this._entries.forEach((entry) => {
+            this._clearTimer(entry);
+            entry.inFlight = false;
+            entry.queued = false;
+        });
+        this._parked.clear();
+    }
+    async _execute(key, entry) {
+        entry.inFlight = true;
+        entry.queued = false;
+        try {
+            await this._run(key);
+        }
+        finally {
+            entry.inFlight = false;
+            if (entry.queued) {
+                entry.queued = false;
+                this.schedule(key);
+            }
+        }
+    }
+    _entry(key) {
+        let entry = this._entries.get(key);
+        if (!entry) {
+            entry = { inFlight: false, queued: false };
+            this._entries.set(key, entry);
+        }
+        return entry;
+    }
+    _clearTimer(entry) {
+        if (entry.timeout) {
+            window.clearTimeout(entry.timeout);
+            entry.timeout = undefined;
+        }
+    }
+}
+
+const FETCH_TIMEOUT_MS = 60_000;
+const RAW_DELTA_OVERLAP_MS = 60_000;
+const VISIBILITY_RESUME_DELAY_MS = 200;
+const LIVE_HOUR_MIN_DELAY_MS = 30_000;
+const emptyTargetState = () => ({
+    metadata: {},
+    calculated: new Map(),
+});
+/**
+ * Owns all data acquisition for the card: it resolves the visible range, keeps
+ * it in sync with the energy date picker, loads statistics or raw history at
+ * the right aggregation, evaluates calculation series and keeps everything
+ * refreshed. The card itself only renders the resulting snapshot.
+ */
+class GraphDataController {
+    constructor(_onChange) {
+        this._onChange = _onChange;
+        this._energyFallbackActive = false;
+        this._main = emptyTargetState();
+        this._compare = emptyTargetState();
+        this._shiftedStatistics = new Map();
+        this._shiftedMetadata = new Map();
+        this._shiftedCalculated = new Map();
+        this._statisticIds = [];
+        this._statTypes = [];
+        this._isLoading = false;
+        /** Per-target request counter; only the newest response may write state. */
+        this._generations = { main: 0, compare: 0 };
+        this._connected = false;
+        this._visible = typeof document === "undefined" || document.visibilityState !== "hidden";
+        this._logger = new OnceLogger();
+        // ---------------------------------------------------------------- visibility
+        this._handleVisibilityChange = () => {
+            const visible = document.visibilityState !== "hidden";
+            if (visible === this._visible) {
+                return;
+            }
+            this._visible = visible;
+            if (!visible) {
+                this._queue.pause();
+                this._clearTimer("_autoRefreshTimeout");
+                this._clearTimer("_liveHourTimeout");
+                void this._teardownRawStream();
+                return;
+            }
+            this._clearTimer("_visibilityResumeTimeout");
+            this._visibilityResumeTimeout = window.setTimeout(() => {
+                this._visibilityResumeTimeout = undefined;
+                if (!this._visible) {
+                    return;
+                }
+                const parked = new Set(this._queue.takeParked());
+                parked.add("main");
+                if (this._comparePeriodStart) {
+                    parked.add("compare");
+                }
+                parked.forEach((key) => this._queue.schedule(key));
+                this._scheduleAutoRefresh();
+            }, VISIBILITY_RESUME_DELAY_MS);
+        };
+        this._queue = new FetchQueue(() => this._visible, (key) => this._runFetch(key));
+        this._energyBinding = new EnergyCollectionBinding((data) => this._onEnergyRange(data), () => this._onEnergyUnavailable());
+    }
+    // ---------------------------------------------------------------- lifecycle
+    connect() {
+        if (this._connected) {
+            return;
+        }
+        this._connected = true;
+        if (typeof document !== "undefined") {
+            document.addEventListener("visibilitychange", this._handleVisibilityChange);
+            this._visible = document.visibilityState !== "hidden";
+        }
+        this._sync();
+    }
+    disconnect() {
+        this._connected = false;
+        if (typeof document !== "undefined") {
+            document.removeEventListener("visibilitychange", this._handleVisibilityChange);
+        }
+        this._energyBinding.disconnect();
+        this._queue.dispose();
+        this._clearTimer("_autoRefreshTimeout");
+        this._clearTimer("_liveHourTimeout");
+        this._clearTimer("_visibilityResumeTimeout");
+        void this._teardownRawStream();
+    }
+    setHass(hass) {
+        const first = !this._hass;
+        this._hass = hass;
+        if (first && this._connected) {
+            this._sync();
+        }
+    }
+    setConfig(config) {
+        const previous = this._config;
+        this._config = config;
+        this._logger.reset();
+        if (previous && !config.aggregation?.compute_current_hour) {
+            this._clearTimer("_liveHourTimeout");
+        }
+        if (this._connected) {
+            this._sync(previous);
+        }
+    }
+    get snapshot() {
+        return {
+            loading: this._isLoading,
+            aggregationDisabled: this._main.aggregation === "disabled",
+            periodStart: this._periodStart,
+            periodEnd: this._periodEnd,
+            comparePeriodStart: this._comparePeriodStart,
+            comparePeriodEnd: this._comparePeriodEnd,
+            main: this._main,
+            compare: this._compare,
+            shiftedStatistics: this._shiftedStatistics,
+            shiftedMetadata: this._shiftedMetadata,
+            shiftedCalculated: this._shiftedCalculated,
+        };
+    }
+    // ------------------------------------------------------------ configuration
+    get _timespan() {
+        return this._config?.timespan ?? DEFAULT_TIMESPAN;
+    }
+    get _usesEnergyPicker() {
+        return this._timespan.mode === "energy";
+    }
+    _hasTimeOffsets(config = this._config) {
+        return Boolean(config?.series.some((series) => getSeriesTimeOffset(series)));
+    }
+    /** Compare is only available through the energy date picker's compare toggle. */
+    _shouldUseCompare() {
+        if (!this._usesEnergyPicker || !this._config) {
+            return false;
+        }
+        if (this._hasTimeOffsets()) {
+            return false;
+        }
+        return this._config.allow_compare !== false;
+    }
+    _sync(previousConfig) {
+        if (!this._hass || !this._config) {
+            return;
+        }
+        const needsPicker = this._usesEnergyPicker;
+        const modeChanged = previousConfig?.timespan?.mode !== this._timespan.mode;
+        const keyChanged = previousConfig?.collection_key !== this._config.collection_key;
+        if (needsPicker && (modeChanged || keyChanged || !previousConfig)) {
+            this._energyBinding.connect(this._hass, this._config.collection_key);
+        }
+        else if (!needsPicker && previousConfig?.timespan?.mode === "energy") {
+            this._energyBinding.disconnect();
+            this._energyRange = undefined;
+            this._energyCompareRange = undefined;
+        }
+        if (!this._shouldUseCompare()) {
+            this._clearCompare();
+        }
+        const periodChanged = this._recalculatePeriod();
+        const compareChanged = this._recalculateComparePeriod();
+        const seriesChanged = !!previousConfig &&
+            JSON.stringify(previousConfig.series) !== JSON.stringify(this._config.series);
+        if (periodChanged || seriesChanged) {
+            void this._teardownRawStream();
+            this._clearShifted();
+        }
+        if (periodChanged || seriesChanged || !this._main.statistics) {
+            this._queue.schedule("main");
+        }
+        if (this._comparePeriodStart &&
+            (compareChanged || seriesChanged || !this._compare.statistics)) {
+            this._queue.schedule("compare");
+        }
+    }
+    // ------------------------------------------------------------------ periods
+    _onEnergyRange(data) {
+        this._energyFallbackActive = false;
+        this._energyRange = { start: data.start, end: data.end };
+        if (this._shouldUseCompare() && data.startCompare) {
+            this._energyCompareRange = {
+                start: data.startCompare,
+                end: data.endCompare,
+            };
+        }
+        else {
+            this._energyCompareRange = undefined;
+        }
+        const periodChanged = this._recalculatePeriod();
+        const compareChanged = this._recalculateComparePeriod();
+        if (periodChanged || !this._main.statistics) {
+            this._queue.schedule("main");
+        }
+        if (this._comparePeriodStart &&
+            (compareChanged || !this._compare.statistics)) {
+            this._queue.schedule("compare");
+        }
+    }
+    _onEnergyUnavailable() {
+        this._energyFallbackActive = true;
+        if (this._recalculatePeriod() || !this._main.statistics) {
+            this._queue.schedule("main");
+        }
+    }
+    _resolveRange() {
+        const energyRange = this._energyRange ?? (this._energyFallbackActive ? todayRange() : undefined);
+        try {
+            return resolveTimespan(this._timespan, energyRange);
+        }
+        catch (error) {
+            log("error", "Invalid timespan configuration", {
+                error: error instanceof Error ? error.message : error,
+            });
+            return undefined;
+        }
+    }
+    _recalculatePeriod() {
+        const resolved = this._resolveRange();
+        if (!resolved) {
+            return false;
+        }
+        const changed = this._periodStart?.getTime() !== resolved.start.getTime() ||
+            this._periodEnd?.getTime() !== resolved.end?.getTime();
+        if (changed) {
+            this._periodStart = resolved.start;
+            this._periodEnd = resolved.end;
+            this._main.lastRawEnd = undefined;
+        }
+        return changed;
+    }
+    _recalculateComparePeriod() {
+        const range = this._shouldUseCompare() ? this._energyCompareRange : undefined;
+        if (!range) {
+            if (this._comparePeriodStart || this._comparePeriodEnd) {
+                this._clearCompare();
+                return true;
+            }
+            return false;
+        }
+        const changed = this._comparePeriodStart?.getTime() !== range.start.getTime() ||
+            this._comparePeriodEnd?.getTime() !== range.end?.getTime();
+        if (changed) {
+            this._comparePeriodStart = range.start;
+            this._comparePeriodEnd = range.end;
+            this._compare = emptyTargetState();
+        }
+        return changed;
+    }
+    _clearCompare() {
+        this._comparePeriodStart = undefined;
+        this._comparePeriodEnd = undefined;
+        this._compare = emptyTargetState();
+    }
+    _clearShifted() {
+        this._shiftedStatistics = new Map();
+        this._shiftedMetadata = new Map();
+        this._shiftedCalculated = new Map();
+    }
+    // ------------------------------------------------------------------ loading
+    _collectStatisticRequests() {
+        const ids = new Set();
+        const types = new Set();
+        this._config?.series.forEach((series) => {
+            const defaultStatType = series.stat_type ?? DEFAULT_STAT_TYPE;
+            if (getSeriesTimeOffset(series)) {
+                // Loaded separately from a shifted source range.
+                return;
+            }
+            if (getSeriesSource(series) === "statistic") {
+                const id = getStatisticId(series);
+                if (id) {
+                    ids.add(id);
+                    types.add(defaultStatType);
+                }
+                return;
+            }
+            series.calculation?.terms?.forEach((term) => {
+                const id = term.statistic_id?.trim();
+                if (id) {
+                    ids.add(id);
+                    types.add(term.stat_type ?? defaultStatType);
+                }
+            });
+        });
+        return {
+            ids: Array.from(ids),
+            types: types.size ? Array.from(types) : [DEFAULT_STAT_TYPE],
+        };
+    }
+    async _runFetch(key) {
+        if (key === "live") {
+            await this._loadLiveHour();
+            return;
+        }
+        await this._loadStatistics(key === "compare");
+    }
+    async _loadStatistics(isCompare) {
+        const hass = this._hass;
+        const config = this._config;
+        const periodStart = isCompare ? this._comparePeriodStart : this._periodStart;
+        const periodEnd = isCompare ? this._comparePeriodEnd : this._periodEnd;
+        if (!hass || !config || !periodStart || !this._visible) {
+            return;
+        }
+        const target = isCompare ? this._compare : this._main;
+        const range = {
+            start: periodStart.getTime(),
+            end: periodEnd?.getTime() ?? null,
+        };
+        const { ids, types } = this._collectStatisticRequests();
+        if (!isCompare) {
+            this._statisticIds = ids;
+            this._statTypes = types;
+        }
+        const plan = resolveAggregationPlan(periodStart, periodEnd, config.aggregation, this._usesEnergyPicker);
+        const targetKey = isCompare ? "compare" : "main";
+        if (plan[0] === "disabled") {
+            this._generations[targetKey] += 1;
+            this._applyDisabled(isCompare, range);
+            return;
+        }
+        const generation = ++this._generations[targetKey];
+        const showLoader = !isCompare && !this._main.statistics;
+        if (showLoader) {
+            this._isLoading = true;
+            this._onChange();
+        }
+        try {
+            const metadata = await this._loadMetadata(hass, ids);
+            const result = await this._fetchWithPlan(hass, plan, periodStart, periodEnd, ids, types, isCompare, range);
+            if (generation !== this._generations[targetKey]) {
+                return;
+            }
+            target.metadata = metadata;
+            target.range = range;
+            target.aggregation = result.aggregation;
+            if (result.aggregation === "raw") {
+                const merged = result.incremental && target.statistics
+                    ? mergeStatistics(target.statistics, result.statistics)
+                    : result.statistics;
+                target.statistics = trimStatisticsToRange(merged, range.start, range.end);
+                target.lastRawEnd = maxStatisticsEnd(target.statistics);
+            }
+            else {
+                target.statistics = result.statistics;
+                target.lastRawEnd = undefined;
+            }
+            this._rebuildCalculations(isCompare);
+            if (!isCompare) {
+                if (result.aggregation === "raw") {
+                    void this._restartRawStream();
+                }
+                else {
+                    void this._teardownRawStream();
+                }
+                await this._loadShiftedSeries(periodStart, periodEnd, generation);
+                if (generation !== this._generations.main) {
+                    return;
+                }
+                this._scheduleAutoRefresh();
+                this._scheduleLiveHour();
+            }
+        }
+        catch (error) {
+            if (generation === this._generations[targetKey]) {
+                log("error", "Failed to load statistics", {
+                    compare: isCompare,
+                    error: error instanceof Error ? error.message : error,
+                });
+                if (isCompare) {
+                    this._compare = emptyTargetState();
+                }
+                else {
+                    this._main = emptyTargetState();
+                    this._clearShifted();
+                }
+            }
+        }
+        finally {
+            if (generation === this._generations[targetKey] && showLoader) {
+                this._isLoading = false;
+            }
+            this._onChange();
+        }
+    }
+    _applyDisabled(isCompare, range) {
+        const target = emptyTargetState();
+        target.range = range;
+        target.aggregation = "disabled";
+        if (isCompare) {
+            this._compare = target;
+        }
+        else {
+            this._main = target;
+            this._clearShifted();
+            this._clearTimer("_autoRefreshTimeout");
+            this._clearTimer("_liveHourTimeout");
+        }
+        this._isLoading = false;
+        this._onChange();
+    }
+    async _loadMetadata(hass, ids) {
+        if (!ids.length) {
+            return {};
+        }
+        try {
+            const entries = await withTimeout(fetchStatisticsMetadata(hass, ids), FETCH_TIMEOUT_MS, "getStatisticsMetadata");
+            const metadata = {};
+            entries.forEach((item) => {
+                metadata[item.statistic_id] = item;
+            });
+            return metadata;
+        }
+        catch (error) {
+            if (!(error instanceof TimeoutError)) {
+                log("warn", "Failed to load statistics metadata", {
+                    error: error instanceof Error ? error.message : error,
+                });
+            }
+            return {};
+        }
+    }
+    /**
+     * Walks the aggregation plan until one interval returns data. Every step is
+     * tried once; the last attempted interval is reported even when it was empty.
+     */
+    async _fetchWithPlan(hass, plan, start, end, ids, types, isCompare, range) {
+        if (!ids.length) {
+            return { statistics: {}, aggregation: plan[0], incremental: false };
+        }
+        let statistics = {};
+        let lastAggregation = plan[0];
+        let incremental = false;
+        for (let idx = 0; idx < plan.length; idx++) {
+            const aggregation = plan[idx];
+            lastAggregation = aggregation;
+            if (aggregation === "disabled") {
+                return { statistics: {}, aggregation, incremental: false };
+            }
+            try {
+                if (aggregation === "raw") {
+                    const target = isCompare ? this._compare : this._main;
+                    const lastEnd = target.lastRawEnd;
+                    const from = lastEnd !== undefined && (range.end === null || lastEnd < range.end)
+                        ? new Date(Math.max(start.getTime(), lastEnd - RAW_DELTA_OVERLAP_MS))
+                        : start;
+                    incremental = from !== start;
+                    statistics = await this._fetchRawStatistics(hass, from, end, ids);
+                }
+                else {
+                    statistics = await withTimeout(fetchStatistics(hass, start, end, ids, aggregation, types), FETCH_TIMEOUT_MS, `fetchStatistics:${aggregation}`);
+                    incremental = false;
+                }
+                if (statisticsHaveData(statistics, ids)) {
+                    return { statistics, aggregation, incremental };
+                }
+                if (idx < plan.length - 1) {
+                    log("warn", `Aggregation "${aggregation}" returned no data. Trying "${plan[idx + 1]}".`);
+                }
+            }
+            catch (error) {
+                log("error", `Failed to load statistics for aggregation "${aggregation}"`, {
+                    error: error instanceof Error ? error.message : error,
+                });
+            }
+        }
+        return { statistics, aggregation: lastAggregation, incremental };
+    }
+    async _fetchRawStatistics(hass, start, end, ids) {
+        // Query slightly beyond the visible range so lines reach both edges.
+        const buffer = end
+            ? Math.max(60_000, (end.getTime() - start.getTime()) * 0.1)
+            : 60_000;
+        const queryStart = new Date(start.getTime() - buffer);
+        const queryEnd = end ? new Date(end.getTime() + buffer) : undefined;
+        const history = await withTimeout(fetchRawHistoryStates(hass, queryStart, queryEnd, ids, this._config?.aggregation?.raw_options), FETCH_TIMEOUT_MS, "fetchRawHistoryStates");
+        return historyStatesToStatistics(history);
+    }
+    // ------------------------------------------------------ time offset series
+    _buildShiftedGroups(start, end) {
+        const groups = new Map();
+        this._config?.series.forEach((series, index) => {
+            const offset = getSeriesTimeOffset(series);
+            if (!offset) {
+                return;
+            }
+            const source = getSeriesSource(series);
+            const statisticId = getStatisticId(series);
+            if (source === "statistic" && !statisticId) {
+                return;
+            }
+            if (source === "calculation" && !series.calculation?.terms?.length) {
+                return;
+            }
+            const sourceStart = shiftDate(start, offset, 1);
+            const sourceEnd = end ? shiftDate(end, offset, 1) : undefined;
+            const key = `${offset.value}:${offset.unit}`;
+            const group = groups.get(key) ?? {
+                key,
+                sourceStart,
+                sourceEnd,
+                offset,
+                statisticSeries: [],
+                calculationSeries: [],
+            };
+            if (source === "statistic" && statisticId) {
+                group.statisticSeries.push({ index, statisticId });
+            }
+            else {
+                group.calculationSeries.push({ index, series });
+            }
+            groups.set(key, group);
+        });
+        return Array.from(groups.values());
+    }
+    _shiftedGroupRequests(group) {
+        const ids = new Set();
+        const types = new Set();
+        group.statisticSeries.forEach(({ index, statisticId }) => {
+            ids.add(statisticId);
+            types.add(this._config?.series[index].stat_type ?? DEFAULT_STAT_TYPE);
+        });
+        group.calculationSeries.forEach(({ series }) => {
+            const defaultStatType = series.stat_type ?? DEFAULT_STAT_TYPE;
+            series.calculation?.terms?.forEach((term) => {
+                const id = term.statistic_id?.trim();
+                if (id) {
+                    ids.add(id);
+                    types.add(term.stat_type ?? defaultStatType);
+                }
+            });
+        });
+        return {
+            ids: Array.from(ids),
+            types: types.size ? Array.from(types) : [DEFAULT_STAT_TYPE],
+        };
+    }
+    /**
+     * Loads every series that configures `time_offset` from its shifted source
+     * range and projects the samples back onto the visible range.
+     */
+    async _loadShiftedSeries(start, end, generation) {
+        const hass = this._hass;
+        const groups = hass ? this._buildShiftedGroups(start, end) : [];
+        if (!hass || !groups.length) {
+            this._clearShifted();
+            return;
+        }
+        const statisticsByIndex = new Map();
+        const metadataByIndex = new Map();
+        const calculatedByKey = new Map();
+        for (const group of groups) {
+            const { ids, types } = this._shiftedGroupRequests(group);
+            const plan = resolveAggregationPlan(group.sourceStart, group.sourceEnd, this._config?.aggregation, this._usesEnergyPicker).filter((aggregation) => aggregation !== "raw");
+            if (!plan.length || plan[0] === "disabled") {
+                this._logger.warnOnce(`shifted-unsupported-${group.key}`, "Series time offset requires aggregated statistics; raw history and disabled ranges are skipped.");
+                continue;
+            }
+            const metadata = await this._loadMetadata(hass, ids);
+            const result = await this._fetchWithPlan(hass, plan, group.sourceStart, group.sourceEnd, ids, types, false, { start: group.sourceStart.getTime(), end: group.sourceEnd?.getTime() ?? null });
+            if (generation !== this._generations.main) {
+                return;
+            }
+            if (result.aggregation === "disabled") {
+                continue;
+            }
+            group.statisticSeries.forEach(({ index, statisticId }) => {
+                const values = result.statistics[statisticId];
+                if (!values?.length) {
+                    return;
+                }
+                statisticsByIndex.set(index, shiftStatisticValues(values, group.offset));
+                metadataByIndex.set(index, metadata[statisticId]);
+            });
+            group.calculationSeries.forEach(({ index, series }) => {
+                const evaluated = evaluateCalculation(series, series.calculation, result.statistics, index, {
+                    start: group.sourceStart,
+                    end: group.sourceEnd,
+                    period: result.aggregation,
+                }, this._logger);
+                if (!evaluated?.values.length) {
+                    return;
+                }
+                calculatedByKey.set(calculationKey(index), shiftStatisticValues(evaluated.values, group.offset));
+            });
+        }
+        this._shiftedStatistics = statisticsByIndex;
+        this._shiftedMetadata = metadataByIndex;
+        this._shiftedCalculated = calculatedByKey;
+    }
+    // ------------------------------------------------------------- calculations
+    _rebuildCalculations(isCompare) {
+        const target = isCompare ? this._compare : this._main;
+        const calculated = new Map();
+        this._config?.series.forEach((series, index) => {
+            if (!series.calculation || getSeriesSource(series) !== "calculation") {
+                return;
+            }
+            // Offset calculations are evaluated on their shifted source range.
+            if (!isCompare && getSeriesTimeOffset(series)) {
+                return;
+            }
+            const result = evaluateCalculation(series, series.calculation, target.statistics ?? {}, index, {
+                start: isCompare ? this._comparePeriodStart : this._periodStart,
+                end: isCompare ? this._comparePeriodEnd : this._periodEnd,
+                period: target.aggregation,
+            }, this._logger);
+            if (result) {
+                calculated.set(calculationKey(index), result.values);
+            }
+        });
+        target.calculated = calculated;
+    }
+    // --------------------------------------------------------------- raw stream
+    _shouldUseRawStream() {
+        return (this._visible &&
+            !!this._hass &&
+            this._main.aggregation === "raw" &&
+            this._statisticIds.length > 0);
+    }
+    async _restartRawStream() {
+        await this._teardownRawStream();
+        if (!this._shouldUseRawStream() || !this._hass) {
+            return;
+        }
+        const fallbackStart = this._main.range?.start ?? Date.now();
+        const startMs = this._main.lastRawEnd !== undefined
+            ? Math.max(this._main.lastRawEnd - RAW_DELTA_OVERLAP_MS, fallbackStart)
+            : fallbackStart;
+        this._rawStreamUnsub = subscribeRawHistoryStream(this._hass, new Date(startMs), this._statisticIds, (message) => {
+            if (message?.states && Object.keys(message.states).length) {
+                this._applyRawStreamStates(message.states);
+            }
+        }, this._config?.aggregation?.raw_options).catch((error) => {
+            log("error", "Failed to subscribe to the raw history stream", {
+                error: error instanceof Error ? error.message : error,
+            });
+            this._rawStreamUnsub = undefined;
+            this._queue.schedule("main");
+            return undefined;
+        });
+    }
+    async _teardownRawStream() {
+        const handle = this._rawStreamUnsub;
+        this._rawStreamUnsub = undefined;
+        if (!handle) {
+            return;
+        }
+        try {
+            const unsubscribe = await handle;
+            if (typeof unsubscribe === "function") {
+                await unsubscribe();
+            }
+        }
+        catch (error) {
+            log("warn", "Failed to unsubscribe from the raw history stream", {
+                error: error instanceof Error ? error.message : error,
+            });
+        }
+    }
+    _applyRawStreamStates(states) {
+        if (!this._shouldUseRawStream()) {
+            return;
+        }
+        const patch = historyStatesToStatistics(states);
+        if (!Object.values(patch).some((entries) => entries?.length)) {
+            return;
+        }
+        const range = this._main.range;
+        const merged = mergeStatistics(this._main.statistics, patch);
+        this._main.statistics = range
+            ? trimStatisticsToRange(merged, range.start, range.end)
+            : merged;
+        this._main.lastRawEnd = maxStatisticsEnd(this._main.statistics);
+        this._rebuildCalculations(false);
+        this._onChange();
+    }
+    /** Re-trims a streaming range after a rolling window has moved on. */
+    _applyRollingWindowShift() {
+        if (!this._main.statistics || !this._periodStart) {
+            return;
+        }
+        const range = {
+            start: this._periodStart.getTime(),
+            end: this._periodEnd?.getTime() ?? null,
+        };
+        this._main.statistics = trimStatisticsToRange(this._main.statistics, range.start, range.end);
+        this._main.range = range;
+        this._main.lastRawEnd = maxStatisticsEnd(this._main.statistics);
+        this._rebuildCalculations(false);
+        this._onChange();
+    }
+    // ------------------------------------------------------------ current hour
+    _shouldComputeCurrentHour() {
+        if (!this._config?.aggregation?.compute_current_hour) {
+            return false;
+        }
+        if (this._main.aggregation !== "hour" || !this._periodStart) {
+            return false;
+        }
+        const now = new Date();
+        if (this._periodStart > now) {
+            return false;
+        }
+        return !this._periodEnd || this._periodEnd > startOfHour(now);
+    }
+    _scheduleLiveHour() {
+        this._clearTimer("_liveHourTimeout");
+        if (!this._shouldComputeCurrentHour()) {
+            return;
+        }
+        this._queue.schedule("live", 250);
+        const delay = Math.max(getNextRefreshTime("5minute") - Date.now(), LIVE_HOUR_MIN_DELAY_MS);
+        this._liveHourTimeout = window.setTimeout(() => {
+            this._liveHourTimeout = undefined;
+            this._scheduleLiveHour();
+        }, delay);
+    }
+    /**
+     * Estimates the ongoing hour from 5-minute statistics until Home Assistant
+     * publishes the official hourly aggregate.
+     */
+    async _loadLiveHour() {
+        const hass = this._hass;
+        if (!hass || !this._visible || !this._shouldComputeCurrentHour()) {
+            return;
+        }
+        const base = this._main.statistics;
+        if (!base || !this._statisticIds.length) {
+            return;
+        }
+        const window = computeLiveHourWindow(this._periodStart, this._periodEnd);
+        if (!window) {
+            return;
+        }
+        try {
+            const fiveMinute = await withTimeout(fetchStatistics(hass, new Date(window.fetchStart), new Date(window.fetchEnd), this._statisticIds, "5minute", this._statTypes), FETCH_TIMEOUT_MS, "fetchStatistics:liveHour");
+            const patch = buildLiveHourPatch(base, fiveMinute, window, this._statisticIds);
+            if (!patch) {
+                return;
+            }
+            this._main.statistics = applyLiveHourPatch(base, patch);
+            this._rebuildCalculations(false);
+            this._onChange();
+        }
+        catch (error) {
+            log("error", "Failed to load the current-hour estimate", {
+                error: error instanceof Error ? error.message : error,
+            });
+        }
+    }
+    // ------------------------------------------------------------- auto refresh
+    _scheduleAutoRefresh() {
+        this._clearTimer("_autoRefreshTimeout");
+        if (!this._visible || !this._config || !this._periodStart) {
+            return;
+        }
+        const timespan = this._timespan;
+        if (timespan.mode === "fixed") {
+            const end = timespan.end ? new Date(timespan.end) : null;
+            if (!end || end <= new Date()) {
+                return; // Historical data does not change.
+            }
+        }
+        const aggregation = this._main.aggregation ?? "hour";
+        if (aggregation === "disabled") {
+            return;
+        }
+        const delay = getNextRefreshTime(aggregation) - Date.now();
+        if (!Number.isFinite(delay)) {
+            return;
+        }
+        this._autoRefreshTimeout = window.setTimeout(() => {
+            this._autoRefreshTimeout = undefined;
+            this._runAutoRefresh(aggregation);
+        }, Math.max(delay, 60_000));
+    }
+    _runAutoRefresh(aggregation) {
+        if (!this._visible) {
+            return;
+        }
+        const periodChanged = this._recalculatePeriod();
+        const compareChanged = this._recalculateComparePeriod();
+        const rolling = isRollingTimespan(this._timespan);
+        let refreshMain = rolling ? periodChanged : true;
+        // A live raw stream already delivers new samples; only the window moves.
+        if (aggregation === "raw" && this._rawStreamUnsub) {
+            if (periodChanged) {
+                this._applyRollingWindowShift();
+            }
+            refreshMain = false;
+        }
+        if (refreshMain) {
+            this._queue.schedule("main");
+        }
+        if (this._comparePeriodStart && (compareChanged || refreshMain)) {
+            this._queue.schedule("compare");
+        }
+        this._scheduleAutoRefresh();
+    }
+    _clearTimer(field) {
+        const handle = this[field];
+        if (handle) {
+            window.clearTimeout(handle);
+            this[field] = undefined;
+        }
+    }
+}
+
+const getFormatterContext = (hass) => {
+    const locale = hass?.locale?.language ?? "en-US";
+    const localeInfo = hass?.locale;
+    let timeZone = localeInfo?.time_zone;
+    if (timeZone === "server") {
+        timeZone = hass?.config?.time_zone;
+    }
+    if (!timeZone || timeZone === "local" || timeZone === "system") {
+        timeZone = undefined;
+    }
+    return { locale, timeZone };
+};
+const formatNumber = (value, hass, options) => new Intl.NumberFormat(hass?.locale?.language ?? "en-US", {
+    maximumFractionDigits: 2,
+    ...options,
+}).format(value);
+const formatDatePart = (date, options, hass) => {
+    const { locale, timeZone } = getFormatterContext(hass);
+    try {
+        return new Intl.DateTimeFormat(locale, { ...options, timeZone }).format(date);
+    }
+    catch {
+        return date.toLocaleDateString();
+    }
+};
+
+const clampAlpha = (value) => Math.max(0, Math.min(1, Number.isFinite(value) ? value : 1));
+const hexToRgb = (value) => {
+    const hex = value.replace("#", "").trim();
+    if (hex.length === 3 || hex.length === 4) {
+        return {
+            r: parseInt(hex[0] + hex[0], 16),
+            g: parseInt(hex[1] + hex[1], 16),
+            b: parseInt(hex[2] + hex[2], 16),
+        };
+    }
+    if (hex.length === 6 || hex.length === 8) {
+        return {
+            r: parseInt(hex.substring(0, 2), 16),
+            g: parseInt(hex.substring(2, 4), 16),
+            b: parseInt(hex.substring(4, 6), 16),
+        };
+    }
+    return null;
+};
+const rgbStringToRgb = (value) => {
+    const match = value
+        .trim()
+        .match(/rgba?\(\s*([\d.]+)\s*,\s*([\d.]+)\s*,\s*([\d.]+)(?:\s*,\s*[\d.]+\s*)?\)/i);
+    if (!match) {
+        return null;
+    }
+    return { r: Number(match[1]), g: Number(match[2]), b: Number(match[3]) };
+};
+const parseColor = (value) => {
+    const trimmed = value.trim();
+    if (trimmed.startsWith("#")) {
+        return hexToRgb(trimmed);
+    }
+    if (trimmed.startsWith("rgb")) {
+        return rgbStringToRgb(trimmed);
+    }
+    return null;
+};
+/** Returns the alpha channel of a color literal, or `undefined` when unknown. */
+const extractAlpha = (color) => {
+    if (typeof color !== "string") {
+        return undefined;
+    }
+    const trimmed = color.trim();
+    const rgbaMatch = trimmed.match(/rgba?\(([^)]+)\)/i);
+    if (rgbaMatch) {
+        const parts = rgbaMatch[1].split(",").map((part) => part.trim());
+        if (parts.length === 4) {
+            const alpha = Number(parts[3]);
+            return Number.isFinite(alpha) ? alpha : undefined;
+        }
+        if (parts.length === 3) {
+            return 1;
+        }
+    }
+    if (trimmed.startsWith("#")) {
+        const hex = trimmed.slice(1);
+        if (hex.length === 8) {
+            return parseInt(hex.slice(6, 8), 16) / 255;
+        }
+        if (hex.length === 4) {
+            return parseInt(hex.slice(3, 4).repeat(2), 16) / 255;
+        }
+    }
+    return undefined;
+};
+const applyAlpha = (color, alpha) => {
+    const rgb = parseColor(color);
+    if (!rgb) {
+        return color.trim();
+    }
+    return `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${clampAlpha(alpha)})`;
+};
+/** Recolors `color` while keeping the alpha channel of an existing literal. */
+const colorWithAlpha = (color, alpha) => {
+    if (alpha === undefined || alpha >= 1) {
+        return color;
+    }
+    const rgb = parseColor(color);
+    if (!rgb) {
+        return color;
+    }
+    return `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${alpha})`;
+};
+/** Recolors every stop of an existing linear gradient, keeping its alphas. */
+const gradientWithColor = (color, gradient) => {
+    if (!gradient || typeof gradient !== "object" || Array.isArray(gradient)) {
+        return undefined;
+    }
+    const source = gradient;
+    if (source.type !== "linear" || !Array.isArray(source.colorStops)) {
+        return undefined;
+    }
+    return {
+        ...source,
+        colorStops: source.colorStops.map((stop) => {
+            if (!stop || typeof stop !== "object" || Array.isArray(stop)) {
+                return stop;
+            }
+            const colorStop = stop;
+            return {
+                ...colorStop,
+                color: colorWithAlpha(color, extractAlpha(colorStop.color)),
+            };
+        }),
+    };
+};
+/**
+ * Picks the color for the active theme. A plain string applies to both themes;
+ * the object form falls back from `dark` to `light`.
+ */
+const resolveThemedColor = (value, darkMode) => {
+    const clean = (raw) => typeof raw === "string" && raw.trim() !== "" ? raw.trim() : undefined;
+    const isObject = typeof value === "object" && value !== null;
+    const light = isObject ? clean(value.light) : clean(value);
+    const dark = isObject ? clean(value.dark) : undefined;
+    return darkMode ? dark ?? light : light;
+};
+/**
+ * Turns a configured color token into something ECharts understands. CSS custom
+ * properties (`--energy-solar-color` or `var(--x)`) are resolved against the
+ * card's computed style so theme changes are picked up.
+ */
+const resolveColorToken = (raw, computedStyle) => {
+    let token = raw.trim();
+    if (!token) {
+        return token;
+    }
+    if (token.startsWith("#") || token.startsWith("rgb")) {
+        return token;
+    }
+    if (token.startsWith("var(") && token.endsWith(")")) {
+        token = token.slice(4, -1).trim();
+    }
+    const resolved = computedStyle.getPropertyValue(token)?.trim();
+    return resolved || token;
+};
+/**
+ * Builds an area fill that fades towards the zero line, so positive and
+ * negative parts of a signal both keep their strong edge away from zero.
+ */
+const buildZeroAwareGradientFill = (color, strongAlpha, dataPoints) => {
+    let min = 0;
+    let max = 0;
+    dataPoints.forEach(([, value]) => {
+        if (typeof value !== "number" || !Number.isFinite(value)) {
+            return;
+        }
+        min = Math.min(min, value);
+        max = Math.max(max, value);
+    });
+    const strongColor = applyAlpha(color, strongAlpha);
+    const weakColor = applyAlpha(color, strongAlpha / 3);
+    let colorStops;
+    if (max === 0 && min === 0) {
+        colorStops = [
+            { offset: 0, color: weakColor },
+            { offset: 1, color: weakColor },
+        ];
+    }
+    else if (min >= 0) {
+        colorStops = [
+            { offset: 0, color: strongColor },
+            { offset: 1, color: weakColor },
+        ];
+    }
+    else if (max <= 0) {
+        colorStops = [
+            { offset: 0, color: weakColor },
+            { offset: 1, color: strongColor },
+        ];
+    }
+    else {
+        colorStops = [
+            { offset: 0, color: strongColor },
+            { offset: clampAlpha(max / (max - min)), color: weakColor },
+            { offset: 1, color: strongColor },
+        ];
+    }
+    return { type: "linear", x: 0, y: 0, x2: 0, y2: 1, colorStops, global: false };
+};
+
+/** Default palette: the colors the energy dashboard uses. */
+const DEFAULT_COLOR_CYCLE = [
+    "--energy-grid-consumption-color",
+    "--energy-grid-return-color",
+    "--energy-solar-color",
+    "--energy-battery-in-color",
+    "--energy-battery-out-color",
+    "--energy-gas-color",
+    "--energy-water-color",
+    "--energy-non-fossil-color",
+];
+const BAR_MAX_WIDTH = 50;
+const BAR_FILL_ALPHA = 0.5;
+const BAR_BORDER_ALPHA = 1;
+const LINE_ALPHA = 0.85;
+const LINE_AREA_ALPHA = 0.15;
+const LINE_GRADIENT_STRONG_ALPHA = 0.75;
+const DEFAULT_LINE_WIDTH = 1.5;
+/**
+ * Stacked line series must be drawn back-to-front, otherwise the fill of a
+ * lower series covers the line above it.
+ */
+const buildStackedLineZ = (configSeries) => {
+    const groups = new Map();
+    configSeries.forEach((series, index) => {
+        const chartType = series.chart_type ?? "bar";
+        const stack = series.stack?.trim();
+        if ((chartType !== "line" && chartType !== "step") || !stack) {
+            return;
+        }
+        const axis = series.y_axis === "right" ? "right" : "left";
+        const key = `${axis}:${stack}`;
+        groups.set(key, [...(groups.get(key) ?? []), index]);
+    });
+    const zByIndex = new Map();
+    groups.forEach((indexes) => {
+        indexes.forEach((seriesIndex, position) => {
+            zByIndex.set(seriesIndex, indexes[indexes.length - position - 1]);
+        });
+    });
+    return zByIndex;
+};
+const resolveSeriesName = (series, index, statisticId, hass, metadata) => {
+    if (series.name) {
+        return series.name;
+    }
+    if (statisticId) {
+        return (hass.states[statisticId]?.attributes.friendly_name ??
+            metadata[statisticId]?.name ??
+            statisticId);
+    }
+    return `Series ${index + 1}`;
+};
+const toDataPoints = (raw, series) => {
+    const statKey = series.stat_type ?? DEFAULT_STAT_TYPE;
+    return raw.map((entry) => {
+        const value = entry[statKey];
+        const timestamp = entry.start ?? entry.end;
+        if (typeof value !== "number" || !Number.isFinite(value)) {
+            return [timestamp, null];
+        }
+        return [timestamp, transformValue(value, series)];
+    });
+};
+/**
+ * Renders the band between two line series as a transparent baseline plus a
+ * stacked area on top - ECharts has no native "fill between" mode.
+ */
+const buildFillBand = (source, target, logger) => {
+    const valuesOf = (points) => {
+        const map = new Map();
+        points.forEach(([timestamp, value]) => map.set(timestamp, value));
+        return map;
+    };
+    const upperValues = valuesOf(source.dataPoints);
+    const lowerValues = valuesOf(target.dataPoints);
+    const buckets = Array.from(new Set([...upperValues.keys(), ...lowerValues.keys()])).sort((a, b) => a - b);
+    const baselineData = [];
+    const bandData = [];
+    let clamped = false;
+    buckets.forEach((bucket) => {
+        const upper = upperValues.get(bucket);
+        const lower = lowerValues.get(bucket);
+        if (upper === undefined ||
+            lower === undefined ||
+            upper === null ||
+            lower === null) {
+            baselineData.push([bucket, lower ?? null]);
+            bandData.push([bucket, null]);
+            return;
+        }
+        const diff = upper - lower;
+        if (diff < 0) {
+            clamped = true;
+            baselineData.push([bucket, lower]);
+            bandData.push([bucket, 0]);
+            return;
+        }
+        baselineData.push([bucket, lower]);
+        bandData.push([bucket, diff]);
+    });
+    if (!bandData.some(([, value]) => typeof value === "number" && value > 0)) {
+        return [];
+    }
+    if (clamped) {
+        logger.warnOnce(`fill-clamped-${source.name}-${target.name}`, `"${source.name}" dropped below "${target.name}". Negative differences were clamped to zero.`);
+    }
+    const stackId = `__fill_${source.id}`;
+    const sourceZ = typeof source.series.z === "number" ? source.series.z : 2;
+    const targetZ = typeof target.series.z === "number" ? target.series.z : 2;
+    const bandZ = sourceZ - 0.1 < 0 ? sourceZ + 0.1 : sourceZ - 0.1;
+    const baseZ = Math.max(Math.min(bandZ - 0.01, targetZ - 0.1), 0);
+    const shared = {
+        type: "line",
+        stack: stackId,
+        stackStrategy: "all",
+        showSymbol: false,
+        silent: true,
+        legendHoverLink: false,
+        emphasis: { disabled: true },
+        yAxisIndex: source.series.yAxisIndex,
+    };
+    const baseline = {
+        ...shared,
+        id: `${source.id}__fill_base`,
+        name: `${source.name}__fill_base`,
+        data: baselineData,
+        smooth: target.series.smooth,
+        lineStyle: { width: 0, color: target.lineColor },
+        areaStyle: { opacity: 0 },
+        yAxisIndex: target.series.yAxisIndex,
+        z: baseZ,
+    };
+    const band = {
+        ...shared,
+        id: `${source.id}__fill_area`,
+        name: `${source.name}__fill_area`,
+        data: bandData,
+        smooth: source.series.smooth,
+        lineStyle: { width: 0, color: source.lineColor },
+        areaStyle: { color: source.fillColor },
+        itemStyle: { color: source.fillColor },
+        z: bandZ,
+    };
+    return [baseline, band];
+};
+/**
+ * Turns the configured series into ECharts series options.
+ *
+ * The generated id encodes source key, statistic type, chart type and config
+ * index, which keeps ids stable across redraws and unique per configuration.
+ */
+const buildSeries = ({ hass, configSeries, statistics, metadata, calculatedData, colorCycle, darkMode, computedStyle, logger, }) => {
+    const palette = colorCycle.length ? colorCycle : DEFAULT_COLOR_CYCLE;
+    const paletteColorAt = (index) => resolveThemedColor(palette[index % palette.length], darkMode) ??
+        DEFAULT_COLOR_CYCLE[index % DEFAULT_COLOR_CYCLE.length];
+    const output = [];
+    const configById = new Map();
+    const lineSeriesByName = new Map();
+    const fillRequests = [];
+    const stackedLineZ = buildStackedLineZ(configSeries);
+    configSeries.forEach((series, index) => {
+        const source = getSeriesSource(series);
+        const statisticId = source === "statistic" ? getStatisticId(series) : undefined;
+        const calcKey = source === "calculation" ? calculationKey(index) : undefined;
+        let raw;
+        if (calcKey) {
+            raw = calculatedData.get(calcKey);
+            if (!raw?.length) {
+                logger.warnOnce(`calculation-empty-${index}`, `Calculation series "${series.name ?? calcKey}" produced no data.`, "debug");
+                return;
+            }
+        }
+        else if (statisticId) {
+            raw = statistics[statisticId];
+            if (!raw?.length) {
+                logger.warnOnce(`statistics-empty-${statisticId}`, `No statistics available for "${statisticId}".`, "debug");
+                return;
+            }
+        }
+        else {
+            logger.warnOnce(`series-misconfigured-${index}`, `Series at index ${index} has no valid data source.`);
+            return;
+        }
+        const chartType = series.chart_type ?? "bar";
+        const isStep = chartType === "step";
+        const isLineLike = chartType === "line" || isStep;
+        const name = resolveSeriesName(series, index, statisticId, hass, metadata);
+        const colorToken = resolveThemedColor(series.color, darkMode) ?? paletteColorAt(index);
+        const colorValue = resolveColorToken(colorToken, computedStyle);
+        const lineOpacity = typeof series.line_opacity === "number"
+            ? clampAlpha(series.line_opacity)
+            : undefined;
+        const baseKey = statisticId ?? calcKey ?? `series_${index}`;
+        const statType = series.stat_type ?? DEFAULT_STAT_TYPE;
+        const id = `${baseKey}:${statType}:${chartType}:${index}`;
+        configById.set(id, series);
+        const dataPoints = toDataPoints(raw, series);
+        if (isLineLike) {
+            const strokeAlpha = lineOpacity ?? LINE_ALPHA;
+            const lineColor = applyAlpha(colorValue, strokeAlpha);
+            const fillOpacity = typeof series.fill_opacity === "number"
+                ? clampAlpha(series.fill_opacity)
+                : LINE_AREA_ALPHA;
+            const fillColor = applyAlpha(colorValue, fillOpacity);
+            const smooth = typeof series.smooth === "number"
+                ? clampAlpha(series.smooth)
+                : series.smooth;
+            const lineSeries = {
+                id,
+                name,
+                type: "line",
+                data: dataPoints,
+                showSymbol: false,
+                smooth: isStep ? false : smooth ?? true,
+                stack: series.stack,
+                yAxisIndex: series.y_axis === "right" ? 1 : 0,
+                z: stackedLineZ.get(index) ?? index,
+                lineStyle: {
+                    width: series.line_width ?? DEFAULT_LINE_WIDTH,
+                    color: lineColor,
+                    type: series.line_style ?? "solid",
+                },
+                itemStyle: { color: lineColor, borderColor: lineColor },
+                legendHoverLink: false,
+                emphasis: { disabled: true },
+                color: lineColor,
+            };
+            if (isStep) {
+                lineSeries.step = "end";
+            }
+            if (series.fill === true) {
+                lineSeries.areaStyle = {
+                    color: series.gradient_fill === true
+                        ? buildZeroAwareGradientFill(colorValue, typeof series.fill_opacity === "number"
+                            ? fillOpacity
+                            : LINE_GRADIENT_STRONG_ALPHA, dataPoints)
+                        : fillColor,
+                };
+            }
+            output.push(lineSeries);
+            if (lineSeriesByName.has(name)) {
+                logger.warnOnce(`duplicate-name-${name}`, `Multiple series are named "${name}". fill_to_series references are ambiguous.`);
+            }
+            else {
+                lineSeriesByName.set(name, {
+                    id,
+                    name,
+                    config: series,
+                    dataPoints,
+                    lineColor,
+                    fillColor,
+                    series: lineSeries,
+                });
+            }
+            const targetName = series.fill_to_series?.trim();
+            if (targetName) {
+                fillRequests.push({ sourceName: name, targetName });
+            }
+        }
+        else {
+            const fillOpacity = typeof series.fill_opacity === "number"
+                ? clampAlpha(series.fill_opacity)
+                : BAR_FILL_ALPHA;
+            const fillColor = applyAlpha(colorValue, fillOpacity);
+            const borderColor = applyAlpha(colorValue, lineOpacity ?? BAR_BORDER_ALPHA);
+            const barSeries = {
+                id,
+                name,
+                type: "bar",
+                data: dataPoints,
+                stack: series.stack,
+                yAxisIndex: series.y_axis === "right" ? 1 : 0,
+                z: index,
+                itemStyle: { color: fillColor, borderColor },
+                legendHoverLink: false,
+                emphasis: { disabled: true },
+                color: fillColor,
+                barMaxWidth: BAR_MAX_WIDTH,
+            };
+            if (series.fill_to_series) {
+                logger.warnOnce(`fill-bar-${name}`, `Series "${name}" is a bar chart and cannot use fill_to_series.`);
+            }
+            output.push(barSeries);
+        }
+    });
+    fillRequests.forEach(({ sourceName, targetName }) => {
+        const source = lineSeriesByName.get(sourceName);
+        const target = lineSeriesByName.get(targetName);
+        if (!source) {
+            return;
+        }
+        if (source.config.stack) {
+            logger.warnOnce(`fill-source-stack-${sourceName}`, `Series "${sourceName}" combines stacking with fill_to_series, which is not supported.`);
+            return;
+        }
+        if (!target) {
+            logger.warnOnce(`fill-target-missing-${sourceName}-${targetName}`, `fill_to_series of "${sourceName}" references "${targetName}", which is not an existing line series.`);
+            return;
+        }
+        if (target.config.stack) {
+            logger.warnOnce(`fill-target-stack-${targetName}`, `Series "${targetName}" uses stacking and cannot be a fill target.`);
+            return;
+        }
+        if (source.name === target.name) {
+            logger.warnOnce(`fill-self-${sourceName}`, `Series "${sourceName}" references itself in fill_to_series.`);
+            return;
+        }
+        output.push(...buildFillBand(source, target, logger));
+    });
+    return { series: output, configById };
+};
+
+const REAL_VALUE_FLAG = "__realValue";
+const CORNER_RADIUS = 4;
+const toBarItem = (point) => {
+    if (Array.isArray(point)) {
+        const value = typeof point[1] === "number" ? point[1] : null;
+        return { value: [point[0], value] };
+    }
+    if (point && Array.isArray(point.value)) {
+        const [timestamp, raw] = point.value;
+        return {
+            ...point,
+            value: [timestamp, typeof raw === "number" ? raw : null],
+        };
+    }
+    return undefined;
+};
+const applyValueLabel = (serie, item, context) => {
+    const seriesId = typeof serie.id === "string" ? serie.id : undefined;
+    if (!seriesId || !item[REAL_VALUE_FLAG]) {
+        return;
+    }
+    const config = context.configById.get(seriesId);
+    if (config?.show_value_labels !== true) {
+        return;
+    }
+    if (config.stack?.trim()) {
+        context.logger.warnOnce(`value-label-stacked-${toBaseId(seriesId)}`, `Value labels are ignored for the stacked bar series "${serie.name ?? seriesId}".`);
+        return;
+    }
+    const value = item.value[1];
+    if (typeof value !== "number" || value === 0) {
+        item.label = { show: false };
+        return;
+    }
+    const precision = typeof config.value_label_precision === "number" &&
+        Number.isFinite(config.value_label_precision)
+        ? Math.max(0, Math.min(20, Math.trunc(config.value_label_precision)))
+        : 0;
+    item.label = {
+        show: true,
+        position: value > 0 ? "top" : "bottom",
+        formatter: context.formatValue(value, precision),
+        color: context.valueLabelColor,
+        fontSize: 11,
+        distance: 4,
+    };
+    serie.labelLayout = {
+        ...(serie.labelLayout ?? {}),
+        hideOverlap: true,
+    };
+};
+/**
+ * Aligns all bar series onto one shared bucket grid and applies the rounded
+ * corner that marks the outer end of every stack.
+ *
+ * ECharts positions bars by category order, so each series must contain an
+ * entry for every bucket; missing buckets are filled with borderless zeros.
+ */
+const applyBarStyling = (series, context) => {
+    const barSeries = series.filter((item) => item.type === "bar");
+    if (!barSeries.length) {
+        return;
+    }
+    const bucketSet = new Set(context.buckets ?? []);
+    barSeries.forEach((serie) => {
+        serie.data?.forEach((point) => {
+            const item = toBarItem(point);
+            if (item) {
+                bucketSet.add(item.value[0]);
+            }
+        });
+    });
+    const buckets = Array.from(bucketSet).sort((a, b) => a - b);
+    barSeries.forEach((serie) => {
+        const baseItemStyle = { ...(serie.itemStyle ?? {}) };
+        const byTimestamp = new Map();
+        serie.data?.forEach((point) => {
+            const item = toBarItem(point);
+            if (!item) {
+                return;
+            }
+            byTimestamp.set(item.value[0], {
+                ...item,
+                [REAL_VALUE_FLAG]: true,
+                itemStyle: { ...baseItemStyle, ...(item.itemStyle ?? {}) },
+            });
+        });
+        serie.data = buckets.map((bucket) => byTimestamp.get(bucket) ?? {
+            value: [bucket, 0],
+            itemStyle: { ...baseItemStyle, borderWidth: 0, borderRadius: [0, 0, 0, 0] },
+        });
+        serie.itemStyle = baseItemStyle;
+        serie.barMaxWidth = serie.barMaxWidth ?? BAR_MAX_WIDTH;
+    });
+    buckets.forEach((_bucket, bucketIndex) => {
+        const roundedPositive = new Set();
+        const roundedNegative = new Set();
+        // Walk the stack from the top so the outermost segment gets the radius.
+        for (let idx = barSeries.length - 1; idx >= 0; idx--) {
+            const serie = barSeries[idx];
+            const item = serie.data?.[bucketIndex];
+            if (!item || !Array.isArray(item.value)) {
+                continue;
+            }
+            const value = item.value[1] ?? 0;
+            const stackKey = serie.stack ?? `__stack_${idx}`;
+            const itemStyle = {
+                ...(serie.itemStyle ?? {}),
+                ...(item.itemStyle ?? {}),
+                borderRadius: [0, 0, 0, 0],
+            };
+            if (!value) {
+                itemStyle.borderWidth = 0;
+                item.itemStyle = itemStyle;
+                continue;
+            }
+            if (value > 0 && !roundedPositive.has(stackKey)) {
+                itemStyle.borderRadius = [CORNER_RADIUS, CORNER_RADIUS, 0, 0];
+                roundedPositive.add(stackKey);
+            }
+            else if (value < 0 && !roundedNegative.has(stackKey)) {
+                itemStyle.borderRadius = [0, 0, CORNER_RADIUS, CORNER_RADIUS];
+                roundedNegative.add(stackKey);
+            }
+            applyValueLabel(serie, item, context);
+            item.itemStyle = itemStyle;
+        }
+    });
+};
+
+const COMPARE_OPACITY = 0.6;
+const BAR_Z_BASE = 10;
+/**
+ * Maps a timestamp of the compare range onto the visible range.
+ *
+ * Calendar-aligned ranges are shifted by whole years, months or days so that
+ * e.g. February compared against January keeps its own day count.
+ */
+const createCompareTransform = (start, compareStart) => {
+    const yearDiff = differenceInYears(start, compareStart);
+    if (yearDiff !== 0 && start.getTime() === startOfYear(start).getTime()) {
+        return (timestamp) => addYears(new Date(timestamp), yearDiff).getTime();
+    }
+    const monthDiff = differenceInMonths(start, compareStart);
+    if (monthDiff !== 0 && start.getTime() === startOfMonth(start).getTime()) {
+        return (timestamp) => addMonths(new Date(timestamp), monthDiff).getTime();
+    }
+    const dayDiff = differenceInDays(start, compareStart);
+    if (dayDiff !== 0 && start.getTime() === startOfDay(start).getTime()) {
+        return (timestamp) => addDays(new Date(timestamp), dayDiff).getTime();
+    }
+    const offset = start.getTime() - compareStart.getTime();
+    return (timestamp) => timestamp + offset;
+};
+const recolor = (color, existing) => colorWithAlpha(color, extractAlpha(existing));
+/**
+ * Fades a compare series, or recolors it when the series configures an explicit
+ * `compare_color`. Compare series are always drawn below their counterpart.
+ */
+const styleCompareSeries = (serie, overrideColor) => {
+    if (overrideColor?.trim()) {
+        const color = overrideColor.trim();
+        const itemColor = recolor(color, serie.itemStyle?.color);
+        serie.itemStyle = { ...(serie.itemStyle ?? {}), color: itemColor };
+        serie.color = itemColor;
+        if (serie.type === "bar") {
+            serie.itemStyle = { ...serie.itemStyle, borderColor: itemColor };
+            return;
+        }
+        const lineColor = recolor(color, serie.lineStyle?.color);
+        serie.lineStyle = { ...(serie.lineStyle ?? {}), color: lineColor };
+        serie.color = lineColor;
+        if (serie.areaStyle) {
+            const areaStyle = { ...serie.areaStyle };
+            areaStyle.color =
+                gradientWithColor(color, areaStyle.color) ?? recolor(color, areaStyle.color);
+            serie.areaStyle = areaStyle;
+        }
+        serie.connectNulls = false;
+        return;
+    }
+    if (serie.type === "bar") {
+        serie.itemStyle = { ...(serie.itemStyle ?? {}), opacity: COMPARE_OPACITY };
+    }
+    else {
+        serie.lineStyle = { ...(serie.lineStyle ?? {}), opacity: COMPARE_OPACITY };
+        serie.itemStyle = { ...(serie.itemStyle ?? {}), opacity: COMPARE_OPACITY };
+        if (serie.areaStyle) {
+            const areaStyle = serie.areaStyle;
+            const opacity = typeof areaStyle.opacity === "number" ? areaStyle.opacity : COMPARE_OPACITY / 2;
+            serie.areaStyle = { ...areaStyle, opacity: opacity * 0.6 };
+        }
+        serie.connectNulls = false;
+    }
+};
+/**
+ * Assigns bar stack names for the "current" and "compare" halves of the chart.
+ *
+ * ECharts draws one column per stack name, so the two halves end up side by
+ * side. A transparent placeholder per stack keeps the column order stable even
+ * when the compare range has no data for a series.
+ */
+class BarStackLayout {
+    constructor() {
+        this._baseKeyBySeriesId = new Map();
+        this._placeholderByBase = new Map();
+        this._zByBase = new Map();
+        this._order = [];
+        this._generatedStacks = 0;
+    }
+    /** Places a main-range bar series into its "current" stack. */
+    assignCurrent(serie, index) {
+        const id = serie.id ?? `bar_${index}`;
+        const baseKey = this._baseKeyFor(serie.stack);
+        this._baseKeyBySeriesId.set(id, baseKey);
+        const z = this._resolveZ(baseKey, serie.z);
+        serie.z = z;
+        serie.stack = `${baseKey}--current`;
+        this._ensurePlaceholder(baseKey, z, "current");
+    }
+    /** Places a compare-range bar series into its "compare" stack. */
+    assignCompare(serie, baseId) {
+        const baseKey = this._baseKeyBySeriesId.get(baseId) ?? this._baseKeyFor(serie.stack);
+        this._baseKeyBySeriesId.set(baseId, baseKey);
+        const z = this._resolveZ(baseKey, serie.z);
+        serie.z = z;
+        serie.stack = `${baseKey}--compare`;
+        this._ensurePlaceholder(baseKey, z, "compare");
+    }
+    /** Placeholder series, in the order their stacks first appeared. */
+    placeholders() {
+        return this._order
+            .map((baseKey) => this._placeholderByBase.get(baseKey))
+            .filter((item) => item !== undefined);
+    }
+    _baseKeyFor(stack) {
+        const name = stack?.trim();
+        if (name) {
+            return name;
+        }
+        this._generatedStacks += 1;
+        return `series-${this._generatedStacks}`;
+    }
+    _resolveZ(baseKey, current) {
+        const candidate = typeof current === "number" && Number.isFinite(current)
+            ? Math.max(current, BAR_Z_BASE)
+            : BAR_Z_BASE;
+        const resolved = Math.max(this._zByBase.get(baseKey) ?? candidate, candidate);
+        this._zByBase.set(baseKey, resolved);
+        return resolved;
+    }
+    _ensurePlaceholder(baseKey, z, half) {
+        const placeholderZ = Math.max(z - 3, 0);
+        const existing = this._placeholderByBase.get(baseKey);
+        if (existing) {
+            existing.stack = `${baseKey}--${half}`;
+            existing.z = placeholderZ;
+            return;
+        }
+        this._order.push(baseKey);
+        this._placeholderByBase.set(baseKey, {
+            id: `${baseKey}--placeholder`,
+            type: "bar",
+            stack: `${baseKey}--${half}`,
+            data: [],
+            silent: true,
+            itemStyle: {
+                color: "transparent",
+                borderColor: "transparent",
+                borderWidth: 0,
+            },
+            emphasis: { disabled: true },
+            barMaxWidth: BAR_MAX_WIDTH,
+            z: placeholderZ,
+        });
+    }
+}
+
+const toTuple = (point) => {
+    const raw = Array.isArray(point) ? point : point?.value;
+    if (!Array.isArray(raw) || typeof raw[0] !== "number") {
+        return undefined;
+    }
+    const value = typeof raw[1] === "number" ? raw[1] : null;
+    return [raw[0], value];
+};
+const asTuples = (data) => {
+    if (!Array.isArray(data)) {
+        return undefined;
+    }
+    const tuples = [];
+    for (const point of data) {
+        if (!Array.isArray(point) || typeof point[0] !== "number") {
+            return undefined;
+        }
+        tuples.push(point);
+    }
+    return tuples;
+};
+/**
+ * Projects every line series onto the bucket grid of the visible range.
+ *
+ * Buckets without a sample become explicit `null` values, so ECharts draws a
+ * gap instead of connecting across missing data.
+ */
+const normalizeLineSeries = (series, buckets) => {
+    if (!buckets.length) {
+        return;
+    }
+    series.forEach((serie) => {
+        if (serie.type !== "line" || !Array.isArray(serie.data)) {
+            return;
+        }
+        const byTimestamp = new Map();
+        serie.data.forEach((point) => {
+            const tuple = toTuple(point);
+            if (tuple) {
+                byTimestamp.set(tuple[0], tuple[1]);
+            }
+        });
+        serie.data = buckets.map((bucket) => [bucket, byTimestamp.get(bucket) ?? null]);
+    });
+};
+/**
+ * Carries the last known value forward to `limit`. Used for step charts, whose
+ * value stays valid until the next state change.
+ */
+const extendStepSeriesToLimit = (data, limit) => {
+    if (!Number.isFinite(limit) || !data.length) {
+        return;
+    }
+    let lastIndex = -1;
+    for (let idx = data.length - 1; idx >= 0; idx--) {
+        const [timestamp, value] = data[idx];
+        if (timestamp <= limit && typeof value === "number") {
+            lastIndex = idx;
+            break;
+        }
+    }
+    if (lastIndex === -1) {
+        return;
+    }
+    const [lastTimestamp, lastValue] = data[lastIndex];
+    if (limit <= lastTimestamp || typeof lastValue !== "number") {
+        return;
+    }
+    for (let idx = lastIndex + 1; idx < data.length; idx++) {
+        if (data[idx][0] > limit) {
+            break;
+        }
+        if (data[idx][1] === null) {
+            data[idx][1] = lastValue;
+        }
+    }
+    const insertion = data.findIndex(([timestamp]) => timestamp >= limit);
+    if (insertion === -1) {
+        data.push([limit, lastValue]);
+    }
+    else if (data[insertion][0] === limit) {
+        data[insertion][1] = data[insertion][1] ?? lastValue;
+    }
+    else {
+        data.splice(insertion, 0, [limit, lastValue]);
+    }
+};
+/**
+ * Pulls a raw-history line up to "now" so a live chart does not end at the last
+ * reported state somewhere in the past.
+ */
+const extendRawLineToNow = (data, now) => {
+    let lastIndex = -1;
+    let lastValue = null;
+    for (let idx = data.length - 1; idx >= 0; idx--) {
+        const [timestamp, value] = data[idx];
+        if (timestamp > now) {
+            continue;
+        }
+        if (typeof value === "number") {
+            lastIndex = idx;
+            lastValue = value;
+            break;
+        }
+    }
+    if (lastIndex === -1 || lastValue === null) {
+        return;
+    }
+    for (let idx = lastIndex + 1; idx < data.length; idx++) {
+        if (data[idx][0] > now) {
+            break;
+        }
+        if (data[idx][1] === null) {
+            data[idx][1] = lastValue;
+        }
+    }
+    if (data.some((point) => Math.abs(point[0] - now) <= 1000)) {
+        return;
+    }
+    const insertion = data.findIndex((point) => point[0] > now);
+    if (insertion === -1) {
+        data.push([now, lastValue]);
+    }
+    else {
+        data.splice(insertion, 0, [now, lastValue]);
+    }
+};
+const extendLineSeries = (series, context) => {
+    const now = Date.now();
+    series.forEach((serie) => {
+        if (serie.type !== "line" || !serie.data?.length) {
+            return;
+        }
+        const tuples = asTuples(serie.data);
+        if (!tuples) {
+            return;
+        }
+        const seriesId = typeof serie.id === "string" ? serie.id : undefined;
+        const isCompare = context.isCompare(seriesId);
+        const chartType = context.chartTypeOf(seriesId);
+        if (chartType === "step") {
+            const rangeEnd = isCompare ? context.compareDisplayEnd : context.displayEnd;
+            extendStepSeriesToLimit(tuples, Math.min(rangeEnd ?? now, now));
+            return;
+        }
+        const displayEnd = isCompare ? context.compareDisplayEnd : context.displayEnd;
+        const shouldExtend = isCompare ? context.extendCompare : context.extendMain;
+        if (!shouldExtend || displayEnd === null || displayEnd <= now) {
+            return;
+        }
+        extendRawLineToNow(tuples, now);
+    });
+};
+/** Snapshot with all values set to zero, used as the animation start frame. */
+const createZeroSnapshot = (series) => {
+    const clone = typeof structuredClone === "function"
+        ? structuredClone(series)
+        : JSON.parse(JSON.stringify(series));
+    clone.forEach((serie) => {
+        if (!Array.isArray(serie.data)) {
+            return;
+        }
+        serie.data = serie.data.map((point) => {
+            if (Array.isArray(point)) {
+                return [point[0], point[1] === null ? null : 0];
+            }
+            if (point && Array.isArray(point.value)) {
+                return {
+                    ...point,
+                    value: [point.value[0], point.value[1] === null ? null : 0],
+                };
+            }
+            return point;
+        });
+    });
+    return clone;
+};
+
+const HOUR_MS = 60 * 60 * 1000;
+const DAY_MS = 24 * HOUR_MS;
+const MONTH_AXIS_MIN_INTERVAL_MS = 28 * DAY_MS;
+const YEAR_AXIS_MIN_INTERVAL_MS = 365 * DAY_MS;
+const formatMonthLabel = (value, hass) => {
+    const date = new Date(value);
+    const isJanuary = date.getMonth() === 0;
+    const label = formatDatePart(date, isJanuary ? { month: "long", year: "numeric" } : { month: "long" }, hass);
+    // Highlight the year boundary inside a multi-year range.
+    return isJanuary ? `{bold|${label}}` : label;
+};
+/**
+ * Keeps the last bucket of a long range fully visible: months and years are
+ * labelled at their start, so the axis has to reach the final bucket start.
+ */
+const computeAxisMax = (start, end, aggregation, buckets, fallbackEnd) => {
+    if ((aggregation === "month" || aggregation === "year") &&
+        buckets &&
+        buckets.length > 1) {
+        const lastBucket = buckets[buckets.length - 1];
+        if (lastBucket > start.getTime()) {
+            return lastBucket;
+        }
+    }
+    if (!end) {
+        return fallbackEnd ?? start.getTime();
+    }
+    // Trim the exclusive end of long ranges back to the last labelled tick.
+    const dayDifference = differenceInDays(end, start);
+    let max = new Date(end);
+    if (dayDifference > 2 && max.getHours() === 0) {
+        max = subHours(max, 1);
+    }
+    if (dayDifference > 2) {
+        max.setMinutes(0, 0, 0);
+    }
+    if (dayDifference > 35) {
+        max.setDate(1);
+    }
+    if (dayDifference > 2) {
+        max.setHours(0);
+    }
+    return max.getTime();
+};
+const buildXAxis = ({ start, end, aggregation, buckets, fallbackEnd, hass, }) => {
+    const primary = {
+        id: "primary",
+        type: "time",
+        min: start,
+        max: computeAxisMax(start, end, aggregation, buckets, fallbackEnd),
+        axisPointer: { show: false },
+    };
+    if (aggregation === "month") {
+        primary.minInterval = MONTH_AXIS_MIN_INTERVAL_MS;
+        primary.axisLabel = {
+            formatter: (value) => formatMonthLabel(value, hass),
+        };
+    }
+    else if (aggregation === "year") {
+        primary.minInterval = YEAR_AXIS_MIN_INTERVAL_MS;
+        primary.axisLabel = {
+            formatter: (value) => formatDatePart(new Date(value), { year: "numeric" }, hass),
+        };
+    }
+    // `ha-chart-base` expects a second, hidden axis for its internal handling.
+    return [primary, { id: "secondary", type: "time", show: false }];
+};
+/** Rounds up to a readable axis bound (1, 1.2, 1.5, 2, ... times a power of 10). */
+const roundToNiceValue = (value) => {
+    if (value === 0) {
+        return 1;
+    }
+    const niceNumbers = [1, 1.2, 1.5, 2, 2.5, 3, 4, 5, 6, 8, 10];
+    const magnitude = 10 ** Math.floor(Math.log10(Math.abs(value)));
+    const normalized = Math.abs(value) / magnitude;
+    return (niceNumbers.find((n) => n >= normalized) ?? 10) * magnitude;
+};
+/**
+ * Data range of one axis. Stacked series are summed per timestamp, with
+ * positive and negative stacks tracked separately - exactly how ECharts stacks.
+ */
+const getDataRange = (series, axisIndex) => {
+    const relevant = series.filter((serie) => (serie.yAxisIndex ?? 0) === axisIndex);
+    if (!relevant.length) {
+        return undefined;
+    }
+    let min = Infinity;
+    let max = -Infinity;
+    const stackTotals = new Map();
+    relevant.forEach((serie) => {
+        serie.data?.forEach((point) => {
+            const tuple = toTuple(point);
+            if (!tuple || tuple[1] === null || !Number.isFinite(tuple[1])) {
+                return;
+            }
+            const [timestamp, value] = tuple;
+            if (!serie.stack) {
+                min = Math.min(min, value);
+                max = Math.max(max, value);
+                return;
+            }
+            const perStack = stackTotals.get(serie.stack) ?? new Map();
+            const totals = perStack.get(timestamp) ?? { positive: 0, negative: 0 };
+            if (value >= 0) {
+                totals.positive += value;
+            }
+            else {
+                totals.negative += value;
+            }
+            perStack.set(timestamp, totals);
+            stackTotals.set(serie.stack, perStack);
+        });
+    });
+    stackTotals.forEach((perStack) => {
+        perStack.forEach(({ positive, negative }) => {
+            min = Math.min(min, negative);
+            max = Math.max(max, positive);
+        });
+    });
+    if (!Number.isFinite(min) || !Number.isFinite(max)) {
+        return undefined;
+    }
+    return { min, max };
+};
+const buildYAxes = ({ axes, seriesConfigs, series, hass, }) => {
+    const leftConfig = axes.find((axis) => axis.id === "left");
+    const rightConfig = axes.find((axis) => axis.id === "right");
+    const usesRight = !!rightConfig || seriesConfigs.some((config) => config.y_axis === "right");
+    const createAxis = (config, index) => {
+        let min = config?.min;
+        let max = config?.max;
+        if (config?.center_zero) {
+            if (max !== undefined) {
+                min = -max;
+            }
+            else {
+                const range = getDataRange(series, index);
+                if (range) {
+                    const bound = roundToNiceValue(Math.max(Math.abs(range.min), Math.abs(range.max)));
+                    min = -bound;
+                    max = bound;
+                }
+            }
+        }
+        return {
+            type: config?.logarithmic_scale ? "log" : "value",
+            name: config?.unit,
+            nameGap: config?.unit ? 2 : 0,
+            nameTextStyle: { align: "left" },
+            position: index === 0 ? "left" : "right",
+            min,
+            max,
+            splitLine: { show: !config?.hide_grid },
+            axisLabel: {
+                formatter: (value) => formatNumber(value, hass),
+            },
+            scale: config?.fit_y_data ?? false,
+            axisPointer: { show: false },
+        };
+    };
+    const yAxis = [createAxis(leftConfig, 0)];
+    if (usesRight) {
+        yAxis.push(createAxis(rightConfig, 1));
+    }
+    return yAxis;
+};
+
+/**
+ * Time selection: one click marks exactly one position of the chart.
+ *
+ * The selection is plain state of the card and plain data of the chart model -
+ * nothing is pushed into the chart instance as an ECharts action. Every redraw
+ * re-derives marker and dimming from the stored bucket, so a data refresh, a
+ * theme switch or a live update can never lose the selection. It ends with the
+ * page, not with a repaint.
+ */
+/**
+ * Snaps a clicked x position onto an existing sample. A click may land
+ * anywhere in the plotting area, so the closest sample of any series wins.
+ */
+const resolveBucket = (series, x) => {
+    let bucket = null;
+    let distance = Number.POSITIVE_INFINITY;
+    series.forEach((serie) => {
+        if (!Array.isArray(serie.data)) {
+            return;
+        }
+        serie.data.forEach((point) => {
+            const tuple = toTuple(point);
+            if (!tuple) {
+                return;
+            }
+            const candidate = Math.abs(tuple[0] - x);
+            if (candidate < distance) {
+                distance = candidate;
+                bucket = tuple[0];
+            }
+        });
+    });
+    return bucket;
+};
+/** First sample after `bucket` across all series - the end of a raw selection. */
+const nextSampleAfter = (series, bucket) => {
+    let next = null;
+    series.forEach((serie) => {
+        if (!Array.isArray(serie.data)) {
+            return;
+        }
+        serie.data.forEach((point) => {
+            const tuple = toTuple(point);
+            if (!tuple || tuple[0] <= bucket) {
+                return;
+            }
+            if (next === null || tuple[0] < next) {
+                next = tuple[0];
+            }
+        });
+    });
+    return next;
+};
+/**
+ * Resolves a clicked x position into the period it selects.
+ *
+ * On a fixed grid the next bucket ends the period - the last one is closed by
+ * advancing the aggregation period, so a bucket reaching past the visible end
+ * keeps its full length. Without a grid (raw history) the next sample ends it.
+ */
+const resolveSelection = (x, { series, buckets, aggregation, displayEnd }) => {
+    if (x === null) {
+        return null;
+    }
+    const bucket = resolveBucket(series, x);
+    if (bucket === null) {
+        return null;
+    }
+    if (buckets?.length &&
+        aggregation &&
+        aggregation !== "raw" &&
+        aggregation !== "disabled") {
+        const index = buckets.indexOf(bucket);
+        if (index >= 0) {
+            const end = index + 1 < buckets.length
+                ? buckets[index + 1]
+                : advanceBucket(new Date(bucket), aggregation).getTime();
+            return { bucket, start: bucket, end };
+        }
+    }
+    return {
+        bucket,
+        start: bucket,
+        end: nextSampleAfter(series, bucket) ?? displayEnd,
+    };
+};
+/** Id of the series that carries the visible selection marker. */
+const SELECTION_SERIES_ID = "__selection_marker";
+const BAND_OPACITY = 0.16;
+/**
+ * Builds the visible marker as a series of its own: it carries no data, so it
+ * stays out of stacking, bar layout and axis scaling, and it is rebuilt from
+ * the selection on every assembly instead of living inside the chart instance.
+ *
+ * A bucket with a known end is marked as a band across its full width; an
+ * open-ended one only gets a line at its position.
+ */
+const buildSelectionMarker = ({ period, computedStyle, }) => {
+    const accent = computedStyle.getPropertyValue("--primary-color").trim() || "#03a9f4";
+    const lineColor = computedStyle.getPropertyValue("--secondary-text-color").trim() || "#727272";
+    const marker = {
+        id: SELECTION_SERIES_ID,
+        name: "selection",
+        type: "line",
+        data: [],
+        silent: true,
+        animation: false,
+        // Behind the data, so bars and lines keep reading as the foreground.
+        z: 0,
+        xAxisIndex: 0,
+        yAxisIndex: 0,
+    };
+    if (period.end === null) {
+        marker.markLine = {
+            silent: true,
+            animation: false,
+            symbol: "none",
+            label: { show: false },
+            lineStyle: { color: lineColor, width: 1, type: "dashed" },
+            data: [{ xAxis: period.start }],
+        };
+        return marker;
+    }
+    marker.markArea = {
+        silent: true,
+        animation: false,
+        itemStyle: { color: accent, opacity: BAND_OPACITY },
+        label: { show: false },
+        data: [[{ xAxis: period.start }, { xAxis: period.end }]],
+    };
+    return marker;
+};
+
+/**
+ * Dimming for the time selection: everything that does not belong to the
+ * selected bucket fades back, so the selection stands out.
+ *
+ * Bars are dimmed point by point, since only the bars outside the selected
+ * bucket are unaffected by it. A line is drawn as one shape and has no
+ * per-point opacity, so the whole line fades instead and its value at the
+ * selected bucket is restated as a `markPoint` - one object per series rather
+ * than one per sample.
+ */
+/** Opacity applied to everything outside the selection. */
+const DIM_OPACITY = 0.5;
+const MARK_SYMBOL_SIZE = 8;
+const FILL_HELPER_PATTERN = /__fill_(base|area)$/u;
+const dimmed = (style) => {
+    const base = style ?? {};
+    const current = typeof base.opacity === "number" ? base.opacity : 1;
+    return { ...base, opacity: current * DIM_OPACITY };
+};
+const dimItem = (point, value) => {
+    const item = Array.isArray(point)
+        ? { value }
+        : { ...point, value };
+    item.itemStyle = dimmed(item.itemStyle);
+    const label = item.label;
+    if (label) {
+        item.label = { ...label, opacity: DIM_OPACITY };
+    }
+    return item;
+};
+const valueAt = (serie, bucket) => {
+    if (!Array.isArray(serie.data)) {
+        return null;
+    }
+    for (const point of serie.data) {
+        const tuple = toTuple(point);
+        if (tuple && tuple[0] === bucket) {
+            return tuple[1];
+        }
+    }
+    return null;
+};
+const dimBarSeries = (serie, bucket) => {
+    if (!Array.isArray(serie.data)) {
+        return;
+    }
+    serie.data = serie.data.map((point) => {
+        const tuple = toTuple(point);
+        if (!tuple || tuple[0] === bucket) {
+            return point;
+        }
+        return dimItem(point, tuple);
+    });
+};
+const dimLineSeries = (serie, bucket) => {
+    const lineStyle = serie.lineStyle;
+    const areaStyle = serie.areaStyle;
+    serie.lineStyle = dimmed(lineStyle);
+    serie.itemStyle = dimmed(serie.itemStyle);
+    if (areaStyle) {
+        serie.areaStyle = dimmed(areaStyle);
+    }
+    // The invisible helpers of a fill band carry no value of their own.
+    if (FILL_HELPER_PATTERN.test(String(serie.id ?? ""))) {
+        return;
+    }
+    const value = valueAt(serie, bucket);
+    if (value === null) {
+        return;
+    }
+    const color = lineStyle?.color ??
+        serie.color;
+    serie.markPoint = {
+        silent: true,
+        symbol: "circle",
+        symbolSize: MARK_SYMBOL_SIZE,
+        label: { show: false },
+        animation: false,
+        // The mark stays at full strength while the line behind it is faded.
+        itemStyle: color ? { color, opacity: 1 } : { opacity: 1 },
+        data: [{ coord: [bucket, value] }],
+    };
+};
+/**
+ * Fades everything outside the selected bucket. Runs after the bar styling,
+ * whose per-item `itemStyle` is preserved, and leaves the marker series of the
+ * selection itself untouched.
+ */
+const applySelectionDimming = (series, bucket) => {
+    series.forEach((serie) => {
+        if (serie.id === SELECTION_SERIES_ID) {
+            return;
+        }
+        if (serie.type === "bar") {
+            dimBarSeries(serie, bucket);
+        }
+        else if (serie.type === "line") {
+            dimLineSeries(serie, bucket);
+        }
+    });
+};
+
+/**
+ * Folds the separately loaded time-offset data into the regular inputs: shifted
+ * statistics get a synthetic id so the builder can treat them like any other
+ * series.
+ */
+const buildMainInputs = (config, snapshot, hass) => {
+    const statistics = { ...(snapshot.main.statistics ?? {}) };
+    const metadata = { ...snapshot.main.metadata };
+    const calculated = new Map(snapshot.main.calculated);
+    snapshot.shiftedCalculated.forEach((value, key) => calculated.set(key, value));
+    const configSeries = config.series.map((series, index) => {
+        const statisticId = getStatisticId(series);
+        if (!getSeriesTimeOffset(series) || !statisticId) {
+            return series;
+        }
+        const shiftedId = shiftedStatisticId(index, statisticId);
+        statistics[shiftedId] = snapshot.shiftedStatistics.get(index) ?? [];
+        const shiftedMetadata = snapshot.shiftedMetadata.get(index) ?? snapshot.main.metadata[statisticId];
+        if (shiftedMetadata) {
+            metadata[shiftedId] = { ...shiftedMetadata, statistic_id: shiftedId };
+        }
+        return {
+            ...series,
+            statistic_id: shiftedId,
+            name: series.name ??
+                hass.states[statisticId]?.attributes.friendly_name ??
+                shiftedMetadata?.name ??
+                statisticId,
+        };
+    });
+    return { statistics, metadata, configSeries, calculated };
+};
+const compareDataIsCurrent = (snapshot) => !!snapshot.comparePeriodStart &&
+    !!snapshot.compare.statistics &&
+    snapshot.compare.range?.start === snapshot.comparePeriodStart.getTime() &&
+    (snapshot.compare.range?.end ?? null) ===
+        (snapshot.comparePeriodEnd?.getTime() ?? null);
+const remapTimestamps = (serie, transform) => {
+    if (!Array.isArray(serie.data)) {
+        return;
+    }
+    serie.data = serie.data.map((point) => {
+        const tuple = toTuple(point);
+        if (!tuple) {
+            return point;
+        }
+        const mapped = [transform(tuple[0]), tuple[1]];
+        return Array.isArray(point) ? mapped : { ...point, value: mapped };
+    });
+};
+const seriesHasValues = (series) => series.some((serie) => serie.data?.some((point) => {
+    const tuple = toTuple(point);
+    return !!tuple && tuple[1] !== null;
+}));
+/**
+ * Builds the complete chart model: series for the visible range, optional
+ * compare series, and the axis/grid options.
+ */
+const assembleChart = ({ hass, config, snapshot, computedStyle, darkMode, logger, selectedX = null, }) => {
+    const { periodStart, periodEnd } = snapshot;
+    if (!periodStart || !snapshot.main.statistics || !snapshot.main.range) {
+        return undefined;
+    }
+    // Ignore stale data that belongs to a range the card has already left.
+    if (snapshot.main.range.start !== periodStart.getTime() ||
+        (snapshot.main.range.end ?? null) !== (periodEnd?.getTime() ?? null)) {
+        return undefined;
+    }
+    const inputs = buildMainInputs(config, snapshot, hass);
+    const colorCycle = config.color_cycle ?? [];
+    const main = buildSeries({
+        hass,
+        configSeries: inputs.configSeries,
+        statistics: inputs.statistics,
+        metadata: inputs.metadata,
+        calculatedData: inputs.calculated,
+        colorCycle,
+        darkMode,
+        computedStyle,
+        logger,
+    });
+    const configById = new Map(main.configById);
+    const barLayout = new BarStackLayout();
+    main.series.forEach((serie, index) => {
+        if (serie.type === "bar") {
+            barLayout.assignCurrent(serie, index);
+        }
+    });
+    const compareSeries = [];
+    if (compareDataIsCurrent(snapshot) && snapshot.comparePeriodStart) {
+        const compare = buildSeries({
+            hass,
+            configSeries: inputs.configSeries,
+            statistics: snapshot.compare.statistics,
+            metadata: snapshot.compare.metadata,
+            calculatedData: snapshot.compare.calculated,
+            colorCycle,
+            darkMode,
+            computedStyle,
+            logger,
+        });
+        const transform = createCompareTransform(periodStart, snapshot.comparePeriodStart);
+        compare.series.forEach((serie, index) => {
+            const baseId = serie.id ?? `compare_${index}`;
+            const compareId = toCompareId(baseId);
+            const cloned = { ...serie, id: compareId, name: `${serie.name ?? baseId} (compare)` };
+            remapTimestamps(cloned, transform);
+            const baseConfig = compare.configById.get(baseId) ??
+                compare.configById.get(baseId.replace(/__fill_(base|area)$/u, ""));
+            if (baseConfig) {
+                configById.set(compareId, baseConfig);
+            }
+            const compareColorToken = resolveThemedColor(baseConfig?.compare_color, darkMode);
+            const compareColor = compareColorToken
+                ? resolveColorToken(compareColorToken, computedStyle)
+                : undefined;
+            if (cloned.type === "bar") {
+                barLayout.assignCompare(cloned, baseId);
+            }
+            else if (cloned.stack?.trim()) {
+                cloned.stack = `${cloned.stack.trim()}--compare`;
+            }
+            else {
+                cloned.stack = `${compareId}--stack`;
+            }
+            styleCompareSeries(cloned, compareColor);
+            cloned.z = Math.max((cloned.z ?? 0) - 1, 0);
+            compareSeries.push(cloned);
+        });
+    }
+    const series = [
+        ...barLayout.placeholders(),
+        ...compareSeries,
+        ...main.series,
+    ];
+    if (!series.length) {
+        return undefined;
+    }
+    const displayEnd = periodEnd?.getTime() ?? snapshot.main.range.end ?? null;
+    const buckets = buildBucketSequence(periodStart.getTime(), displayEnd, snapshot.main.aggregation);
+    if (buckets?.length) {
+        normalizeLineSeries(series, buckets);
+    }
+    extendLineSeries(series, {
+        displayEnd,
+        // Compare data was already remapped onto the visible range.
+        compareDisplayEnd: displayEnd,
+        extendMain: snapshot.main.aggregation === "raw",
+        extendCompare: snapshot.compare.aggregation === "raw",
+        chartTypeOf: (id) => configById.get(toBaseId(id ?? ""))?.chart_type ?? configById.get(id ?? "")?.chart_type,
+        isCompare: (id) => !!id && isCompareId(id),
+    });
+    applyBarStyling(series, {
+        buckets,
+        configById,
+        valueLabelColor: computedStyle.getPropertyValue("--primary-text-color").trim() || "#000",
+        formatValue: (value, precision) => formatNumber(value, hass, {
+            minimumFractionDigits: precision,
+            maximumFractionDigits: precision,
+        }),
+        logger,
+    });
+    // The selection is derived from the data of this assembly, so a refresh keeps
+    // marker and dimming in place as long as the bucket still exists.
+    const selection = resolveSelection(selectedX, {
+        series,
+        buckets,
+        aggregation: snapshot.main.aggregation,
+        displayEnd,
+    });
+    if (selection) {
+        applySelectionDimming(series, selection.bucket);
+        series.push(buildSelectionMarker({ period: selection, computedStyle }));
+    }
+    const options = {
+        xAxis: buildXAxis({
+            start: periodStart,
+            end: periodEnd,
+            aggregation: snapshot.main.aggregation,
+            buckets,
+            fallbackEnd: snapshot.main.range.end,
+            hass,
+        }),
+        yAxis: buildYAxes({
+            axes: config.y_axes ?? [],
+            seriesConfigs: config.series,
+            series,
+            hass,
+        }),
+        grid: { top: 15, left: 1, right: 1, bottom: 0, containLabel: true },
+        // This card renders neither a legend nor a tooltip or axis pointers.
+        legend: { show: false },
+        tooltip: { show: false, showContent: false, axisPointer: { type: "none" } },
+    };
+    return { series, options, hasData: seriesHasValues(series), selection };
+};
+
+/**
+ * Where a click landed on the time axis.
+ *
+ * The card renders no tooltip and no axis pointer, so the click position is
+ * taken from the chart itself: the zrender layer of the ECharts instance
+ * reports clicks anywhere inside the canvas, and `convertFromPixel` turns the
+ * pixel into a value of the time axis. That is a direct read of the click and
+ * needs neither a tooltip formatter nor the transient axis pointer state.
+ *
+ * Home Assistant creates the instance inside `<ha-chart-base>` lazily, so the
+ * subscription is made on the way into a click: `pointerdown` runs before the
+ * click is handled, and by then the chart certainly exists. Versions without a
+ * reachable instance fall back to the `chart-click` event of the element.
+ */
+class SelectionInput {
+    constructor(_onPick, _logger) {
+        this._onPick = _onPick;
+        this._logger = _logger;
+        this._onZrClick = (event) => {
+            const chart = this._chart;
+            if (!chart) {
+                return;
+            }
+            const pixel = [event.offsetX, event.offsetY];
+            // Clicks on the axis labels or beside the plot select nothing.
+            if (typeof chart.containPixel === "function" &&
+                !chart.containPixel({ gridIndex: 0 }, pixel)) {
+                return;
+            }
+            const converted = chart.convertFromPixel({ xAxisIndex: 0 }, pixel[0]);
+            const x = Array.isArray(converted) ? converted[0] : converted;
+            if (typeof x === "number" && Number.isFinite(x)) {
+                this._onPick(x);
+            }
+        };
+    }
+    /** True once a chart instance is hooked; the fallback stays silent then. */
+    get hooked() {
+        return this._chart !== undefined;
+    }
+    /** Subscribes to the chart of `host`, replacing an earlier subscription. */
+    attach(host) {
+        const chart = host?.chart;
+        if (!chart || typeof chart.getZr !== "function") {
+            this._logger.warnOnce("no-chart-instance", "<ha-chart-base> exposes no chart instance; falling back to chart-click.");
+            return;
+        }
+        if (chart === this._chart) {
+            return;
+        }
+        // A rebuilt chart is a new instance, so the old subscription is dropped.
+        this.detach();
+        this._chart = chart;
+        this._zr = chart.getZr();
+        this._zr?.on("click", this._onZrClick);
+    }
+    detach() {
+        this._zr?.off("click", this._onZrClick);
+        this._zr = undefined;
+        this._chart = undefined;
+    }
+    /** Fallback: `<ha-chart-base>` reports a click that hit a data item. */
+    handleChartClick(event) {
+        if (this.hooked) {
+            return;
+        }
+        const detail = event.detail;
+        const value = Array.isArray(detail?.value) ? detail?.value[0] : undefined;
+        if (typeof value === "number" && Number.isFinite(value)) {
+            this._onPick(value);
+        }
+    }
+}
+
+/** The released version — what `package.json` says, without the build counter */
+/** `<semver>+build.<n>` — what the card reports in the console */
+const CARD_VERSION = "0.0.1+build.24" ;
+
+/** Name of the event the card fires whenever the selected period changes. */
+const SELECTION_EVENT = "custom-graph-selection";
+const DISABLED_MESSAGE = "Fetching statistics is disabled for this period. Choose a shorter time range.";
+console.info("%c CUSTOM-GRAPH-CARD %c " + CARD_VERSION + " ", "background-color: #000000; color: #4CAF50; font-weight: bold;", "background-color: #666666; color: #FFFFFF; font-weight: bold;");
+let CustomGraphCard = class CustomGraphCard extends s {
+    constructor() {
+        super(...arguments);
+        this._chartData = [];
+        this._hasData = false;
+        this._loading = false;
+        this._disabled = false;
+        this._usesSectionLayout = false;
+        this._logger = new OnceLogger();
+        this._controller = new GraphDataController(() => this._onData());
+        this._darkMode = false;
+        /** The one selected x value; `null` while nothing is selected. */
+        this._selectedX = null;
+        /** Bucket and period of the last assembly, used to toggle and to report. */
+        this._selection = null;
+        /** Series of the last assembly; a click is snapped against them. */
+        this._assembledSeries = [];
+        /** Last reported selection; guards the event against repeated payloads. */
+        this._emitted = {
+            start: null,
+            end: null,
+        };
+        this._selectionInput = new SelectionInput((x) => this._onPick(x), this._logger);
+        /** Home Assistant creates the chart lazily; a click proves it exists. */
+        this._attachSelectionInput = () => {
+            this._selectionInput.attach(this.renderRoot?.querySelector("ha-chart-base"));
+        };
+        this._onChartClick = (event) => {
+            this._selectionInput.handleChartClick(event);
+        };
+    }
+    setConfig(config) {
+        this._config = normalizeConfig(config);
+        this._logger.reset();
+        this._renderedRange = undefined;
+        this._clearSelection();
+        this._controller.setConfig(this._config);
+    }
+    static getStubConfig() {
+        return { type: "custom:custom-graph-card", series: [] };
+    }
+    getCardSize() {
+        return 5;
+    }
+    getGridOptions() {
+        const hasTitle = !!this._config?.title?.trim();
+        return {
+            columns: 12,
+            min_columns: 6,
+            rows: hasTitle ? 5 : 4,
+            min_rows: hasTitle ? 4 : 3,
+        };
+    }
+    connectedCallback() {
+        super.connectedCallback();
+        this._controller.connect();
+    }
+    disconnectedCallback() {
+        super.disconnectedCallback();
+        this._controller.disconnect();
+        this._selectionInput.detach();
+        if (this._animationFrame !== undefined) {
+            cancelAnimationFrame(this._animationFrame);
+            this._animationFrame = undefined;
+        }
+    }
+    shouldUpdate(changedProps) {
+        if (!changedProps.has("hass") || changedProps.size > 1) {
+            return true;
+        }
+        // Ignore plain entity state updates; the card is driven by statistics.
+        const oldHass = changedProps.get("hass");
+        if (!oldHass) {
+            return true;
+        }
+        return (oldHass.connected !== this.hass?.connected ||
+            oldHass.themes !== this.hass?.themes ||
+            oldHass.locale !== this.hass?.locale);
+    }
+    willUpdate(changedProps) {
+        if (changedProps.has("hass") && this.hass) {
+            this._controller.setHass(this.hass);
+        }
+    }
+    updated(changedProps) {
+        super.updated(changedProps);
+        this._evaluateSectionLayout();
+        // A theme switch changes every resolved color, so the chart is rebuilt.
+        const darkMode = this._isDarkMode();
+        const themeChanged = darkMode !== this._darkMode;
+        this._darkMode = darkMode;
+        if (changedProps.has("_config") || themeChanged) {
+            this._rebuildChart();
+        }
+    }
+    firstUpdated() {
+        this._evaluateSectionLayout();
+    }
+    _onData() {
+        const snapshot = this._controller.snapshot;
+        this._loading = snapshot.loading;
+        this._disabled = snapshot.aggregationDisabled;
+        this._rebuildChart();
+    }
+    /** Section layouts size the card through grid rows instead of `chart_height`. */
+    _evaluateSectionLayout() {
+        if (!this.isConnected) {
+            return;
+        }
+        const layout = this.layout;
+        this._usesSectionLayout = layout === "grid";
+    }
+    /**
+     * A click was placed in the plotting area. The x value is snapped onto a
+     * bucket first, so clicking the selected one again clears it - which keeps
+     * exactly one selection alive without any timing heuristics.
+     */
+    _onPick(x) {
+        const bucket = resolveBucket(this._assembledSeries, x);
+        if (bucket === null) {
+            return;
+        }
+        this._selectedX = bucket === this._selection?.bucket ? null : bucket;
+        this._rebuildChart();
+    }
+    _clearSelection() {
+        this._selectedX = null;
+        this._selection = null;
+        this._selectedRange = undefined;
+    }
+    /**
+     * The selection belongs to one visible range: it survives refreshes, live
+     * updates and redraws, but a switch of the range points at a period the
+     * chart no longer shows.
+     */
+    _dropSelectionOnRangeChange(range) {
+        if (this._selectedX === null || !this._selectedRange) {
+            return;
+        }
+        if (this._selectedRange.start !== range.start ||
+            this._selectedRange.end !== range.end) {
+            this._clearSelection();
+        }
+    }
+    /**
+     * Reports the selected period as a {@link SELECTION_EVENT} whenever it
+     * changed, so dashboards can react to it. The event bubbles out of the
+     * shadow root; clearing the selection reports a payload of `null`s.
+     */
+    _emitSelection(period) {
+        const start = period?.start ?? null;
+        const end = period?.end ?? null;
+        if (start === this._emitted.start && end === this._emitted.end) {
+            return;
+        }
+        this._emitted = { start, end };
+        this.dispatchEvent(new CustomEvent(SELECTION_EVENT, {
+            detail: {
+                start,
+                end,
+                startTime: start === null ? null : new Date(start).toISOString(),
+                endTime: end === null ? null : new Date(end).toISOString(),
+            },
+            bubbles: true,
+            composed: true,
+        }));
+    }
+    _rebuildChart() {
+        if (!this.hass || !this._config) {
+            return;
+        }
+        const snapshot = this._controller.snapshot;
+        if (snapshot.periodStart) {
+            this._dropSelectionOnRangeChange({
+                start: snapshot.periodStart.getTime(),
+                end: snapshot.periodEnd?.getTime() ?? null,
+            });
+        }
+        const assembled = assembleChart({
+            hass: this.hass,
+            config: this._config,
+            snapshot,
+            computedStyle: this.isConnected
+                ? getComputedStyle(this)
+                : getComputedStyle(document.documentElement),
+            darkMode: this._isDarkMode(),
+            logger: this._logger,
+            selectedX: this._selectedX,
+        });
+        if (!assembled) {
+            this._chartData = [];
+            this._chartOptions = undefined;
+            this._hasData = false;
+            this._assembledSeries = [];
+            this._clearSelection();
+            this._emitSelection(null);
+            return;
+        }
+        const range = {
+            start: snapshot.periodStart.getTime(),
+            end: snapshot.periodEnd?.getTime() ?? null,
+        };
+        this._assembledSeries = assembled.series;
+        this._selection = assembled.selection;
+        // The click may have snapped to a bucket of its own, so the stored value
+        // follows the assembly - a later click on the same bucket then clears it.
+        this._selectedX = assembled.selection?.bucket ?? null;
+        this._selectedRange = assembled.selection ? range : undefined;
+        this._emitSelection(assembled.selection);
+        const rangeChanged = !this._renderedRange ||
+            this._renderedRange.start !== range.start ||
+            this._renderedRange.end !== range.end;
+        this._hasData = assembled.hasData;
+        // Growing out of zero looks better than morphing the previous range's data
+        // into the new one, so a range switch always animates from a flat chart.
+        this._chartOptions = { ...assembled.options, animation: rangeChanged };
+        if (!rangeChanged) {
+            this._chartData = assembled.series;
+            return;
+        }
+        this._chartData = createZeroSnapshot(assembled.series);
+        if (this._animationFrame !== undefined) {
+            cancelAnimationFrame(this._animationFrame);
+        }
+        this._animationFrame = requestAnimationFrame(() => {
+            this._animationFrame = undefined;
+            this._chartData = assembled.series;
+            this._renderedRange = range;
+        });
+    }
+    _isDarkMode() {
+        return (this.hass?.themes?.darkMode === true);
+    }
+    _localize(key, fallback) {
+        const localized = this.hass?.localize?.(key);
+        return localized?.trim() ? localized : fallback;
+    }
+    render() {
+        if (!this.hass || !this._config) {
+            return A;
+        }
+        const hasTitle = !!this._config.title?.trim();
+        return x `
       <ha-card>
-        ${e?U`<h1 class="card-header">${this._config.title}</h1>`:L}
+        ${hasTitle
+            ? x `<h1 class="card-header">${this._config.title}</h1>`
+            : A}
         <div
-          class=${eo({content:!0,"content--no-title":!e})}
+          class=${o({ content: true, "content--no-title": !hasTitle })}
         >
           ${this._renderChart()}
         </div>
       </ha-card>
-    `}_renderChart(){if(this._loading)return U`<div class="placeholder">
-        ${this._localize("ui.components.statistics_charts.loading_statistics","Loading statistics…")}
-      </div>`;if(this._disabled)return U`<div class="placeholder">
-        ${this._localize("ui.components.statistics_charts.choose_shorter_period","Fetching statistics is disabled for this period. Choose a shorter time range.")}
-      </div>`;if(!this._hasData||!this._chartOptions)return U`<div class="placeholder">
-        ${this._localize("ui.components.statistics_charts.no_statistics_found","No statistics available for the selected period")}
-      </div>`;let e=this._usesSectionLayout?"100%":this._config?.chart_height;return U`
+    `;
+    }
+    _renderChart() {
+        if (this._loading) {
+            return x `<div class="placeholder">
+        ${this._localize("ui.components.statistics_charts.loading_statistics", "Loading statistics…")}
+      </div>`;
+        }
+        if (this._disabled) {
+            return x `<div class="placeholder">
+        ${this._localize("ui.components.statistics_charts.choose_shorter_period", DISABLED_MESSAGE)}
+      </div>`;
+        }
+        if (!this._hasData || !this._chartOptions) {
+            return x `<div class="placeholder">
+        ${this._localize("ui.components.statistics_charts.no_statistics_found", "No statistics available for the selected period")}
+      </div>`;
+        }
+        const height = this._usesSectionLayout ? "100%" : this._config?.chart_height;
+        return x `
       <div
-        class=${eo({chart:!0,"chart--section":this._usesSectionLayout})}
+        class=${o({
+            chart: true,
+            "chart--section": this._usesSectionLayout,
+        })}
       >
         <ha-chart-base
           .hass=${this.hass}
           .data=${this._chartData}
           .options=${this._chartOptions}
-          .height=${e}
+          .height=${height}
           @pointerdown=${this._attachSelectionInput}
           @chart-click=${this._onChartClick}
         ></ha-chart-base>
       </div>
-    `}static{this.styles=l`
+    `;
+    }
+};
+CustomGraphCard.styles = i$3 `
     ha-card {
       display: flex;
       flex-direction: column;
@@ -84,5 +5287,40 @@ let e,t;function i(e,t,i,r){var s,a=arguments.length,n=a<3?t:null===r?r=Object.g
       text-align: center;
       padding: 16px 8px;
     }
-  `}constructor(...e){super(...e),this._chartData=[],this._hasData=!1,this._loading=!1,this._disabled=!1,this._usesSectionLayout=!1,this._logger=new eu,this._controller=new tf(()=>this._onData()),this._darkMode=!1,this._selectedX=null,this._selection=null,this._assembledSeries=[],this._emitted={start:null,end:null},this._selectionInput=new tU(e=>this._onPick(e),this._logger),this._attachSelectionInput=()=>{this._selectionInput.attach(this.renderRoot?.querySelector("ha-chart-base"))},this._onChartClick=e=>{this._selectionInput.handleChartClick(e)}}}i([es({attribute:!1})],tz.prototype,"hass",void 0),i([ea()],tz.prototype,"_config",void 0),i([ea()],tz.prototype,"_chartData",void 0),i([ea()],tz.prototype,"_chartOptions",void 0),i([ea()],tz.prototype,"_hasData",void 0),i([ea()],tz.prototype,"_loading",void 0),i([ea()],tz.prototype,"_disabled",void 0),i([ea()],tz.prototype,"_usesSectionLayout",void 0),tz=i([(t="custom-graph-card",e=>"function"==typeof e?(customElements.define(t,e),e):((e,t)=>{let{kind:i,elements:r}=t;return{kind:i,elements:r,finisher(t){customElements.define(e,t)}}})(t,e))],tz),window.customCards=window.customCards||[],window.customCards.push({type:"custom-graph-card",name:"Custom Graph",description:"Statistics chart with custom aggregation, stacking, axes and colors. YAML only.",documentationURL:"https://github.com/stefgo/ha-custom-graph"});
+  `;
+__decorate([
+    n$1({ attribute: false })
+], CustomGraphCard.prototype, "hass", void 0);
+__decorate([
+    t$1()
+], CustomGraphCard.prototype, "_config", void 0);
+__decorate([
+    t$1()
+], CustomGraphCard.prototype, "_chartData", void 0);
+__decorate([
+    t$1()
+], CustomGraphCard.prototype, "_chartOptions", void 0);
+__decorate([
+    t$1()
+], CustomGraphCard.prototype, "_hasData", void 0);
+__decorate([
+    t$1()
+], CustomGraphCard.prototype, "_loading", void 0);
+__decorate([
+    t$1()
+], CustomGraphCard.prototype, "_disabled", void 0);
+__decorate([
+    t$1()
+], CustomGraphCard.prototype, "_usesSectionLayout", void 0);
+CustomGraphCard = __decorate([
+    e$2("custom-graph-card")
+], CustomGraphCard);
+
+window.customCards = window.customCards || [];
+window.customCards.push({
+    type: "custom-graph-card",
+    name: "Custom Graph",
+    description: "Statistics chart with custom aggregation, stacking, axes and colors. YAML only.",
+    documentationURL: "https://github.com/stefgo/ha-custom-graph",
+});
 //# sourceMappingURL=customgraph.js.map

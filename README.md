@@ -484,9 +484,15 @@ document.addEventListener("custom-graph-selection", (event) => {
 ```bash
 npm install       # install dependencies
 npm run typecheck # TypeScript, no emit
-npm run build     # production bundle in dist/
-npm run watch     # rebuild into a local Home Assistant www folder
+npm run build     # bundle into dist/customgraph.js (rollup)
+npm run watch     # same, rebuilding on every change
 ```
+
+Every rollup run bumps the local counter in `.build-number` and bakes
+`<version>+build.<n>` into the bundle, which the card prints to the browser
+console. If the console still shows the previous number after a deploy, the
+browser served a cached bundle. The counter is local to the working copy and
+not committed; the released version stays the semver in `package.json`.
 
 The architecture of the source tree is documented in
 [docs/architecture.md](docs/architecture.md).
