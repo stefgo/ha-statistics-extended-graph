@@ -13,8 +13,36 @@ interface EnergyCollection {
 }
 
 const POLL_INTERVAL_MS = 200;
-const RETRY_INTERVAL_MS = 1000;
 const MAX_ATTEMPTS = 50;
+/**
+ * Once the picker has been declared missing it is unlikely to appear, so the
+ * poll backs off from the startup rate to an idle heartbeat. It keeps watching,
+ * because a picker card can still be added to the view later.
+ */
+const IDLE_INTERVAL_MS = 15_000;
+
+/**
+ * Compares `major.minor` numerically. A plain string comparison gets this
+ * wrong the moment a minor reaches two digits ("2026.10" sorts before
+ * "2026.4"), and an unknown version is treated as current.
+ */
+const isVersionAtLeast = (
+  version: string | undefined,
+  major: number,
+  minor: number
+): boolean => {
+  const parts = String(version ?? "")
+    .split(".")
+    .map((part) => Number.parseInt(part, 10));
+
+  if (!Number.isFinite(parts[0])) {
+    return true;
+  }
+  if (parts[0] !== major) {
+    return parts[0] > major;
+  }
+  return Number.isFinite(parts[1]) ? parts[1] >= minor : false;
+};
 
 const getCollectionKey = (
   hass: HomeAssistant,
@@ -24,7 +52,9 @@ const getCollectionKey = (
     return `_${collectionKey}`;
   }
   // Home Assistant 2026.4 scopes the default collection per dashboard panel.
-  return hass.config.version < "2026.4" ? "_energy" : `_energy_${hass.panelUrl}`;
+  return isVersionAtLeast(hass.config?.version, 2026, 4)
+    ? `_energy_${hass.panelUrl}`
+    : "_energy";
 };
 
 const findCollection = (
@@ -91,7 +121,7 @@ export class EnergyCollectionBinding {
       }
       this._pollHandle = window.setTimeout(
         () => this._attach(hass, key, MAX_ATTEMPTS),
-        RETRY_INTERVAL_MS
+        IDLE_INTERVAL_MS
       );
       return;
     }
