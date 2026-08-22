@@ -504,7 +504,8 @@ export class GraphDataController {
       periodStart,
       periodEnd,
       config.aggregation,
-      this._usesEnergyPicker
+      this._usesEnergyPicker,
+      this._logger
     );
 
     const targetKey = isCompare ? "compare" : "main";
@@ -872,7 +873,8 @@ export class GraphDataController {
         group.sourceStart,
         group.sourceEnd,
         this._config?.aggregation,
-        this._usesEnergyPicker
+        this._usesEnergyPicker,
+        this._logger
       ).filter((aggregation) => aggregation !== "raw");
 
       if (!plan.length || plan[0] === "disabled") {
