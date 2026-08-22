@@ -3438,70 +3438,139 @@ const formatDatePart = (date, options, hass) => {
 };
 
 const clampAlpha = (value) => Math.max(0, Math.min(1, Number.isFinite(value) ? value : 1));
-const hexToRgb = (value) => {
-    const hex = value.replace("#", "").trim();
-    if (hex.length === 3 || hex.length === 4) {
-        return {
-            r: parseInt(hex[0] + hex[0], 16),
-            g: parseInt(hex[1] + hex[1], 16),
-            b: parseInt(hex[2] + hex[2], 16),
-        };
+/**
+ * `rgb()` and `rgba()` in both the legacy comma form and the modern space form,
+ * with percentages allowed for any channel: `rgb(255, 0, 0)`,
+ * `rgb(255 0 0 / 50%)`, `rgb(100% 0% 0%)`.
+ */
+const RGB_PATTERN = /^rgba?\(\s*([\d.]+%?)[\s,]+([\d.]+%?)[\s,]+([\d.]+%?)(?:\s*[,/]\s*([\d.]+%?))?\s*\)$/i;
+const channel = (raw) => raw.endsWith("%") ? (Number.parseFloat(raw) / 100) * 255 : Number(raw);
+const alphaChannel = (raw) => {
+    if (raw === undefined) {
+        return 1;
     }
-    if (hex.length === 6 || hex.length === 8) {
-        return {
-            r: parseInt(hex.substring(0, 2), 16),
-            g: parseInt(hex.substring(2, 4), 16),
-            b: parseInt(hex.substring(4, 6), 16),
-        };
-    }
-    return null;
+    return clampAlpha(raw.endsWith("%") ? Number.parseFloat(raw) / 100 : Number(raw));
 };
-const rgbStringToRgb = (value) => {
-    const match = value
-        .trim()
-        .match(/rgba?\(\s*([\d.]+)\s*,\s*([\d.]+)\s*,\s*([\d.]+)(?:\s*,\s*[\d.]+\s*)?\)/i);
+const hexToParsed = (value) => {
+    const hex = value.replace("#", "").trim();
+    const short = hex.length === 3 || hex.length === 4;
+    const long = hex.length === 6 || hex.length === 8;
+    if (!short && !long) {
+        return null;
+    }
+    const part = (index) => {
+        const raw = short
+            ? hex[index].repeat(2)
+            : hex.substring(index * 2, index * 2 + 2);
+        return parseInt(raw, 16);
+    };
+    const hasAlpha = hex.length === 4 || hex.length === 8;
+    const parsed = { r: part(0), g: part(1), b: part(2), a: hasAlpha ? part(3) / 255 : 1 };
+    return Number.isNaN(parsed.r) || Number.isNaN(parsed.g) || Number.isNaN(parsed.b)
+        ? null
+        : parsed;
+};
+const rgbStringToParsed = (value) => {
+    const match = value.match(RGB_PATTERN);
     if (!match) {
         return null;
     }
-    return { r: Number(match[1]), g: Number(match[2]), b: Number(match[3]) };
+    const parsed = {
+        r: channel(match[1]),
+        g: channel(match[2]),
+        b: channel(match[3]),
+        a: alphaChannel(match[4]),
+    };
+    return Number.isFinite(parsed.r) && Number.isFinite(parsed.g) && Number.isFinite(parsed.b)
+        ? parsed
+        : null;
+};
+/** Lazily created; `null` once it is known that no canvas is available. */
+let canvasContext;
+/**
+ * Last resort for everything the patterns above do not cover: named colors,
+ * `hsl()`, and whatever a theme resolves to on a modern browser - `oklch()`,
+ * `color-mix()`. Assigning to `fillStyle` normalizes a color the browser
+ * understands and is ignored for one it does not, so two different sentinels
+ * before the same assignment tell the two apart.
+ */
+const normalizeThroughCanvas = (value) => {
+    if (canvasContext === undefined) {
+        try {
+            canvasContext = document.createElement("canvas").getContext("2d");
+        }
+        catch {
+            canvasContext = null;
+        }
+    }
+    if (!canvasContext) {
+        return undefined;
+    }
+    try {
+        canvasContext.fillStyle = "#000000";
+        canvasContext.fillStyle = value;
+        const first = String(canvasContext.fillStyle);
+        canvasContext.fillStyle = "#ffffff";
+        canvasContext.fillStyle = value;
+        const second = String(canvasContext.fillStyle);
+        return first === second ? first : undefined;
+    }
+    catch {
+        return undefined;
+    }
+};
+const CACHE_LIMIT = 256;
+const parseCache = new Map();
+const warned = new Set();
+/**
+ * Parses any color literal into channels. Colors are resolved once per literal
+ * and cached, because this runs per series on every redraw.
+ */
+const parseColorWithAlpha = (value) => {
+    const trimmed = value.trim();
+    if (!trimmed) {
+        return null;
+    }
+    const cached = parseCache.get(trimmed);
+    if (cached !== undefined) {
+        return cached;
+    }
+    let parsed = trimmed.startsWith("#")
+        ? hexToParsed(trimmed)
+        : rgbStringToParsed(trimmed);
+    if (!parsed) {
+        const normalized = normalizeThroughCanvas(trimmed);
+        if (normalized) {
+            parsed = normalized.startsWith("#")
+                ? hexToParsed(normalized)
+                : rgbStringToParsed(normalized);
+        }
+    }
+    if (!parsed && !warned.has(trimmed)) {
+        warned.add(trimmed);
+        // Silence here would show up as an opacity option that quietly does
+        // nothing, which is a good deal harder to find than a line in the console.
+        log("warn", `The color "${trimmed}" could not be read. Opacity and compare colors are left unchanged for it.`);
+    }
+    if (parseCache.size >= CACHE_LIMIT) {
+        parseCache.clear();
+    }
+    parseCache.set(trimmed, parsed);
+    return parsed;
 };
 const parseColor = (value) => {
-    const trimmed = value.trim();
-    if (trimmed.startsWith("#")) {
-        return hexToRgb(trimmed);
-    }
-    if (trimmed.startsWith("rgb")) {
-        return rgbStringToRgb(trimmed);
-    }
-    return null;
+    const parsed = parseColorWithAlpha(value);
+    return parsed ? { r: parsed.r, g: parsed.g, b: parsed.b } : null;
 };
-/** Returns the alpha channel of a color literal, or `undefined` when unknown. */
+/**
+ * Returns the alpha channel of a color literal, or `undefined` when the color
+ * cannot be read at all. An opaque color reports `1`.
+ */
 const extractAlpha = (color) => {
     if (typeof color !== "string") {
         return undefined;
     }
-    const trimmed = color.trim();
-    const rgbaMatch = trimmed.match(/rgba?\(([^)]+)\)/i);
-    if (rgbaMatch) {
-        const parts = rgbaMatch[1].split(",").map((part) => part.trim());
-        if (parts.length === 4) {
-            const alpha = Number(parts[3]);
-            return Number.isFinite(alpha) ? alpha : undefined;
-        }
-        if (parts.length === 3) {
-            return 1;
-        }
-    }
-    if (trimmed.startsWith("#")) {
-        const hex = trimmed.slice(1);
-        if (hex.length === 8) {
-            return parseInt(hex.slice(6, 8), 16) / 255;
-        }
-        if (hex.length === 4) {
-            return parseInt(hex.slice(3, 4).repeat(2), 16) / 255;
-        }
-    }
-    return undefined;
+    return parseColorWithAlpha(color)?.a;
 };
 const applyAlpha = (color, alpha) => {
     const rgb = parseColor(color);
@@ -5136,7 +5205,7 @@ class SelectionInput {
 
 /** The released version — what `package.json` says, without the build counter */
 /** `<semver>+build.<n>` — what the card reports in the console */
-const CARD_VERSION = "0.0.1+build.30" ;
+const CARD_VERSION = "0.0.1+build.31" ;
 
 /** Name of the event the card fires whenever the selected period changes. */
 const SELECTION_EVENT = "custom-graph-selection";
