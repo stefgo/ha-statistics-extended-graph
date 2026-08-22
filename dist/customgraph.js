@@ -1253,7 +1253,34 @@ function subHours(dirtyDate, dirtyAmount) {
 
 /** Home Assistant's recorder buckets weeks starting on Monday. */
 const WEEK_OPTIONS = { weekStartsOn: 1 };
-const MAX_BUCKETS = 200_000;
+/**
+ * Above this a chart is unusable anyway and the browser tab stalls building it:
+ * `5minute` over a year is ~105.000 buckets, one point per bucket per series,
+ * and a bar grid of the same size on top. It is a guard against a
+ * misconfiguration, not a display limit - `resolveAggregationPlan` keeps the
+ * count in range before it gets here.
+ */
+const MAX_BUCKETS = 5_000;
+/** Nominal length of one bucket, used to size a range before it is built. */
+const BUCKET_LENGTH_MS = {
+    "5minute": 5 * 60_000,
+    hour: 60 * 60_000,
+    day: 24 * 60 * 60_000,
+    week: 7 * 24 * 60 * 60_000,
+    month: 28 * 24 * 60 * 60_000,
+    year: 365 * 24 * 60 * 60_000,
+};
+/**
+ * Roughly how many buckets an interval produces over a range. Month and year
+ * use their shortest possible length, so the estimate never undercounts.
+ */
+const estimateBucketCount = (start, end, period) => {
+    if (period === "raw" || period === "disabled") {
+        return 0;
+    }
+    const span = Math.max((end ?? new Date()).getTime() - start.getTime(), 0);
+    return Math.ceil(span / BUCKET_LENGTH_MS[period]);
+};
 const advanceBucket = (date, period) => {
     switch (period) {
         case "5minute":
@@ -1929,14 +1956,38 @@ const applyLiveHourPatch = (base, patch) => {
 };
 
 const POLL_INTERVAL_MS = 200;
-const RETRY_INTERVAL_MS = 1000;
 const MAX_ATTEMPTS = 50;
+/**
+ * Once the picker has been declared missing it is unlikely to appear, so the
+ * poll backs off from the startup rate to an idle heartbeat. It keeps watching,
+ * because a picker card can still be added to the view later.
+ */
+const IDLE_INTERVAL_MS = 15_000;
+/**
+ * Compares `major.minor` numerically. A plain string comparison gets this
+ * wrong the moment a minor reaches two digits ("2026.10" sorts before
+ * "2026.4"), and an unknown version is treated as current.
+ */
+const isVersionAtLeast = (version, major, minor) => {
+    const parts = String(version ?? "")
+        .split(".")
+        .map((part) => Number.parseInt(part, 10));
+    if (!Number.isFinite(parts[0])) {
+        return true;
+    }
+    if (parts[0] !== major) {
+        return parts[0] > major;
+    }
+    return Number.isFinite(parts[1]) ? parts[1] >= minor : false;
+};
 const getCollectionKey = (hass, collectionKey) => {
     if (collectionKey) {
         return `_${collectionKey}`;
     }
     // Home Assistant 2026.4 scopes the default collection per dashboard panel.
-    return hass.config.version < "2026.4" ? "_energy" : `_energy_${hass.panelUrl}`;
+    return isVersionAtLeast(hass.config?.version, 2026, 4)
+        ? `_energy_${hass.panelUrl}`
+        : "_energy";
 };
 const findCollection = (hass, key) => {
     const connection = hass.connection;
@@ -1986,7 +2037,7 @@ class EnergyCollectionBinding {
                 log("warn", "No energy date selection found on this dashboard. Falling back to the default range.");
                 this._onUnavailable();
             }
-            this._pollHandle = window.setTimeout(() => this._attach(hass, key, MAX_ATTEMPTS), RETRY_INTERVAL_MS);
+            this._pollHandle = window.setTimeout(() => this._attach(hass, key, MAX_ATTEMPTS), IDLE_INTERVAL_MS);
             return;
         }
         this._pollHandle = window.setTimeout(() => this._attach(hass, key, attempt + 1), POLL_INTERVAL_MS);
@@ -2034,13 +2085,23 @@ const getEnergyPickerRange = (start, end) => {
  * Builds the ordered list of intervals to try: the configured override first,
  * then the automatic choice, then the configured fallback. Every entry after a
  * `disabled` target is dropped, because `disabled` means "do not query at all".
+ *
+ * An interval that would produce an absurd number of buckets for the range is
+ * dropped as well. `aggregation.manual: 5minute` on a year is a plausible
+ * typo and would otherwise fetch and render ~105.000 points per series, which
+ * hangs the browser tab; the automatic choice takes over instead. The
+ * automatic choice itself is bounded by construction and never hits this.
  */
-const resolveAggregationPlan = (start, end, aggregation, usesEnergyPicker) => {
+const resolveAggregationPlan = (start, end, aggregation, usesEnergyPicker, logger) => {
     const auto = deriveAutoPeriod(start, end);
     const plan = [];
     let stopped = false;
     const push = (target) => {
         if (stopped || !target) {
+            return;
+        }
+        if (estimateBucketCount(start, end, target) > MAX_BUCKETS) {
+            logger?.warnOnce(`aggregation-too-dense-${target}`, `Aggregation "${target}" would produce far more than ${MAX_BUCKETS} points for this range and is skipped.`);
             return;
         }
         if (!plan.includes(target)) {
@@ -2477,6 +2538,12 @@ const FETCH_TIMEOUT_MS = 60_000;
 const RAW_DELTA_OVERLAP_MS = 60_000;
 const VISIBILITY_RESUME_DELAY_MS = 200;
 const LIVE_HOUR_MIN_DELAY_MS = 30_000;
+/**
+ * Backoff for a load that failed outright. Without it the next attempt would
+ * be the regular refresh, which for hourly data is up to an hour away - far
+ * too long to sit on a blank card because of one websocket hiccup.
+ */
+const RETRY_DELAYS_MS = [5_000, 15_000, 60_000];
 const emptyTargetState = () => ({
     metadata: {},
     calculated: new Map(),
@@ -2501,6 +2568,8 @@ class GraphDataController {
         this._isLoading = false;
         /** Per-target request counter; only the newest response may write state. */
         this._generations = { main: 0, compare: 0 };
+        /** Consecutive failures per target, which pick the backoff delay. */
+        this._failures = { main: 0, compare: 0 };
         this._connected = false;
         this._visible = typeof document === "undefined" || document.visibilityState !== "hidden";
         this._logger = new OnceLogger();
@@ -2533,7 +2602,7 @@ class GraphDataController {
                 this._scheduleAutoRefresh();
             }, VISIBILITY_RESUME_DELAY_MS);
         };
-        this._queue = new FetchQueue(() => this._visible, (key) => this._runFetch(key));
+        this._queue = new FetchQueue(() => this._connected && this._visible, (key) => this._runFetch(key));
         this._energyBinding = new EnergyCollectionBinding((data) => this._onEnergyRange(data), () => this._onEnergyUnavailable());
     }
     // ---------------------------------------------------------------- lifecycle
@@ -2541,12 +2610,24 @@ class GraphDataController {
         if (this._connected) {
             return;
         }
+        // Statistics survive a detach, but the queue, every timer and the raw
+        // stream do not - they are only ever (re)armed at the end of a load.
+        // `_sync` schedules nothing when neither range nor series changed, so a
+        // re-attached card would sit on frozen data forever. Loading once puts all
+        // of that back in place, and refreshes what went stale while detached.
+        const reattached = !!this._main.statistics;
         this._connected = true;
         if (typeof document !== "undefined") {
             document.addEventListener("visibilitychange", this._handleVisibilityChange);
             this._visible = document.visibilityState !== "hidden";
         }
         this._sync();
+        if (reattached) {
+            this._queue.schedule("main");
+            if (this._comparePeriodStart) {
+                this._queue.schedule("compare");
+            }
+        }
     }
     disconnect() {
         this._connected = false;
@@ -2699,6 +2780,8 @@ class GraphDataController {
             this._periodStart = resolved.start;
             this._periodEnd = resolved.end;
             this._main.lastRawEnd = undefined;
+            // A new range is a fresh start, not a continuation of a failing one.
+            this._failures.main = 0;
         }
         return changed;
     }
@@ -2717,6 +2800,7 @@ class GraphDataController {
             this._comparePeriodStart = range.start;
             this._comparePeriodEnd = range.end;
             this._compare = emptyTargetState();
+            this._failures.compare = 0;
         }
         return changed;
     }
@@ -2761,6 +2845,15 @@ class GraphDataController {
             types: types.size ? Array.from(types) : [DEFAULT_STAT_TYPE],
         };
     }
+    /**
+     * Whether a response may still write state. A newer request supersedes an
+     * older one, and a detached card must not be revived by a late answer: every
+     * `await` in a load is a point at which the card can have gone away, and the
+     * tail of a load arms timers and the raw stream that nobody would clean up.
+     */
+    _isCurrent(target, generation) {
+        return this._connected && generation === this._generations[target];
+    }
     async _runFetch(key) {
         if (key === "live") {
             await this._loadLiveHour();
@@ -2786,7 +2879,7 @@ class GraphDataController {
             this._statisticIds = ids;
             this._statTypes = types;
         }
-        const plan = resolveAggregationPlan(periodStart, periodEnd, config.aggregation, this._usesEnergyPicker);
+        const plan = resolveAggregationPlan(periodStart, periodEnd, config.aggregation, this._usesEnergyPicker, this._logger);
         const targetKey = isCompare ? "compare" : "main";
         if (plan[0] === "disabled") {
             this._generations[targetKey] += 1;
@@ -2802,9 +2895,17 @@ class GraphDataController {
         try {
             const metadata = await this._loadMetadata(hass, ids);
             const result = await this._fetchWithPlan(hass, plan, periodStart, periodEnd, ids, types, isCompare, range);
-            if (generation !== this._generations[targetKey]) {
+            if (!this._isCurrent(targetKey, generation)) {
                 return;
             }
+            // Every request threw. The recorder did not say "no data" - it said
+            // nothing at all, so the last good data stays on screen and the load is
+            // retried rather than the card going blank until the next refresh.
+            if (result.failed) {
+                this._scheduleRetry(targetKey);
+                return;
+            }
+            this._failures[targetKey] = 0;
             target.metadata = metadata;
             target.range = range;
             target.aggregation = result.aggregation;
@@ -2828,7 +2929,7 @@ class GraphDataController {
                     void this._teardownRawStream();
                 }
                 await this._loadShiftedSeries(periodStart, periodEnd, generation);
-                if (generation !== this._generations.main) {
+                if (!this._isCurrent("main", generation)) {
                     return;
                 }
                 this._scheduleAutoRefresh();
@@ -2836,26 +2937,30 @@ class GraphDataController {
             }
         }
         catch (error) {
-            if (generation === this._generations[targetKey]) {
+            if (this._isCurrent(targetKey, generation)) {
                 log("error", "Failed to load statistics", {
                     compare: isCompare,
                     error: error instanceof Error ? error.message : error,
                 });
-                if (isCompare) {
-                    this._compare = emptyTargetState();
-                }
-                else {
-                    this._main = emptyTargetState();
-                    this._clearShifted();
-                }
+                // Whatever is on screen is older than intended but still real data,
+                // which beats an empty card. It is replaced once a load succeeds.
+                this._scheduleRetry(targetKey);
             }
         }
         finally {
             if (generation === this._generations[targetKey] && showLoader) {
                 this._isLoading = false;
             }
-            this._onChange();
+            if (this._connected) {
+                this._onChange();
+            }
         }
+    }
+    /** Re-runs a failed load, backing off over consecutive failures. */
+    _scheduleRetry(target) {
+        const attempt = Math.min(this._failures[target], RETRY_DELAYS_MS.length - 1);
+        this._failures[target] = this._failures[target] + 1;
+        this._queue.schedule(target, RETRY_DELAYS_MS[attempt]);
     }
     _applyDisabled(isCompare, range) {
         const target = emptyTargetState();
@@ -2897,20 +3002,38 @@ class GraphDataController {
     /**
      * Walks the aggregation plan until one interval returns data. Every step is
      * tried once; the last attempted interval is reported even when it was empty.
+     *
+     * `failed` separates the two ways this can come back without data: the
+     * recorder genuinely has none for the range, or every request threw. Only the
+     * caller can act on that difference, and it must - overwriting good data with
+     * the empty result of a failed request is what blanks the card.
      */
     async _fetchWithPlan(hass, plan, start, end, ids, types, isCompare, range) {
         if (!ids.length) {
-            return { statistics: {}, aggregation: plan[0], incremental: false };
+            return {
+                statistics: {},
+                aggregation: plan[0],
+                incremental: false,
+                failed: false,
+            };
         }
         let statistics = {};
         let lastAggregation = plan[0];
         let incremental = false;
+        let attempts = 0;
+        let errors = 0;
         for (let idx = 0; idx < plan.length; idx++) {
             const aggregation = plan[idx];
             lastAggregation = aggregation;
             if (aggregation === "disabled") {
-                return { statistics: {}, aggregation, incremental: false };
+                return {
+                    statistics: {},
+                    aggregation,
+                    incremental: false,
+                    failed: false,
+                };
             }
+            attempts += 1;
             try {
                 if (aggregation === "raw") {
                     const target = isCompare ? this._compare : this._main;
@@ -2926,19 +3049,25 @@ class GraphDataController {
                     incremental = false;
                 }
                 if (statisticsHaveData(statistics, ids)) {
-                    return { statistics, aggregation, incremental };
+                    return { statistics, aggregation, incremental, failed: false };
                 }
                 if (idx < plan.length - 1) {
                     log("warn", `Aggregation "${aggregation}" returned no data. Trying "${plan[idx + 1]}".`);
                 }
             }
             catch (error) {
+                errors += 1;
                 log("error", `Failed to load statistics for aggregation "${aggregation}"`, {
                     error: error instanceof Error ? error.message : error,
                 });
             }
         }
-        return { statistics, aggregation: lastAggregation, incremental };
+        return {
+            statistics,
+            aggregation: lastAggregation,
+            incremental,
+            failed: attempts > 0 && errors === attempts,
+        };
     }
     async _fetchRawStatistics(hass, start, end, ids) {
         // Query slightly beyond the visible range so lines reach both edges.
@@ -3025,14 +3154,14 @@ class GraphDataController {
         const calculatedByKey = new Map();
         for (const group of groups) {
             const { ids, types } = this._shiftedGroupRequests(group);
-            const plan = resolveAggregationPlan(group.sourceStart, group.sourceEnd, this._config?.aggregation, this._usesEnergyPicker).filter((aggregation) => aggregation !== "raw");
+            const plan = resolveAggregationPlan(group.sourceStart, group.sourceEnd, this._config?.aggregation, this._usesEnergyPicker, this._logger).filter((aggregation) => aggregation !== "raw");
             if (!plan.length || plan[0] === "disabled") {
                 this._logger.warnOnce(`shifted-unsupported-${group.key}`, "Series time offset requires aggregated statistics; raw history and disabled ranges are skipped.");
                 continue;
             }
             const metadata = await this._loadMetadata(hass, ids);
             const result = await this._fetchWithPlan(hass, plan, group.sourceStart, group.sourceEnd, ids, types, false, { start: group.sourceStart.getTime(), end: group.sourceEnd?.getTime() ?? null });
-            if (generation !== this._generations.main) {
+            if (!this._isCurrent("main", generation)) {
                 return;
             }
             if (result.aggregation === "disabled") {
@@ -3087,7 +3216,8 @@ class GraphDataController {
     }
     // --------------------------------------------------------------- raw stream
     _shouldUseRawStream() {
-        return (this._visible &&
+        return (this._connected &&
+            this._visible &&
             !!this._hass &&
             this._main.aggregation === "raw" &&
             this._statisticIds.length > 0);
@@ -3196,7 +3326,7 @@ class GraphDataController {
      */
     async _loadLiveHour() {
         const hass = this._hass;
-        if (!hass || !this._visible || !this._shouldComputeCurrentHour()) {
+        if (!hass || !this._connected || !this._visible || !this._shouldComputeCurrentHour()) {
             return;
         }
         const base = this._main.statistics;
@@ -3226,7 +3356,7 @@ class GraphDataController {
     // ------------------------------------------------------------- auto refresh
     _scheduleAutoRefresh() {
         this._clearTimer("_autoRefreshTimeout");
-        if (!this._visible || !this._config || !this._periodStart) {
+        if (!this._connected || !this._visible || !this._config || !this._periodStart) {
             return;
         }
         const timespan = this._timespan;
@@ -3250,7 +3380,7 @@ class GraphDataController {
         }, Math.max(delay, 60_000));
     }
     _runAutoRefresh(aggregation) {
-        if (!this._visible) {
+        if (!this._connected || !this._visible) {
             return;
         }
         const periodChanged = this._recalculatePeriod();
@@ -5006,7 +5136,7 @@ class SelectionInput {
 
 /** The released version — what `package.json` says, without the build counter */
 /** `<semver>+build.<n>` — what the card reports in the console */
-const CARD_VERSION = "0.0.1+build.29" ;
+const CARD_VERSION = "0.0.1+build.30" ;
 
 /** Name of the event the card fires whenever the selected period changes. */
 const SELECTION_EVENT = "custom-graph-selection";
@@ -5042,6 +5172,24 @@ let CustomGraphCard = class CustomGraphCard extends s {
         this._onChartClick = (event) => {
             this._selectionInput.handleChartClick(event);
         };
+    }
+    /**
+     * Lit runs `willUpdate` only for updates that `shouldUpdate` let through, and
+     * this card drops plain entity-state updates - it is driven by statistics,
+     * not by states. Handing `hass` on from there would therefore have skipped
+     * most of them and left the controller holding an object that grows
+     * arbitrarily old, including its websocket connection. The controller is fed
+     * from the setter instead, so it always has the current one, while the render
+     * path keeps ignoring the updates it has no use for.
+     */
+    set hass(hass) {
+        const previous = this._hass;
+        this._hass = hass;
+        this._controller.setHass(hass);
+        this.requestUpdate("hass", previous);
+    }
+    get hass() {
+        return this._hass;
     }
     setConfig(config) {
         this._config = normalizeConfig(config);
@@ -5090,11 +5238,6 @@ let CustomGraphCard = class CustomGraphCard extends s {
         return (oldHass.connected !== this.hass?.connected ||
             oldHass.themes !== this.hass?.themes ||
             oldHass.locale !== this.hass?.locale);
-    }
-    willUpdate(changedProps) {
-        if (changedProps.has("hass") && this.hass) {
-            this._controller.setHass(this.hass);
-        }
     }
     updated(changedProps) {
         super.updated(changedProps);
@@ -5179,6 +5322,19 @@ let CustomGraphCard = class CustomGraphCard extends s {
             composed: true,
         }));
     }
+    /**
+     * True while the loaded data still belongs to a range the card has left -
+     * the one case in which "nothing to assemble" means "not yet" rather than
+     * "there is nothing".
+     */
+    _dataIsStale(snapshot) {
+        const range = snapshot.main.range;
+        if (!snapshot.periodStart || !range) {
+            return false;
+        }
+        return (range.start !== snapshot.periodStart.getTime() ||
+            (range.end ?? null) !== (snapshot.periodEnd?.getTime() ?? null));
+    }
     _rebuildChart() {
         if (!this.hass || !this._config) {
             return;
@@ -5202,12 +5358,20 @@ let CustomGraphCard = class CustomGraphCard extends s {
             selectedX: this._selectedX,
         });
         if (!assembled) {
-            this._chartData = [];
-            this._chartOptions = undefined;
-            this._hasData = false;
+            // Data for the new range has not arrived yet, so there is nothing to
+            // draw - but there is something drawn. Replacing it with the "no data"
+            // placeholder for the length of a fetch reads as an error rather than as
+            // loading, so the previous chart keeps standing. Only the selection goes:
+            // it points at a period the card has left.
+            const keepPreviousChart = this._hasData && this._dataIsStale(snapshot);
             this._assembledSeries = [];
             this._clearSelection();
             this._emitSelection(null);
+            if (!keepPreviousChart) {
+                this._chartData = [];
+                this._chartOptions = undefined;
+                this._hasData = false;
+            }
             return;
         }
         const range = {
@@ -5363,7 +5527,7 @@ CustomGraphCard.styles = i$3 `
   `;
 __decorate([
     n$1({ attribute: false })
-], CustomGraphCard.prototype, "hass", void 0);
+], CustomGraphCard.prototype, "hass", null);
 __decorate([
     t$1()
 ], CustomGraphCard.prototype, "_config", void 0);

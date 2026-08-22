@@ -53,7 +53,28 @@ console.info(
 
 @customElement("custom-graph-card")
 export class CustomGraphCard extends LitElement {
-  @property({ attribute: false }) public hass!: HomeAssistant;
+  /**
+   * Lit runs `willUpdate` only for updates that `shouldUpdate` let through, and
+   * this card drops plain entity-state updates - it is driven by statistics,
+   * not by states. Handing `hass` on from there would therefore have skipped
+   * most of them and left the controller holding an object that grows
+   * arbitrarily old, including its websocket connection. The controller is fed
+   * from the setter instead, so it always has the current one, while the render
+   * path keeps ignoring the updates it has no use for.
+   */
+  @property({ attribute: false })
+  public set hass(hass: HomeAssistant) {
+    const previous = this._hass;
+    this._hass = hass;
+    this._controller.setHass(hass);
+    this.requestUpdate("hass", previous);
+  }
+
+  public get hass(): HomeAssistant {
+    return this._hass as HomeAssistant;
+  }
+
+  private _hass?: HomeAssistant;
 
   @state() private _config?: CustomGraphCardConfig;
   @state() private _chartData: SeriesOption[] = [];
@@ -141,12 +162,6 @@ export class CustomGraphCard extends LitElement {
       oldHass.themes !== this.hass?.themes ||
       oldHass.locale !== this.hass?.locale
     );
-  }
-
-  protected override willUpdate(changedProps: PropertyValues): void {
-    if (changedProps.has("hass") && this.hass) {
-      this._controller.setHass(this.hass);
-    }
   }
 
   protected override updated(changedProps: PropertyValues): void {
