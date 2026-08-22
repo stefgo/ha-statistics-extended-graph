@@ -149,7 +149,7 @@ export class GraphDataController {
 
   constructor(private readonly _onChange: () => void) {
     this._queue = new FetchQueue<FetchKey>(
-      () => this._visible,
+      () => this._connected && this._visible,
       (key) => this._runFetch(key)
     );
     this._energyBinding = new EnergyCollectionBinding(
@@ -164,12 +164,26 @@ export class GraphDataController {
     if (this._connected) {
       return;
     }
+    // Statistics survive a detach, but the queue, every timer and the raw
+    // stream do not - they are only ever (re)armed at the end of a load.
+    // `_sync` schedules nothing when neither range nor series changed, so a
+    // re-attached card would sit on frozen data forever. Loading once puts all
+    // of that back in place, and refreshes what went stale while detached.
+    const reattached = !!this._main.statistics;
+
     this._connected = true;
     if (typeof document !== "undefined") {
       document.addEventListener("visibilitychange", this._handleVisibilityChange);
       this._visible = document.visibilityState !== "hidden";
     }
     this._sync();
+
+    if (reattached) {
+      this._queue.schedule("main");
+      if (this._comparePeriodStart) {
+        this._queue.schedule("compare");
+      }
+    }
   }
 
   public disconnect(): void {
@@ -435,6 +449,16 @@ export class GraphDataController {
     };
   }
 
+  /**
+   * Whether a response may still write state. A newer request supersedes an
+   * older one, and a detached card must not be revived by a late answer: every
+   * `await` in a load is a point at which the card can have gone away, and the
+   * tail of a load arms timers and the raw stream that nobody would clean up.
+   */
+  private _isCurrent(target: "main" | "compare", generation: number): boolean {
+    return this._connected && generation === this._generations[target];
+  }
+
   private async _runFetch(key: FetchKey): Promise<void> {
     if (key === "live") {
       await this._loadLiveHour();
@@ -500,7 +524,7 @@ export class GraphDataController {
         range
       );
 
-      if (generation !== this._generations[targetKey]) {
+      if (!this._isCurrent(targetKey, generation)) {
         return;
       }
 
@@ -529,7 +553,7 @@ export class GraphDataController {
           void this._teardownRawStream();
         }
         await this._loadShiftedSeries(periodStart, periodEnd, generation);
-        if (generation !== this._generations.main) {
+        if (!this._isCurrent("main", generation)) {
           return;
         }
         this._scheduleAutoRefresh();
@@ -552,7 +576,9 @@ export class GraphDataController {
       if (generation === this._generations[targetKey] && showLoader) {
         this._isLoading = false;
       }
-      this._onChange();
+      if (this._connected) {
+        this._onChange();
+      }
     }
   }
 
@@ -819,7 +845,7 @@ export class GraphDataController {
         { start: group.sourceStart.getTime(), end: group.sourceEnd?.getTime() ?? null }
       );
 
-      if (generation !== this._generations.main) {
+      if (!this._isCurrent("main", generation)) {
         return;
       }
       if (result.aggregation === "disabled") {
@@ -901,6 +927,7 @@ export class GraphDataController {
 
   private _shouldUseRawStream(): boolean {
     return (
+      this._connected &&
       this._visible &&
       !!this._hass &&
       this._main.aggregation === "raw" &&
@@ -1037,7 +1064,7 @@ export class GraphDataController {
    */
   private async _loadLiveHour(): Promise<void> {
     const hass = this._hass;
-    if (!hass || !this._visible || !this._shouldComputeCurrentHour()) {
+    if (!hass || !this._connected || !this._visible || !this._shouldComputeCurrentHour()) {
       return;
     }
     const base = this._main.statistics;
@@ -1082,7 +1109,7 @@ export class GraphDataController {
 
   private _scheduleAutoRefresh(): void {
     this._clearTimer("_autoRefreshTimeout");
-    if (!this._visible || !this._config || !this._periodStart) {
+    if (!this._connected || !this._visible || !this._config || !this._periodStart) {
       return;
     }
 
@@ -1114,7 +1141,7 @@ export class GraphDataController {
   }
 
   private _runAutoRefresh(aggregation: AggregationTarget): void {
-    if (!this._visible) {
+    if (!this._connected || !this._visible) {
       return;
     }
 
