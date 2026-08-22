@@ -6,6 +6,7 @@ import type { HomeAssistant } from "custom-card-helpers";
 import type { CustomGraphCardConfig } from "./config/types";
 import { normalizeConfig } from "./config/validate";
 import { GraphDataController } from "./core/data-controller";
+import type { GraphSnapshot } from "./core/data-controller";
 import { OnceLogger } from "./core/logger";
 import { assembleChart } from "./chart/assemble";
 import { createZeroSnapshot } from "./chart/lines";
@@ -250,6 +251,22 @@ export class CustomGraphCard extends LitElement {
     );
   }
 
+  /**
+   * True while the loaded data still belongs to a range the card has left -
+   * the one case in which "nothing to assemble" means "not yet" rather than
+   * "there is nothing".
+   */
+  private _dataIsStale(snapshot: GraphSnapshot): boolean {
+    const range = snapshot.main.range;
+    if (!snapshot.periodStart || !range) {
+      return false;
+    }
+    return (
+      range.start !== snapshot.periodStart.getTime() ||
+      (range.end ?? null) !== (snapshot.periodEnd?.getTime() ?? null)
+    );
+  }
+
   private _rebuildChart(): void {
     if (!this.hass || !this._config) {
       return;
@@ -276,12 +293,22 @@ export class CustomGraphCard extends LitElement {
     });
 
     if (!assembled) {
-      this._chartData = [];
-      this._chartOptions = undefined;
-      this._hasData = false;
+      // Data for the new range has not arrived yet, so there is nothing to
+      // draw - but there is something drawn. Replacing it with the "no data"
+      // placeholder for the length of a fetch reads as an error rather than as
+      // loading, so the previous chart keeps standing. Only the selection goes:
+      // it points at a period the card has left.
+      const keepPreviousChart = this._hasData && this._dataIsStale(snapshot);
+
       this._assembledSeries = [];
       this._clearSelection();
       this._emitSelection(null);
+
+      if (!keepPreviousChart) {
+        this._chartData = [];
+        this._chartOptions = undefined;
+        this._hasData = false;
+      }
       return;
     }
 
