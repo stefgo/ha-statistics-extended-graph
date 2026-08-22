@@ -2446,6 +2446,7 @@ const withTimeout = (promise, timeoutMs, context) => {
         }
     });
 };
+const DEFAULT_DELAY_MS = 500;
 /**
  * Debounces and serializes the loads of one target.
  *
@@ -2460,17 +2461,23 @@ class FetchQueue {
         this._entries = new Map();
         this._parked = new Set();
     }
-    schedule(key, delayMs = 500) {
+    schedule(key, delayMs = DEFAULT_DELAY_MS) {
         const entry = this._entry(key);
         if (!this._isActive()) {
             this._clearTimer(entry);
             entry.queued = true;
+            entry.queuedDelay = delayMs;
             this._parked.add(key);
             return;
         }
         if (entry.inFlight) {
             this._clearTimer(entry);
             entry.queued = true;
+            // The rerun keeps the delay it was asked for. A retry scheduled from
+            // inside a failing run would otherwise collapse onto the default and
+            // hammer a recorder that is already not answering, and a range change
+            // arriving later would still get its own, shorter delay back.
+            entry.queuedDelay = delayMs;
             return;
         }
         this._clearTimer(entry);
@@ -2501,20 +2508,24 @@ class FetchQueue {
             this._clearTimer(entry);
             entry.inFlight = false;
             entry.queued = false;
+            entry.queuedDelay = undefined;
         });
         this._parked.clear();
     }
     async _execute(key, entry) {
         entry.inFlight = true;
         entry.queued = false;
+        entry.queuedDelay = undefined;
         try {
             await this._run(key);
         }
         finally {
             entry.inFlight = false;
             if (entry.queued) {
+                const delay = entry.queuedDelay;
                 entry.queued = false;
-                this.schedule(key);
+                entry.queuedDelay = undefined;
+                this.schedule(key, delay);
             }
         }
     }
@@ -5205,7 +5216,7 @@ class SelectionInput {
 
 /** The released version — what `package.json` says, without the build counter */
 /** `<semver>+build.<n>` — what the card reports in the console */
-const CARD_VERSION = "0.0.1+build.31" ;
+const CARD_VERSION = "0.0.1+build.32" ;
 
 /** Name of the event the card fires whenever the selected period changes. */
 const SELECTION_EVENT = "custom-graph-selection";
