@@ -5216,7 +5216,7 @@ class SelectionInput {
 
 /** The released version — what `package.json` says, without the build counter */
 /** `<semver>+build.<n>` — what the card reports in the console */
-const CARD_VERSION = "0.0.1+build.32" ;
+const CARD_VERSION = "0.0.1" ;
 
 /** Name of the event the card fires whenever the selected period changes. */
 const SELECTION_EVENT = "custom-graph-selection";

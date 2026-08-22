@@ -27,7 +27,9 @@ fi
 
 echo "Building card ..."
 npm ci --silent
-npm run build
+# The local build counter is opt-in, so only the bundle deployed from here
+# carries one; every other build stays at the plain semver.
+CUSTOMGRAPH_BUILD_COUNTER=1 npm run build
 
 echo "Deploying customgraph.js to ${HOST}:${TARGET} ..."
 ssh -p "${SSH_PORT}" "${HOST}" "mkdir -p ${TARGET}"

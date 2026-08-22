@@ -10,7 +10,7 @@ declare const __CARD_BUILD_TIME__: string;
 export const CARD_SEMVER =
   typeof __CARD_SEMVER__ === "string" ? __CARD_SEMVER__ : "dev";
 
-/** Rises with every build, so a cached bundle is recognisable by its number */
+/** Rises with every local deploy build; 0 when the build carried no counter */
 export const CARD_BUILD = typeof __CARD_BUILD__ === "number" ? __CARD_BUILD__ : 0;
 
 export const CARD_BUILD_TIME =
