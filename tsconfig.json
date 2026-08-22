@@ -12,10 +12,13 @@
     "exactOptionalPropertyTypes": false,
     "experimentalDecorators": true,
     "useDefineForClassFields": false,
+    "sourceMap": true,
+    "outDir": "./dist",
+    "rootDir": "./",
     "skipLibCheck": true,
     "esModuleInterop": true,
-    "forceConsistentCasingInFileNames": true,
-    "noEmit": true
+    "forceConsistentCasingInFileNames": true
   },
-  "include": ["src/**/*.ts"]
+  "include": ["src/**/*.ts"],
+  "exclude": ["node_modules", "dist"]
 }

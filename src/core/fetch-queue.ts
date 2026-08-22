@@ -24,9 +24,13 @@ export const withTimeout = <T>(
   }) as Promise<T>;
 };
 
+const DEFAULT_DELAY_MS = 500;
+
 interface QueueEntry {
   inFlight: boolean;
   queued: boolean;
+  /** Delay the collapsed rerun is owed; the most recent request sets it. */
+  queuedDelay?: number;
   timeout?: number;
 }
 
@@ -46,12 +50,13 @@ export class FetchQueue<K extends string> {
     private readonly _run: (key: K) => Promise<void>
   ) {}
 
-  public schedule(key: K, delayMs = 500): void {
+  public schedule(key: K, delayMs: number = DEFAULT_DELAY_MS): void {
     const entry = this._entry(key);
 
     if (!this._isActive()) {
       this._clearTimer(entry);
       entry.queued = true;
+      entry.queuedDelay = delayMs;
       this._parked.add(key);
       return;
     }
@@ -59,6 +64,11 @@ export class FetchQueue<K extends string> {
     if (entry.inFlight) {
       this._clearTimer(entry);
       entry.queued = true;
+      // The rerun keeps the delay it was asked for. A retry scheduled from
+      // inside a failing run would otherwise collapse onto the default and
+      // hammer a recorder that is already not answering, and a range change
+      // arriving later would still get its own, shorter delay back.
+      entry.queuedDelay = delayMs;
       return;
     }
 
@@ -94,6 +104,7 @@ export class FetchQueue<K extends string> {
       this._clearTimer(entry);
       entry.inFlight = false;
       entry.queued = false;
+      entry.queuedDelay = undefined;
     });
     this._parked.clear();
   }
@@ -101,13 +112,16 @@ export class FetchQueue<K extends string> {
   private async _execute(key: K, entry: QueueEntry): Promise<void> {
     entry.inFlight = true;
     entry.queued = false;
+    entry.queuedDelay = undefined;
     try {
       await this._run(key);
     } finally {
       entry.inFlight = false;
       if (entry.queued) {
+        const delay = entry.queuedDelay;
         entry.queued = false;
-        this.schedule(key);
+        entry.queuedDelay = undefined;
+        this.schedule(key, delay);
       }
     }
   }

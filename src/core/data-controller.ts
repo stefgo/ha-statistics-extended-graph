@@ -58,6 +58,12 @@ const FETCH_TIMEOUT_MS = 60_000;
 const RAW_DELTA_OVERLAP_MS = 60_000;
 const VISIBILITY_RESUME_DELAY_MS = 200;
 const LIVE_HOUR_MIN_DELAY_MS = 30_000;
+/**
+ * Backoff for a load that failed outright. Without it the next attempt would
+ * be the regular refresh, which for hourly data is up to an hour away - far
+ * too long to sit on a blank card because of one websocket hiccup.
+ */
+const RETRY_DELAYS_MS = [5_000, 15_000, 60_000];
 
 type FetchKey = "main" | "compare" | "live";
 
@@ -134,6 +140,8 @@ export class GraphDataController {
   private _isLoading = false;
   /** Per-target request counter; only the newest response may write state. */
   private _generations: Record<"main" | "compare", number> = { main: 0, compare: 0 };
+  /** Consecutive failures per target, which pick the backoff delay. */
+  private _failures: Record<"main" | "compare", number> = { main: 0, compare: 0 };
 
   private _rawStreamUnsub?: Promise<UnsubscribeFunc | void>;
   private _autoRefreshTimeout?: number;
@@ -149,7 +157,7 @@ export class GraphDataController {
 
   constructor(private readonly _onChange: () => void) {
     this._queue = new FetchQueue<FetchKey>(
-      () => this._visible,
+      () => this._connected && this._visible,
       (key) => this._runFetch(key)
     );
     this._energyBinding = new EnergyCollectionBinding(
@@ -164,12 +172,26 @@ export class GraphDataController {
     if (this._connected) {
       return;
     }
+    // Statistics survive a detach, but the queue, every timer and the raw
+    // stream do not - they are only ever (re)armed at the end of a load.
+    // `_sync` schedules nothing when neither range nor series changed, so a
+    // re-attached card would sit on frozen data forever. Loading once puts all
+    // of that back in place, and refreshes what went stale while detached.
+    const reattached = !!this._main.statistics;
+
     this._connected = true;
     if (typeof document !== "undefined") {
       document.addEventListener("visibilitychange", this._handleVisibilityChange);
       this._visible = document.visibilityState !== "hidden";
     }
     this._sync();
+
+    if (reattached) {
+      this._queue.schedule("main");
+      if (this._comparePeriodStart) {
+        this._queue.schedule("compare");
+      }
+    }
   }
 
   public disconnect(): void {
@@ -358,6 +380,8 @@ export class GraphDataController {
       this._periodStart = resolved.start;
       this._periodEnd = resolved.end;
       this._main.lastRawEnd = undefined;
+      // A new range is a fresh start, not a continuation of a failing one.
+      this._failures.main = 0;
     }
     return changed;
   }
@@ -381,6 +405,7 @@ export class GraphDataController {
       this._comparePeriodStart = range.start;
       this._comparePeriodEnd = range.end;
       this._compare = emptyTargetState();
+      this._failures.compare = 0;
     }
     return changed;
   }
@@ -435,6 +460,16 @@ export class GraphDataController {
     };
   }
 
+  /**
+   * Whether a response may still write state. A newer request supersedes an
+   * older one, and a detached card must not be revived by a late answer: every
+   * `await` in a load is a point at which the card can have gone away, and the
+   * tail of a load arms timers and the raw stream that nobody would clean up.
+   */
+  private _isCurrent(target: "main" | "compare", generation: number): boolean {
+    return this._connected && generation === this._generations[target];
+  }
+
   private async _runFetch(key: FetchKey): Promise<void> {
     if (key === "live") {
       await this._loadLiveHour();
@@ -469,7 +504,8 @@ export class GraphDataController {
       periodStart,
       periodEnd,
       config.aggregation,
-      this._usesEnergyPicker
+      this._usesEnergyPicker,
+      this._logger
     );
 
     const targetKey = isCompare ? "compare" : "main";
@@ -500,9 +536,18 @@ export class GraphDataController {
         range
       );
 
-      if (generation !== this._generations[targetKey]) {
+      if (!this._isCurrent(targetKey, generation)) {
         return;
       }
+
+      // Every request threw. The recorder did not say "no data" - it said
+      // nothing at all, so the last good data stays on screen and the load is
+      // retried rather than the card going blank until the next refresh.
+      if (result.failed) {
+        this._scheduleRetry(targetKey);
+        return;
+      }
+      this._failures[targetKey] = 0;
 
       target.metadata = metadata;
       target.range = range;
@@ -529,31 +574,37 @@ export class GraphDataController {
           void this._teardownRawStream();
         }
         await this._loadShiftedSeries(periodStart, periodEnd, generation);
-        if (generation !== this._generations.main) {
+        if (!this._isCurrent("main", generation)) {
           return;
         }
         this._scheduleAutoRefresh();
         this._scheduleLiveHour();
       }
     } catch (error) {
-      if (generation === this._generations[targetKey]) {
+      if (this._isCurrent(targetKey, generation)) {
         log("error", "Failed to load statistics", {
           compare: isCompare,
           error: error instanceof Error ? error.message : error,
         });
-        if (isCompare) {
-          this._compare = emptyTargetState();
-        } else {
-          this._main = emptyTargetState();
-          this._clearShifted();
-        }
+        // Whatever is on screen is older than intended but still real data,
+        // which beats an empty card. It is replaced once a load succeeds.
+        this._scheduleRetry(targetKey);
       }
     } finally {
       if (generation === this._generations[targetKey] && showLoader) {
         this._isLoading = false;
       }
-      this._onChange();
+      if (this._connected) {
+        this._onChange();
+      }
     }
+  }
+
+  /** Re-runs a failed load, backing off over consecutive failures. */
+  private _scheduleRetry(target: "main" | "compare"): void {
+    const attempt = Math.min(this._failures[target], RETRY_DELAYS_MS.length - 1);
+    this._failures[target] = this._failures[target] + 1;
+    this._queue.schedule(target, RETRY_DELAYS_MS[attempt]);
   }
 
   private _applyDisabled(isCompare: boolean, range: RangeState): void {
@@ -604,6 +655,11 @@ export class GraphDataController {
   /**
    * Walks the aggregation plan until one interval returns data. Every step is
    * tried once; the last attempted interval is reported even when it was empty.
+   *
+   * `failed` separates the two ways this can come back without data: the
+   * recorder genuinely has none for the range, or every request threw. Only the
+   * caller can act on that difference, and it must - overwriting good data with
+   * the empty result of a failed request is what blanks the card.
    */
   private async _fetchWithPlan(
     hass: HomeAssistant,
@@ -618,21 +674,36 @@ export class GraphDataController {
     statistics: Statistics;
     aggregation: AggregationTarget;
     incremental: boolean;
+    failed: boolean;
   }> {
     if (!ids.length) {
-      return { statistics: {}, aggregation: plan[0], incremental: false };
+      return {
+        statistics: {},
+        aggregation: plan[0],
+        incremental: false,
+        failed: false,
+      };
     }
 
     let statistics: Statistics = {};
     let lastAggregation: AggregationTarget = plan[0];
     let incremental = false;
+    let attempts = 0;
+    let errors = 0;
 
     for (let idx = 0; idx < plan.length; idx++) {
       const aggregation = plan[idx];
       lastAggregation = aggregation;
       if (aggregation === "disabled") {
-        return { statistics: {}, aggregation, incremental: false };
+        return {
+          statistics: {},
+          aggregation,
+          incremental: false,
+          failed: false,
+        };
       }
+
+      attempts += 1;
 
       try {
         if (aggregation === "raw") {
@@ -654,7 +725,7 @@ export class GraphDataController {
         }
 
         if (statisticsHaveData(statistics, ids)) {
-          return { statistics, aggregation, incremental };
+          return { statistics, aggregation, incremental, failed: false };
         }
         if (idx < plan.length - 1) {
           log(
@@ -663,13 +734,19 @@ export class GraphDataController {
           );
         }
       } catch (error) {
+        errors += 1;
         log("error", `Failed to load statistics for aggregation "${aggregation}"`, {
           error: error instanceof Error ? error.message : error,
         });
       }
     }
 
-    return { statistics, aggregation: lastAggregation, incremental };
+    return {
+      statistics,
+      aggregation: lastAggregation,
+      incremental,
+      failed: attempts > 0 && errors === attempts,
+    };
   }
 
   private async _fetchRawStatistics(
@@ -796,7 +873,8 @@ export class GraphDataController {
         group.sourceStart,
         group.sourceEnd,
         this._config?.aggregation,
-        this._usesEnergyPicker
+        this._usesEnergyPicker,
+        this._logger
       ).filter((aggregation) => aggregation !== "raw");
 
       if (!plan.length || plan[0] === "disabled") {
@@ -819,7 +897,7 @@ export class GraphDataController {
         { start: group.sourceStart.getTime(), end: group.sourceEnd?.getTime() ?? null }
       );
 
-      if (generation !== this._generations.main) {
+      if (!this._isCurrent("main", generation)) {
         return;
       }
       if (result.aggregation === "disabled") {
@@ -901,6 +979,7 @@ export class GraphDataController {
 
   private _shouldUseRawStream(): boolean {
     return (
+      this._connected &&
       this._visible &&
       !!this._hass &&
       this._main.aggregation === "raw" &&
@@ -1037,7 +1116,7 @@ export class GraphDataController {
    */
   private async _loadLiveHour(): Promise<void> {
     const hass = this._hass;
-    if (!hass || !this._visible || !this._shouldComputeCurrentHour()) {
+    if (!hass || !this._connected || !this._visible || !this._shouldComputeCurrentHour()) {
       return;
     }
     const base = this._main.statistics;
@@ -1082,7 +1161,7 @@ export class GraphDataController {
 
   private _scheduleAutoRefresh(): void {
     this._clearTimer("_autoRefreshTimeout");
-    if (!this._visible || !this._config || !this._periodStart) {
+    if (!this._connected || !this._visible || !this._config || !this._periodStart) {
       return;
     }
 
@@ -1114,7 +1193,7 @@ export class GraphDataController {
   }
 
   private _runAutoRefresh(aggregation: AggregationTarget): void {
-    if (!this._visible) {
+    if (!this._connected || !this._visible) {
       return;
     }
 

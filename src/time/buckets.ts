@@ -16,7 +16,40 @@ import type { StatisticsPeriod } from "../data/statistics";
 /** Home Assistant's recorder buckets weeks starting on Monday. */
 export const WEEK_OPTIONS = { weekStartsOn: 1 as const };
 
-const MAX_BUCKETS = 200_000;
+/**
+ * Above this a chart is unusable anyway and the browser tab stalls building it:
+ * `5minute` over a year is ~105.000 buckets, one point per bucket per series,
+ * and a bar grid of the same size on top. It is a guard against a
+ * misconfiguration, not a display limit - `resolveAggregationPlan` keeps the
+ * count in range before it gets here.
+ */
+export const MAX_BUCKETS = 5_000;
+
+/** Nominal length of one bucket, used to size a range before it is built. */
+const BUCKET_LENGTH_MS: Record<StatisticsPeriod, number> = {
+  "5minute": 5 * 60_000,
+  hour: 60 * 60_000,
+  day: 24 * 60 * 60_000,
+  week: 7 * 24 * 60 * 60_000,
+  month: 28 * 24 * 60 * 60_000,
+  year: 365 * 24 * 60 * 60_000,
+};
+
+/**
+ * Roughly how many buckets an interval produces over a range. Month and year
+ * use their shortest possible length, so the estimate never undercounts.
+ */
+export const estimateBucketCount = (
+  start: Date,
+  end: Date | undefined,
+  period: AggregationTarget
+): number => {
+  if (period === "raw" || period === "disabled") {
+    return 0;
+  }
+  const span = Math.max((end ?? new Date()).getTime() - start.getTime(), 0);
+  return Math.ceil(span / BUCKET_LENGTH_MS[period]);
+};
 
 export const advanceBucket = (date: Date, period: StatisticsPeriod): Date => {
   switch (period) {

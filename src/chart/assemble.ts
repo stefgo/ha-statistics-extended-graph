@@ -14,6 +14,13 @@ import { applyBarStyling } from "./bars";
 import { BarStackLayout, createCompareTransform, styleCompareSeries } from "./compare";
 import { extendLineSeries, normalizeLineSeries, toTuple } from "./lines";
 import { buildXAxis, buildYAxes } from "./axes";
+import { applySelectionDimming } from "./dimming";
+import {
+  buildSelectionAxis,
+  buildSelectionMarker,
+  resolveSelection,
+} from "./selection";
+import type { SelectedPeriod } from "./selection";
 
 export interface AssembleParams {
   hass: HomeAssistant;
@@ -22,12 +29,16 @@ export interface AssembleParams {
   computedStyle: CSSStyleDeclaration;
   darkMode: boolean;
   logger: OnceLogger;
+  /** Clicked x value of the selection; every other bucket is dimmed. */
+  selectedX?: number | null;
 }
 
 export interface AssembledChart {
   series: SeriesOption[];
   options: ChartOptions;
   hasData: boolean;
+  /** Period the click snapped to, `null` while nothing is selected. */
+  selection: SelectedPeriod | null;
 }
 
 interface MainInputs {
@@ -124,6 +135,7 @@ export const assembleChart = ({
   computedStyle,
   darkMode,
   logger,
+  selectedX = null,
 }: AssembleParams): AssembledChart | undefined => {
   const { periodStart, periodEnd } = snapshot;
   if (!periodStart || !snapshot.main.statistics || !snapshot.main.range) {
@@ -256,6 +268,39 @@ export const assembleChart = ({
     logger,
   });
 
+  // The selection is derived from the data of this assembly, so a refresh keeps
+  // marker and dimming in place as long as the bucket still exists.
+  const selection = resolveSelection(selectedX, {
+    series,
+    buckets,
+    aggregation: snapshot.main.aggregation,
+    displayEnd,
+  });
+
+  // The hidden marker axis is always appended, so the axis indices of the data
+  // series never shift between a selected and a cleared chart.
+  const yAxis = [
+    ...buildYAxes({
+      axes: config.y_axes ?? [],
+      seriesConfigs: config.series,
+      series,
+      hass,
+    }),
+    buildSelectionAxis(),
+  ];
+
+  if (selection) {
+    const dots = applySelectionDimming(series, selection.bucket);
+    series.push(
+      buildSelectionMarker({
+        period: selection,
+        computedStyle,
+        axisIndex: yAxis.length - 1,
+      }),
+      ...dots
+    );
+  }
+
   const options: ChartOptions = {
     xAxis: buildXAxis({
       start: periodStart,
@@ -265,17 +310,12 @@ export const assembleChart = ({
       fallbackEnd: snapshot.main.range.end,
       hass,
     }),
-    yAxis: buildYAxes({
-      axes: config.y_axes ?? [],
-      seriesConfigs: config.series,
-      series,
-      hass,
-    }),
+    yAxis,
     grid: { top: 15, left: 1, right: 1, bottom: 0, containLabel: true },
     // This card renders neither a legend nor a tooltip or axis pointers.
     legend: { show: false },
     tooltip: { show: false, showContent: false, axisPointer: { type: "none" } },
   };
 
-  return { series, options, hasData: seriesHasValues(series) };
+  return { series, options, hasData: seriesHasValues(series), selection };
 };
