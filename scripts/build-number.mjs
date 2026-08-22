@@ -10,8 +10,8 @@
  * The counter is local to the working copy (`.build-number` is not committed):
  * it answers "is this the bundle I just built?", not "which build is this
  * across machines". It is therefore opt-in — only `builddeploy.sh` asks for it
- * (`CUSTOMGRAPH_BUILD_COUNTER=1`). A plain `npm run build`, and with it any
- * release build, reports the bare semver.
+ * (`CUSTOMGRAPH_BUILD_COUNTER=1`). A plain `npm run build`, and with it the
+ * release workflow on GitHub, reports the bare semver.
  */
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 

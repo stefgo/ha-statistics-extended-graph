@@ -10,7 +10,7 @@ import { nextBuild } from "./scripts/build-number.mjs";
 const pkg = createRequire(import.meta.url)("./package.json");
 
 // Only `builddeploy.sh` asks for a build counter (CUSTOMGRAPH_BUILD_COUNTER);
-// every other build reports the bare semver.
+// every other build, the GitHub release included, reports the bare semver.
 // Bumped once per rollup run — a `watch` session keeps the number it started
 // with, exactly like the build it stands in for.
 const { build, builtAt, full } = nextBuild(pkg.version);

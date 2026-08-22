@@ -41,8 +41,11 @@ unaggregated ("raw") recorder history.
 
 ### Manual installation
 
-1. Download `dist/customgraph.js` from the release or build it yourself
-   (`npm install && npm run build`).
+1. Download `customgraph.js` from the
+   [latest GitHub release](https://github.com/stefgo/ha-custom-graph/releases/latest)
+   — the bundle is attached there as an asset — or build it yourself
+   (`npm install && npm run build`, which writes `dist/customgraph.js`; `dist/`
+   is not part of the repository).
 2. Copy it to `config/www/community/custom-graph/customgraph.js`.
 3. Add the resource under *Settings → Dashboards → Resources → + ADD RESOURCE*:
    - URL: `/local/community/custom-graph/customgraph.js`
@@ -489,14 +492,31 @@ npm run build     # bundle into dist/customgraph.js (rollup)
 npm run watch     # same, rebuilding on every change
 ```
 
-Every rollup run bumps the local counter in `.build-number` and bakes
-`<version>+build.<n>` into the bundle, which the card prints to the browser
-console. If the console still shows the previous number after a deploy, the
-browser served a cached bundle. The counter is local to the working copy and
-not committed; the released version stays the semver in `package.json`.
+The card prints its version to the browser console. Only `builddeploy.sh` asks
+for a local build counter (`CUSTOMGRAPH_BUILD_COUNTER=1`) and reports
+`<version>+build.<n>`; every other build — a plain `npm run build` and the
+release workflow included — reports the bare semver from `package.json`. If the
+console still shows the previous number after a deploy, the browser served a
+cached bundle. The counter in `.build-number` is local to the working copy and
+not committed.
 
 The architecture of the source tree is documented in
 [docs/architecture.md](docs/architecture.md).
+
+## Releases
+
+A release is built from its tag: pushing `vX.Y.Z` runs
+[`.github/workflows/release.yml`](.github/workflows/release.yml), which
+typechecks, builds and attaches `customgraph.js` to the GitHub release. That
+asset is what HACS installs, which is why `dist/` is not committed.
+
+```bash
+# bump "version" in package.json and note the changes in CHANGELOG.md first
+git tag v0.1.0
+git push origin v0.1.0
+```
+
+Released versions are documented in [CHANGELOG.md](CHANGELOG.md).
 
 ## Credits
 
