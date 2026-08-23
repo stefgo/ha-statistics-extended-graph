@@ -7,6 +7,14 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html). A release
 its `v*` tag by the release workflow, which attaches the bundle to the GitHub release — that
 asset is what HACS installs.
 
+## [0.0.6] — 2026-08-23
+
+### Changed
+
+- The bundle attached to a GitHub release is now **minified** (223 KB → 86 KB). Minification is
+  release-only: `npm run build`, `npm run dev` and `builddeploy.sh` keep producing the readable
+  bundle, so local debugging is unchanged.
+
 ## [0.0.5] — 2026-08-23
 
 The first released version. Everything below was built before any release existed, so it is
