@@ -15,7 +15,7 @@ Unlike the built-in energy cards it is not limited to the entities of the energy
 dashboard: any entity with long-term statistics can be charted, as well as
 unaggregated ("raw") recorder history.
 
-![One ha-card combining Statistics Extended Graph and Statistics Table and Legend: a stacked hourly energy chart on top, five legend rows with their sums underneath, closed by a self-sufficiency total row](screenshots/statistics-legend-with-custom-graph.png)
+![One ha-card combining Statistics Extended Graph and Statistics Table and Legend: a stacked hourly energy chart on top, five legend rows with their sums underneath, closed by a self-sufficiency total row](https://raw.githubusercontent.com/stefgo/ha-statistics-extended-graph/main/screenshots/statistics-legend-with-custom-graph.png)
 
 *This card's chart of hourly grid, battery and PV energy, combined in one `ha-card` with
 [Statistics Table and Legend](https://github.com/stefgo/ha-statistics-legend-table), which
