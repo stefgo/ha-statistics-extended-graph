@@ -19,7 +19,7 @@ card.ts                  Lit element: rendering, placeholders, animation
 
 | Path | Responsibility |
 | --- | --- |
-| `src/card.ts` | The `<custom-graph-card>` element. Holds no data logic: it renders the snapshot, shows loading/empty placeholders and drives the zero-to-value animation on range switches. |
+| `src/card.ts` | The `<statistics-extended-graph>` element. Holds no data logic: it renders the snapshot, shows loading/empty placeholders and drives the zero-to-value animation on range switches. |
 | `src/config/types.ts` | All configuration types. The single source of truth for what a YAML configuration may contain. |
 | `src/config/validate.ts` | Validation and defaults for `setConfig`. Only a missing series list is fatal; everything else is a console warning. |
 | `src/core/data-controller.ts` | Orchestrates all data acquisition: range resolution, energy picker binding, statistics/raw loading with aggregation fallback, calculation rebuilds, time-offset loading, live hour, auto refresh and visibility handling. Publishes a `GraphSnapshot`. |
@@ -84,5 +84,5 @@ card.ts                  Lit element: rendering, placeholders, animation
   y axis lets the dashed marker line span the full plot height without touching
   the scale of the data axes. Because all of it is plain data, the selection
   survives every redraw instead of living inside the chart. It leaves the card
-  as a `custom-graph-selection` event carrying the period of the bucket, fired
-  after each assembly whenever that period changed.
+  as a `statistics-extended-graph-selection` event carrying the period of the
+  bucket, fired after each assembly whenever that period changed.

@@ -1,6 +1,6 @@
 import { log } from "../core/logger";
 import { DEFAULT_TIMESPAN } from "../time/timespan";
-import type { CustomGraphCardConfig } from "./types";
+import type { StatisticsExtendedGraphConfig } from "./types";
 
 /** Options that exist in comparable cards but are intentionally not supported. */
 const UNSUPPORTED_CARD_OPTIONS = [
@@ -44,8 +44,8 @@ const warnUnsupported = (
  * warning so a single broken series cannot take down the whole dashboard.
  */
 export const normalizeConfig = (
-  config: CustomGraphCardConfig
-): CustomGraphCardConfig => {
+  config: StatisticsExtendedGraphConfig
+): StatisticsExtendedGraphConfig => {
   if (!config.series || !Array.isArray(config.series) || !config.series.length) {
     throw new Error("At least one series must be configured");
   }

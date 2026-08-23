@@ -1,6 +1,6 @@
 {
-  "name": "Custom Graph",
+  "name": "Statistics Extended Graph",
   "render_readme": true,
-  "filename": "customgraph.js",
+  "filename": "statistics-extended-graph.js",
   "content_in_root": false
 }

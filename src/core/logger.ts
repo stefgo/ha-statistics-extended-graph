@@ -7,7 +7,7 @@ const LEVEL_ORDER: Record<LogLevel, number> = {
   error: 3,
 };
 
-const LOG_PREFIX = "[custom-graph-card]";
+const LOG_PREFIX = "[statistics-extended-graph]";
 
 /** Minimum level that reaches the browser console. */
 const ACTIVE_LEVEL: LogLevel = "warn";

@@ -28,7 +28,7 @@ jobs:
 
       - run: npm ci
       - run: npm run typecheck
-      # No CUSTOMGRAPH_BUILD_COUNTER here: the released bundle reports the bare
+      # No SEG_BUILD_COUNTER here: the released bundle reports the bare
       # semver, the build counter stays with the local deploy build.
       - run: npm run build
 
@@ -40,4 +40,4 @@ jobs:
           gh release create "$TAG" \
             --title "$TAG" \
             --generate-notes \
-            dist/customgraph.js
+            dist/statistics-extended-graph.js

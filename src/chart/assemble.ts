@@ -1,5 +1,5 @@
 import type { HomeAssistant } from "custom-card-helpers";
-import type { CustomGraphCardConfig, SeriesConfig } from "../config/types";
+import type { StatisticsExtendedGraphConfig, SeriesConfig } from "../config/types";
 import type { Statistics, StatisticsMetaDataMap, StatisticValue } from "../data/statistics";
 import type { BarSeriesOption, ChartOptions, SeriesOption } from "../types/echarts";
 import type { GraphSnapshot } from "../core/data-controller";
@@ -24,7 +24,7 @@ import type { SelectedPeriod } from "./selection";
 
 export interface AssembleParams {
   hass: HomeAssistant;
-  config: CustomGraphCardConfig;
+  config: StatisticsExtendedGraphConfig;
   snapshot: GraphSnapshot;
   computedStyle: CSSStyleDeclaration;
   darkMode: boolean;
@@ -54,7 +54,7 @@ interface MainInputs {
  * series.
  */
 const buildMainInputs = (
-  config: CustomGraphCardConfig,
+  config: StatisticsExtendedGraphConfig,
   snapshot: GraphSnapshot,
   hass: HomeAssistant
 ): MainInputs => {

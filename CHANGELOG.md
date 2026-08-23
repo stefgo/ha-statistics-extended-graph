@@ -14,8 +14,8 @@ gathered into this one entry rather than split into versions nobody could instal
 
 ### Added
 
-- **Statistics chart card** (`custom:custom-graph-card`) built on the ECharts runtime Home
-  Assistant already ships — no additional chart library is loaded — and configured entirely in
+- **Statistics chart card** (`custom:statistics-extended-graph`) built on the ECharts
+  runtime Home Assistant already ships — no additional chart library is loaded — and configured entirely in
   YAML.
 - **Time range from the energy date picker** (`energy-date-selection`), or set manually as a
   relative or fixed range, including the picker's compare toggle.
@@ -38,14 +38,14 @@ gathered into this one entry rather than split into versions nobody could instal
 - **`builddeploy.sh`** builds the bundle and copies it to a Home Assistant instance configured
   through `.env` (template in `.env.example`).
 - **Release workflow**: pushing a `vX.Y.Z` tag builds the bundle on GitHub and attaches
-  `customgraph.js` to the release, which is what HACS installs.
+  `statistics-extended-graph.js` to the release, which is what HACS installs.
 
 ### Changed
 
 - The build moved from Parcel to **Rollup**, which bakes the version into the bundle instead of
   generating a source file for it.
 - The local build counter is **opt-in**: only `builddeploy.sh` asks for it
-  (`CUSTOMGRAPH_BUILD_COUNTER=1`), so a plain `npm run build` and the release workflow report the
+  (`SEG_BUILD_COUNTER=1`), so a plain `npm run build` and the release workflow report the
   bare semver.
 - `dist/` is no longer committed. The bundle comes from the GitHub release, or from a local build.
 

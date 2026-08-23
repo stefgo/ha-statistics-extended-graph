@@ -3,7 +3,7 @@ import type { UnsubscribeFunc } from "home-assistant-js-websocket";
 import { startOfHour } from "date-fns";
 import type {
   AggregationTarget,
-  CustomGraphCardConfig,
+  StatisticsExtendedGraphConfig,
   SeriesConfig,
 } from "../config/types";
 import {
@@ -119,7 +119,7 @@ interface ShiftedFetchGroup {
  */
 export class GraphDataController {
   private _hass?: HomeAssistant;
-  private _config?: CustomGraphCardConfig;
+  private _config?: StatisticsExtendedGraphConfig;
 
   private _periodStart?: Date;
   private _periodEnd?: Date;
@@ -215,7 +215,7 @@ export class GraphDataController {
     }
   }
 
-  public setConfig(config: CustomGraphCardConfig): void {
+  public setConfig(config: StatisticsExtendedGraphConfig): void {
     const previous = this._config;
     this._config = config;
     this._logger.reset();
@@ -269,7 +269,7 @@ export class GraphDataController {
     return this._config.allow_compare !== false;
   }
 
-  private _sync(previousConfig?: CustomGraphCardConfig): void {
+  private _sync(previousConfig?: StatisticsExtendedGraphConfig): void {
     if (!this._hass || !this._config) {
       return;
     }
