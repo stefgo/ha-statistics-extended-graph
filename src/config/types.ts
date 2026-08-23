@@ -120,7 +120,7 @@ export interface AxisConfig {
   unit?: string;
 }
 
-export interface CustomGraphCardConfig extends LovelaceCardConfig {
+export interface StatisticsExtendedGraphConfig extends LovelaceCardConfig {
   type: string;
   title?: string;
   chart_height?: string;

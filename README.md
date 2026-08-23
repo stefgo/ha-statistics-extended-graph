@@ -1,4 +1,4 @@
-# Custom Graph
+# Statistics Extended Graph for Home Assistant
 
 A lightweight statistics chart card for Home Assistant Lovelace dashboards.
 
@@ -34,30 +34,30 @@ unaggregated ("raw") recorder history.
 ### HACS (custom repository)
 
 1. Open *HACS → Frontend*, then the three-dot menu in the top right.
-2. Choose *Custom repositories*, add `https://github.com/stefgo/ha-custom-graph`
+2. Choose *Custom repositories*, add `https://github.com/stefgo/ha-statistics-extended-graph`
    and set the category to *Lovelace*.
-3. Search for "Custom Graph" in HACS and install the latest release.
+3. Search for "Statistics Extended Graph" in HACS and install the latest release.
 4. Reload the browser and clear the cache if the card does not appear.
 
 ### Manual installation
 
-1. Download `customgraph.js` from the
-   [latest GitHub release](https://github.com/stefgo/ha-custom-graph/releases/latest)
+1. Download `statistics-extended-graph.js` from the
+   [latest GitHub release](https://github.com/stefgo/ha-statistics-extended-graph/releases/latest)
    — the bundle is attached there as an asset — or build it yourself
-   (`npm install && npm run build`, which writes `dist/customgraph.js`; `dist/`
-   is not part of the repository).
-2. Copy it to `config/www/community/custom-graph/customgraph.js`.
+   (`npm install && npm run build`, which writes
+   `dist/statistics-extended-graph.js`; `dist/` is not part of the repository).
+2. Copy it to `config/www/community/statistics-extended-graph/statistics-extended-graph.js`.
 3. Add the resource under *Settings → Dashboards → Resources → + ADD RESOURCE*:
-   - URL: `/local/community/custom-graph/customgraph.js`
+   - URL: `/local/community/statistics-extended-graph/statistics-extended-graph.js`
    - Resource type: `JavaScript Module`
 4. Clear the browser cache and reload the page.
 
 ### Deploy script
 
 For development there is `builddeploy.sh`: it builds the card and copies
-`dist/customgraph.js` to the Home Assistant instance over SSH.
+`dist/statistics-extended-graph.js` to the Home Assistant instance over SSH.
 
-1. `cp .env.example .env` and enter your instance (`CUSTOMGRAPH_HOST`, and
+1. `cp .env.example .env` and enter your instance (`SEG_HOST`, and
    optionally port, config path or target directory). `.env` is git-ignored.
 2. Run `./builddeploy.sh`.
 
@@ -67,7 +67,7 @@ The card has no visual editor: add it through the dashboard's *Manual card* /
 raw YAML editor.
 
 ```yaml
-type: custom:custom-graph-card
+type: custom:statistics-extended-graph
 title: Energy overview
 series:
   - statistic_id: sensor.energy_grid_import
@@ -87,7 +87,7 @@ the range you select there. For other modes see [Timespan](#timespan).
 
 | Key | Type | Default | Description |
 | --- | --- | --- | --- |
-| `type` | string | – | Must be `custom:custom-graph-card`. |
+| `type` | string | – | Must be `custom:statistics-extended-graph`. |
 | `title` | string | – | Optional card header. |
 | `chart_height` | string | auto | CSS height (e.g. `300px`). Ignored in section layouts, where the grid rows define the height. |
 | `timespan` | object | `{mode: energy}` | Time range shown by the card, see below. |
@@ -298,7 +298,7 @@ aggregation:
 ### Fixed window with two axes
 
 ```yaml
-type: custom:custom-graph-card
+type: custom:statistics-extended-graph
 title: Heat pump snapshot
 timespan:
   mode: fixed
@@ -327,7 +327,7 @@ series:
 ### Grid balance with a zero-centred axis
 
 ```yaml
-type: custom:custom-graph-card
+type: custom:statistics-extended-graph
 title: Grid power balance
 y_axes:
   - id: left
@@ -348,7 +348,7 @@ series:
 ### Rolling window
 
 ```yaml
-type: custom:custom-graph-card
+type: custom:statistics-extended-graph
 title: Consumption, last 30 days
 timespan:
   mode: relative
@@ -362,7 +362,7 @@ series:
 ### Energy dashboard style stack
 
 ```yaml
-type: custom:custom-graph-card
+type: custom:statistics-extended-graph
 series:
   - name: Solar self consumed
     chart_type: bar
@@ -404,7 +404,7 @@ series:
 ### Binary sensor as a step chart
 
 ```yaml
-type: custom:custom-graph-card
+type: custom:statistics-extended-graph
 title: Garage door
 aggregation:
   energy_picker:
@@ -423,7 +423,7 @@ series:
 ### Separate colors for light and dark mode
 
 ```yaml
-type: custom:custom-graph-card
+type: custom:statistics-extended-graph
 color_cycle:
   - "#1f4e9c"
   - light: "#b35c00"
@@ -458,11 +458,11 @@ and therefore survives data refreshes, live updates and theme switches. It ends
 with a reload, with leaving the page, or with a switch of the visible range,
 whose buckets the selection no longer belongs to.
 
-Every change fires a `custom-graph-selection` event that bubbles out of the
-card:
+Every change fires a `statistics-extended-graph-selection` event that bubbles
+out of the card:
 
 ```js
-document.addEventListener("custom-graph-selection", (event) => {
+document.addEventListener("statistics-extended-graph-selection", (event) => {
   const { start, end, startTime, endTime } = event.detail;
 });
 ```
@@ -488,12 +488,12 @@ document.addEventListener("custom-graph-selection", (event) => {
 ```bash
 npm install       # install dependencies
 npm run typecheck # TypeScript, no emit
-npm run build     # bundle into dist/customgraph.js (rollup)
+npm run build     # bundle into dist/statistics-extended-graph.js (rollup)
 npm run watch     # same, rebuilding on every change
 ```
 
 The card prints its version to the browser console. Only `builddeploy.sh` asks
-for a local build counter (`CUSTOMGRAPH_BUILD_COUNTER=1`) and reports
+for a local build counter (`SEG_BUILD_COUNTER=1`) and reports
 `<version>+build.<n>`; every other build — a plain `npm run build` and the
 release workflow included — reports the bare semver from `package.json`. If the
 console still shows the previous number after a deploy, the browser served a
@@ -507,8 +507,8 @@ The architecture of the source tree is documented in
 
 A release is built from its tag: pushing `vX.Y.Z` runs
 [`.github/workflows/release.yml`](.github/workflows/release.yml), which
-typechecks, builds and attaches `customgraph.js` to the GitHub release. That
-asset is what HACS installs, which is why `dist/` is not committed.
+typechecks, builds and attaches `statistics-extended-graph.js` to the GitHub
+release. That asset is what HACS installs, which is why `dist/` is not committed.
 
 ```bash
 # bump "version" in package.json and note the changes in CHANGELOG.md first

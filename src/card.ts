@@ -3,7 +3,7 @@ import type { PropertyValues } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
 import { classMap } from "lit/directives/class-map.js";
 import type { HomeAssistant } from "custom-card-helpers";
-import type { CustomGraphCardConfig } from "./config/types";
+import type { StatisticsExtendedGraphConfig } from "./config/types";
 import { normalizeConfig } from "./config/validate";
 import { GraphDataController } from "./core/data-controller";
 import type { GraphSnapshot } from "./core/data-controller";
@@ -24,7 +24,7 @@ interface LovelaceGridOptions {
 }
 
 /** Name of the event the card fires whenever the selected period changes. */
-export const SELECTION_EVENT = "custom-graph-selection";
+export const SELECTION_EVENT = "statistics-extended-graph-selection";
 
 /**
  * Payload of {@link SELECTION_EVENT}: the period the selection covers. Every
@@ -46,13 +46,13 @@ const DISABLED_MESSAGE =
   "Fetching statistics is disabled for this period. Choose a shorter time range.";
 
 console.info(
-  "%c CUSTOM-GRAPH-CARD %c " + CARD_VERSION + " ",
+  "%c STATISTICS-EXTENDED-GRAPH %c " + CARD_VERSION + " ",
   "background-color: #000000; color: #4CAF50; font-weight: bold;",
   "background-color: #666666; color: #FFFFFF; font-weight: bold;",
 );
 
-@customElement("custom-graph-card")
-export class CustomGraphCard extends LitElement {
+@customElement("statistics-extended-graph")
+export class StatisticsExtendedGraph extends LitElement {
   /**
    * Lit runs `willUpdate` only for updates that `shouldUpdate` let through, and
    * this card drops plain entity-state updates - it is driven by statistics,
@@ -76,7 +76,7 @@ export class CustomGraphCard extends LitElement {
 
   private _hass?: HomeAssistant;
 
-  @state() private _config?: CustomGraphCardConfig;
+  @state() private _config?: StatisticsExtendedGraphConfig;
   @state() private _chartData: SeriesOption[] = [];
   @state() private _chartOptions?: ChartOptions;
   @state() private _hasData = false;
@@ -107,7 +107,7 @@ export class CustomGraphCard extends LitElement {
     this._logger
   );
 
-  public setConfig(config: CustomGraphCardConfig): void {
+  public setConfig(config: StatisticsExtendedGraphConfig): void {
     this._config = normalizeConfig(config);
     this._logger.reset();
     this._renderedRange = undefined;
@@ -115,8 +115,8 @@ export class CustomGraphCard extends LitElement {
     this._controller.setConfig(this._config);
   }
 
-  public static getStubConfig(): Partial<CustomGraphCardConfig> {
-    return { type: "custom:custom-graph-card", series: [] };
+  public static getStubConfig(): Partial<StatisticsExtendedGraphConfig> {
+    return { type: "custom:statistics-extended-graph", series: [] };
   }
 
   public getCardSize(): number {
@@ -516,6 +516,6 @@ export class CustomGraphCard extends LitElement {
 
 declare global {
   interface HTMLElementTagNameMap {
-    "custom-graph-card": CustomGraphCard;
+    "statistics-extended-graph": StatisticsExtendedGraph;
   }
 }

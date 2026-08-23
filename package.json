@@ -1,10 +1,10 @@
 {
-  "name": "custom-graph",
+  "name": "statistics-extended-graph",
   "version": "0.1.0",
-  "description": "Customizable statistics graph card for Home Assistant Lovelace",
+  "description": "Statistics Extended Graph for Home Assistant - a customizable statistics chart card for Lovelace",
   "type": "module",
-  "main": "dist/customgraph.js",
-  "module": "dist/customgraph.js",
+  "main": "dist/statistics-extended-graph.js",
+  "module": "dist/statistics-extended-graph.js",
   "license": "MIT",
   "scripts": {
     "build": "rollup -c",
