@@ -1,5 +1,10 @@
 # Statistics Extended Graph for Home Assistant
 
+[![Release](https://img.shields.io/github/v/release/stefgo/ha-statistics-extended-graph?style=flat-square)](https://github.com/stefgo/ha-statistics-extended-graph/releases)
+[![HACS: custom](https://img.shields.io/badge/HACS-custom-41BDF5?style=flat-square)](https://hacs.xyz/)
+[![Home Assistant](https://img.shields.io/badge/Home%20Assistant-Lovelace-41BDF5?style=flat-square)](https://www.home-assistant.io/)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue?style=flat-square)](LICENSE.md)
+
 A lightweight statistics chart card for Home Assistant Lovelace dashboards.
 
 The card follows the Home Assistant **energy date picker**, reuses the ECharts
