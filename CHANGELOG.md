@@ -7,7 +7,7 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html). A release
 its `v*` tag by the release workflow, which attaches the bundle to the GitHub release — that
 asset is what HACS installs.
 
-## [0.1.0] — unreleased
+## [0.0.5] — 2026-08-23
 
 The first released version. Everything below was built before any release existed, so it is
 gathered into this one entry rather than split into versions nobody could install.

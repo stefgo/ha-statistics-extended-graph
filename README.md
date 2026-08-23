@@ -523,8 +523,8 @@ release. That asset is what HACS installs, which is why `dist/` is not committed
 
 ```bash
 # bump "version" in package.json and note the changes in CHANGELOG.md first
-git tag v0.1.0
-git push origin v0.1.0
+git tag v0.0.5
+git push origin v0.0.5
 ```
 
 Released versions are documented in [CHANGELOG.md](CHANGELOG.md).
