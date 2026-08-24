@@ -18,7 +18,7 @@ fi
 
 HOST="${SEG_HOST:-}"
 CONFIG="${SEG_CONFIG:-/config}"
-TARGET="${SEG_TARGET:-${CONFIG}/www/community/statistics-extended-graph}"
+TARGET="${SEG_TARGET:-${CONFIG}/www/community/ha-statistics-extended-graph}"
 SSH_PORT="${SEG_SSH_PORT:-22}"
 
 if [ -z "$HOST" ]; then
