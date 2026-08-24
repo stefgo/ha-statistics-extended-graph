@@ -84,5 +84,5 @@ card.ts                  Lit element: rendering, placeholders, animation
   y axis lets the dashed marker line span the full plot height without touching
   the scale of the data axes. Because all of it is plain data, the selection
   survives every redraw instead of living inside the chart. It leaves the card
-  as a `statistics-extended-graph-selection` event carrying the period of the
+  as a `custom-graph-selection` event carrying the period of the
   bucket, fired after each assembly whenever that period changed.

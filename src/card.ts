@@ -24,7 +24,7 @@ interface LovelaceGridOptions {
 }
 
 /** Name of the event the card fires whenever the selected period changes. */
-export const SELECTION_EVENT = "statistics-extended-graph-selection";
+export const SELECTION_EVENT = "custom-graph-selection";
 
 /**
  * Payload of {@link SELECTION_EVENT}: the period the selection covers. Every

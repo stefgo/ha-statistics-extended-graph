@@ -469,11 +469,11 @@ and therefore survives data refreshes, live updates and theme switches. It ends
 with a reload, with leaving the page, or with a switch of the visible range,
 whose buckets the selection no longer belongs to.
 
-Every change fires a `statistics-extended-graph-selection` event that bubbles
+Every change fires a `custom-graph-selection` event that bubbles
 out of the card:
 
 ```js
-document.addEventListener("statistics-extended-graph-selection", (event) => {
+document.addEventListener("custom-graph-selection", (event) => {
   const { start, end, startTime, endTime } = event.detail;
 });
 ```
