@@ -3,7 +3,7 @@
 [![Release](https://img.shields.io/github/v/release/stefgo/ha-statistics-extended-graph?style=flat-square)](https://github.com/stefgo/ha-statistics-extended-graph/releases)
 [![HACS: custom](https://img.shields.io/badge/HACS-custom-41BDF5?style=flat-square)](https://hacs.xyz/)
 [![Home Assistant](https://img.shields.io/badge/Home%20Assistant-Lovelace-41BDF5?style=flat-square)](https://www.home-assistant.io/)
-[![License: MIT](https://img.shields.io/badge/license-MIT-blue?style=flat-square)](LICENSE.md)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue?style=flat-square)](https://github.com/stefgo/ha-statistics-extended-graph/blob/main/LICENSE.md)
 
 A lightweight statistics chart card for Home Assistant Lovelace dashboards.
 
@@ -512,12 +512,12 @@ cached bundle. The counter in `.build-number` is local to the working copy and
 not committed.
 
 The architecture of the source tree is documented in
-[docs/architecture.md](docs/architecture.md).
+[docs/architecture.md](https://github.com/stefgo/ha-statistics-extended-graph/blob/main/docs/architecture.md).
 
 ## Releases
 
 A release is built from its tag: pushing `vX.Y.Z` runs
-[`.github/workflows/release.yml`](.github/workflows/release.yml), which
+[`.github/workflows/release.yml`](https://github.com/stefgo/ha-statistics-extended-graph/blob/main/.github/workflows/release.yml), which
 typechecks, builds and attaches `statistics-extended-graph.js` to the GitHub
 release. That asset is what HACS installs, which is why `dist/` is not committed.
 
@@ -527,10 +527,10 @@ git tag v0.0.5
 git push origin v0.0.5
 ```
 
-Released versions are documented in [CHANGELOG.md](CHANGELOG.md).
+Released versions are documented in [CHANGELOG.md](https://github.com/stefgo/ha-statistics-extended-graph/blob/main/CHANGELOG.md).
 
 ## Credits
 
 Independent reimplementation inspired by
 [energy-custom-graph](https://github.com/Thyraz/energy-custom-graph) (MIT).
-Released under the MIT license, see [LICENSE.md](LICENSE.md).
+Released under the MIT license, see [LICENSE.md](https://github.com/stefgo/ha-statistics-extended-graph/blob/main/LICENSE.md).
