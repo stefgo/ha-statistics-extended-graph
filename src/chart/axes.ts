@@ -8,21 +8,35 @@ import { toTuple } from "./lines";
 
 /**
  * Smallest distance between two axis ticks, so a tick never subdivides a
- * bucket. Coarser spacing stays ECharts' decision.
+ * bucket. Coarser spacing stays ECharts' decision, and an axis that says
+ * nothing is left to the default of `<ha-chart-base>`.
  *
- * This has to be set for every interval, not just the ones with a custom
- * label: `<ha-chart-base>` fills in a `minInterval` of its own whenever the
- * axis leaves it undefined, and derives it from the distance between `min` and
- * `max` - for ranges beyond two days that is a full day. The axis deliberately
- * spans the whole period even while zoomed in, and the zoom does not feed back
- * into that default, so a zoomed-in window would inherit day-spaced ticks and
- * end up with a single label, or none at all.
+ * A zoomable axis has to say something for every interval, not just for the
+ * ones with a custom label: `<ha-chart-base>` fills in a `minInterval` of its
+ * own whenever the axis leaves it undefined, and derives it from the distance
+ * between `min` and `max` - for ranges beyond two days that is a full day. The
+ * axis deliberately spans the whole period even while zoomed in, and the zoom
+ * does not feed back into that default, so a zoomed-in window would inherit
+ * day-spaced ticks and end up with a single label, or none at all.
+ *
+ * Without a zoom there is nothing to correct: the default is derived from the
+ * range that is actually drawn, so the axis keeps the spacing it always had
+ * and only months and years still ask for their bucket length.
  */
-const axisMinInterval = (aggregation: AggregationTarget | undefined): number =>
-  aggregation && aggregation !== "raw" && aggregation !== "disabled"
-    ? BUCKET_LENGTH_MS[aggregation]
-    : // Explicitly unconstrained - `??` would hand the axis back to the default.
-      0;
+const axisMinInterval = (
+  aggregation: AggregationTarget | undefined,
+  zoomable: boolean
+): number | undefined => {
+  if (!aggregation || aggregation === "raw" || aggregation === "disabled") {
+    // Explicitly unconstrained - leaving it out would hand a zoomable axis
+    // back to the default.
+    return zoomable ? 0 : undefined;
+  }
+  if (!zoomable && aggregation !== "month" && aggregation !== "year") {
+    return undefined;
+  }
+  return BUCKET_LENGTH_MS[aggregation];
+};
 
 const formatMonthLabel = (value: number, hass?: HomeAssistant): string => {
   const date = new Date(value);
@@ -86,6 +100,8 @@ export interface XAxisParams {
   aggregation: AggregationTarget | undefined;
   /** Interval the labels are written for; defaults to `aggregation`. */
   labelAggregation?: AggregationTarget;
+  /** Whether a zoom can narrow this axis; see {@link axisMinInterval}. */
+  zoomable?: boolean;
   buckets?: number[];
   fallbackEnd: number | null;
   hass?: HomeAssistant;
@@ -96,6 +112,7 @@ export const buildXAxis = ({
   end,
   aggregation,
   labelAggregation = aggregation,
+  zoomable = false,
   buckets,
   fallbackEnd,
   hass,
@@ -106,10 +123,14 @@ export const buildXAxis = ({
     min: start,
     max: computeAxisMax(start, end, aggregation, buckets, fallbackEnd),
     axisPointer: { show: false },
-    // Follows what is drawn, so the detail layer of a zoom is labelled at its
-    // own resolution instead of the one the full range was loaded at.
-    minInterval: axisMinInterval(labelAggregation),
   };
+
+  // Follows what is drawn, so the detail layer of a zoom is labelled at its
+  // own resolution instead of the one the full range was loaded at.
+  const minInterval = axisMinInterval(labelAggregation, zoomable);
+  if (minInterval !== undefined) {
+    primary.minInterval = minInterval;
+  }
 
   if (labelAggregation === "month") {
     primary.axisLabel = {

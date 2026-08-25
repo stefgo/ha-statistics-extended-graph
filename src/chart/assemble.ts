@@ -399,6 +399,9 @@ export const assembleChart = ({
       // them the meaning of the zoom window - do not move when the detail
       // layer comes and goes. Only the labels follow what is drawn.
       aggregation: snapshot.main.aggregation,
+      // A zoom narrows what is drawn without narrowing the axis, so the tick
+      // spacing has to be pinned to the buckets rather than to the span.
+      zoomable: zoom !== undefined,
       buckets: view.isDetail
         ? buildBucketSequence(
             periodStart.getTime(),

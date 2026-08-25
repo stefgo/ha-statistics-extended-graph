@@ -20,10 +20,27 @@ const SLIDER_BOTTOM = 4;
 const SLIDER_HANDLE_SIZE = 18;
 const SLIDER_SIDE_INSET = SLIDER_HANDLE_SIZE / 2 + 1;
 
-const clampPercent = (value: number | undefined): number | undefined =>
-  typeof value === "number" && Number.isFinite(value)
-    ? Math.min(100, Math.max(0, value))
+/**
+ * A percentage as configured, or `undefined` for anything that is not one.
+ * Out-of-range values are dropped rather than clamped: clamping a `start` of
+ * `150` to `100` would open the card on a window of zero width, while the
+ * warning in `validate.ts` promises the value is ignored.
+ */
+const percent = (value: number | undefined): number | undefined =>
+  typeof value === "number" && Number.isFinite(value) && value >= 0 && value <= 100
+    ? value
     : undefined;
+
+/**
+ * The window the configuration opens on. Anything that does not describe a
+ * window growing to the right - a reversed pair, or a `start` of `100` - falls
+ * back to the full range, which is what the warning announces.
+ */
+const resolveWindow = (config: ZoomConfig): { start: number; end: number } => {
+  const start = percent(config.start) ?? 0;
+  const end = percent(config.end) ?? 100;
+  return end > start ? { start, end } : { start: 0, end: 100 };
+};
 
 /**
  * Whether the slider bar is on screen. `auto` shows it only while a zoom
@@ -46,17 +63,10 @@ export const buildDataZoom = (
   config: ZoomConfig,
   zoomed: boolean
 ): DataZoomOption[] => {
-  const start = clampPercent(config.start);
-  const end = clampPercent(config.end);
-  const window = {
-    start: start ?? 0,
-    end: end !== undefined && start !== undefined && end <= start ? 100 : end ?? 100,
-  };
-
   const shared = {
     xAxisIndex: 0,
     filterMode: "none" as const,
-    ...window,
+    ...resolveWindow(config),
     ...(config.zoom_lock !== undefined ? { zoomLock: config.zoom_lock } : {}),
   };
 
