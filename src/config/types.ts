@@ -120,6 +120,32 @@ export interface AxisConfig {
   unit?: string;
 }
 
+/** Modifier that has to be held for a data-zoom gesture, or a plain toggle. */
+export type ZoomGesture = boolean | "shift" | "ctrl" | "alt";
+
+export type DataZoomType = "inside" | "slider" | "both";
+
+export interface DataZoomConfig {
+  /** `inside` zooms on the plot itself, `slider` adds a bar below it. */
+  type?: DataZoomType;
+  zoom_on_mouse_wheel?: ZoomGesture;
+  move_on_mouse_move?: ZoomGesture;
+  move_on_mouse_wheel?: ZoomGesture;
+  /** Locks the width of the window, so a drag only pans it. */
+  zoom_lock?: boolean;
+  /** Initially visible window in percent of the range. */
+  start?: number;
+  end?: number;
+  /** Smallest window the user can zoom into, in percent of the range. */
+  min_span?: number;
+  /**
+   * Load high resolution data for the zoom window, so zooming in shows more
+   * than a magnified version of the same buckets. Off by default, because
+   * every step into a new window is a fetch.
+   */
+  refine?: boolean;
+}
+
 export interface StatisticsExtendedGraphConfig extends LovelaceCardConfig {
   type: string;
   title?: string;
@@ -130,5 +156,7 @@ export interface StatisticsExtendedGraphConfig extends LovelaceCardConfig {
   color_cycle?: ColorConfig[];
   y_axes?: AxisConfig[];
   aggregation?: AggregationConfig;
+  /** `true` enables the inside zoom with its defaults. */
+  data_zoom?: boolean | DataZoomConfig;
   series: SeriesConfig[];
 }

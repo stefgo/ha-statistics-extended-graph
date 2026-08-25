@@ -30,6 +30,26 @@ export const deriveAutoPeriod = (
   return "hour";
 };
 
+/** Intervals from finest to coarsest, for comparing two of them. */
+const PERIOD_ORDER: StatisticsPeriod[] = [
+  "5minute",
+  "hour",
+  "day",
+  "week",
+  "month",
+  "year",
+];
+
+/** Position of an interval on that ladder; `-1` for "raw" and "disabled". */
+export const periodRank = (target: AggregationTarget | undefined): number =>
+  PERIOD_ORDER.indexOf(target as StatisticsPeriod);
+
+/** A window of the visible range the user zoomed into, in epoch milliseconds. */
+export interface ZoomWindow {
+  start: number;
+  end: number;
+}
+
 /** Classifies a range into the button the energy date picker would have used. */
 export const getEnergyPickerRange = (
   start: Date,

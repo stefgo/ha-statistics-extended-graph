@@ -1,6 +1,6 @@
 import { log } from "../core/logger";
 import { DEFAULT_TIMESPAN } from "../time/timespan";
-import type { StatisticsExtendedGraphConfig } from "./types";
+import type { DataZoomConfig, StatisticsExtendedGraphConfig } from "./types";
 
 /** Options that exist in comparable cards but are intentionally not supported. */
 const UNSUPPORTED_CARD_OPTIONS = [
@@ -22,6 +22,46 @@ const UNSUPPORTED_SERIES_OPTIONS = [
   "hidden_by_default",
   "pv_production_entity",
 ];
+
+const DATA_ZOOM_TYPES = ["inside", "slider", "both"];
+
+const isPercent = (value: unknown): boolean =>
+  typeof value === "number" && Number.isFinite(value) && value >= 0 && value <= 100;
+
+/** Reports zoom settings that cannot be honoured; they fall back to defaults. */
+const validateDataZoom = (config: boolean | DataZoomConfig | undefined): void => {
+  if (typeof config !== "object" || config === null) {
+    return;
+  }
+
+  if (config.type !== undefined && !DATA_ZOOM_TYPES.includes(config.type)) {
+    log(
+      "warn",
+      `data_zoom.type "${config.type}" is unknown. Use ${DATA_ZOOM_TYPES.join(", ")}. Falling back to "inside".`
+    );
+  }
+
+  if (config.refine !== undefined && typeof config.refine !== "boolean") {
+    log(
+      "warn",
+      `data_zoom.refine must be true or false, not "${config.refine}". Zooming stays visual.`
+    );
+  }
+
+  (["start", "end", "min_span"] as const).forEach((key) => {
+    if (config[key] !== undefined && !isPercent(config[key])) {
+      log("warn", `data_zoom.${key} must be a percentage between 0 and 100. It is ignored.`);
+    }
+  });
+
+  if (
+    isPercent(config.start) &&
+    isPercent(config.end) &&
+    (config.end as number) <= (config.start as number)
+  ) {
+    log("warn", "data_zoom.end must be greater than data_zoom.start. The full range is shown.");
+  }
+};
 
 const warnUnsupported = (
   target: Record<string, unknown>,
@@ -51,6 +91,7 @@ export const normalizeConfig = (
   }
 
   warnUnsupported(config as Record<string, unknown>, UNSUPPORTED_CARD_OPTIONS, "The card");
+  validateDataZoom(config.data_zoom);
 
   config.series.forEach((series, index) => {
     if (!series) {

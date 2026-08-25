@@ -70,6 +70,8 @@ export interface XAxisParams {
   start: Date;
   end?: Date;
   aggregation: AggregationTarget | undefined;
+  /** Interval the labels are written for; defaults to `aggregation`. */
+  labelAggregation?: AggregationTarget;
   buckets?: number[];
   fallbackEnd: number | null;
   hass?: HomeAssistant;
@@ -79,6 +81,7 @@ export const buildXAxis = ({
   start,
   end,
   aggregation,
+  labelAggregation = aggregation,
   buckets,
   fallbackEnd,
   hass,
@@ -91,12 +94,12 @@ export const buildXAxis = ({
     axisPointer: { show: false },
   };
 
-  if (aggregation === "month") {
+  if (labelAggregation === "month") {
     primary.minInterval = MONTH_AXIS_MIN_INTERVAL_MS;
     primary.axisLabel = {
       formatter: (value: number) => formatMonthLabel(value, hass),
     };
-  } else if (aggregation === "year") {
+  } else if (labelAggregation === "year") {
     primary.minInterval = YEAR_AXIS_MIN_INTERVAL_MS;
     primary.axisLabel = {
       formatter: (value: number) =>

@@ -10,9 +10,13 @@ import type { GraphSnapshot } from "./core/data-controller";
 import { OnceLogger } from "./core/logger";
 import { assembleChart } from "./chart/assemble";
 import { createZeroSnapshot } from "./chart/lines";
+import { dropZoomWindow } from "./chart/zoom";
+import { refinesOnZoom } from "./config/data-zoom";
 import { SelectionInput } from "./chart/selection-input";
+import { ZoomInput } from "./chart/zoom-input";
 import { resolveBucket } from "./chart/selection";
 import type { SelectedPeriod } from "./chart/selection";
+import type { ZoomWindow } from "./time/aggregation";
 import type { ChartOptions, SeriesOption } from "./types/echarts";
 import { CARD_VERSION } from "./version";
 
@@ -106,11 +110,19 @@ export class StatisticsExtendedGraph extends LitElement {
     (x) => this._onPick(x),
     this._logger
   );
+  private readonly _zoomInput = new ZoomInput(
+    (window) => this._onZoomWindow(window),
+    () => this._renderedAxisRange(),
+    this._logger
+  );
+  /** Part of the range the chart currently shows; drives the detail layer. */
+  private _zoomWindow: ZoomWindow | null = null;
 
   public setConfig(config: StatisticsExtendedGraphConfig): void {
     this._config = normalizeConfig(config);
     this._logger.reset();
     this._renderedRange = undefined;
+    this._zoomWindow = null;
     this._clearSelection();
     this._controller.setConfig(this._config);
   }
@@ -142,6 +154,7 @@ export class StatisticsExtendedGraph extends LitElement {
     super.disconnectedCallback();
     this._controller.disconnect();
     this._selectionInput.detach();
+    this._zoomInput.detach();
     if (this._animationFrame !== undefined) {
       cancelAnimationFrame(this._animationFrame);
       this._animationFrame = undefined;
@@ -175,6 +188,12 @@ export class StatisticsExtendedGraph extends LitElement {
 
     if (changedProps.has("_config") || themeChanged) {
       this._rebuildChart();
+    }
+
+    // A wheel zoom is not preceded by a pointer event, so the subscription
+    // cannot wait for one: it is tried after every render until it takes.
+    if (this._refinesOnZoom) {
+      this._zoomInput.attach(this.renderRoot?.querySelector("ha-chart-base"), true);
     }
   }
 
@@ -305,6 +324,7 @@ export class StatisticsExtendedGraph extends LitElement {
       darkMode: this._isDarkMode(),
       logger: this._logger,
       selectedX: this._selectedX,
+      zoomWindow: this._zoomWindow,
     });
 
     if (!assembled) {
@@ -344,10 +364,20 @@ export class StatisticsExtendedGraph extends LitElement {
       this._renderedRange.start !== range.start ||
       this._renderedRange.end !== range.end;
 
+    if (rangeChanged) {
+      // The window described buckets of a range the card has left.
+      this._zoomWindow = null;
+    }
+
     this._hasData = assembled.hasData;
     // Growing out of zero looks better than morphing the previous range's data
     // into the new one, so a range switch always animates from a flat chart.
-    this._chartOptions = { ...assembled.options, animation: rangeChanged };
+    // A new range starts from the configured zoom window, a refresh of the
+    // same range keeps the window the user panned to.
+    this._chartOptions = {
+      ...(rangeChanged ? assembled.options : dropZoomWindow(assembled.options)),
+      animation: rangeChanged,
+    };
 
     if (!rangeChanged) {
       this._chartData = assembled.series;
@@ -365,9 +395,42 @@ export class StatisticsExtendedGraph extends LitElement {
     });
   }
 
-  /** Home Assistant creates the chart lazily; a click proves it exists. */
-  private _attachSelectionInput = (): void => {
-    this._selectionInput.attach(this.renderRoot?.querySelector("ha-chart-base"));
+  /** Only a refining zoom needs the events; a visual one is chart-internal. */
+  private get _refinesOnZoom(): boolean {
+    return refinesOnZoom(this._config?.data_zoom);
+  }
+
+  /**
+   * The zoom came to rest. The controller decides whether that needs data;
+   * the chart is rebuilt either way, because a window that left the loaded
+   * detail has to fall back to the coarse data right away instead of waiting
+   * for a fetch.
+   */
+  private _onZoomWindow(window: ZoomWindow | null): void {
+    this._zoomWindow = window;
+    this._controller.setZoomWindow(window);
+    this._rebuildChart();
+  }
+
+  /** The range the time axis spans, for a zoom reported in percentages. */
+  private _renderedAxisRange(): { start: number; end: number } | undefined {
+    const snapshot = this._controller.snapshot;
+    if (!snapshot.periodStart) {
+      return undefined;
+    }
+    const end = snapshot.periodEnd?.getTime() ?? snapshot.main.range?.end ?? null;
+    return end === null
+      ? undefined
+      : { start: snapshot.periodStart.getTime(), end };
+  }
+
+  /** Home Assistant creates the chart lazily; a pointer proves it exists. */
+  private _attachChartInput = (): void => {
+    const host = this.renderRoot?.querySelector("ha-chart-base");
+    this._selectionInput.attach(host);
+    if (this._refinesOnZoom) {
+      this._zoomInput.attach(host);
+    }
   };
 
   private _onChartClick = (event: CustomEvent): void => {
@@ -447,7 +510,8 @@ export class StatisticsExtendedGraph extends LitElement {
           .data=${this._chartData}
           .options=${this._chartOptions}
           .height=${height}
-          @pointerdown=${this._attachSelectionInput}
+          @pointerdown=${this._attachChartInput}
+          @wheel=${this._attachChartInput}
           @chart-click=${this._onChartClick}
         ></ha-chart-base>
       </div>

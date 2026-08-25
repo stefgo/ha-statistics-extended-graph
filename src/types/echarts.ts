@@ -72,11 +72,26 @@ export interface GridOption {
   containLabel?: boolean;
 }
 
+export interface DataZoomOption {
+  type: "inside" | "slider";
+  xAxisIndex?: number | number[];
+  filterMode?: "filter" | "weakFilter" | "empty" | "none";
+  start?: number;
+  end?: number;
+  minSpan?: number;
+  zoomLock?: boolean;
+  zoomOnMouseWheel?: boolean | "shift" | "ctrl" | "alt";
+  moveOnMouseMove?: boolean | "shift" | "ctrl" | "alt";
+  moveOnMouseWheel?: boolean | "shift" | "ctrl" | "alt";
+  [key: string]: unknown;
+}
+
 export interface ChartOptions {
   series?: SeriesOption[];
   xAxis?: XAxisOption[];
   yAxis?: YAxisOption[];
   grid?: GridOption;
+  dataZoom?: DataZoomOption[];
   legend?: Record<string, unknown>;
   tooltip?: Record<string, unknown>;
   animation?: boolean;
@@ -102,6 +117,9 @@ export interface ZRenderHandler {
  */
 export interface ChartInstance {
   getZr(): ZRenderHandler | undefined;
+  on?(event: string, handler: (payload: unknown) => void): void;
+  off?(event: string, handler?: (payload: unknown) => void): void;
+  getOption?(): { dataZoom?: DataZoomOption[] } | undefined;
   convertFromPixel(
     finder: Record<string, unknown>,
     value: number | [number, number]

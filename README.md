@@ -34,6 +34,7 @@ contributes the legend rows with their sums and the self-sufficiency total row.*
 - Per-series time offset, e.g. to show this year and last year side by side.
 - Compare support for the energy date picker's compare toggle.
 - Left and right Y axis with independent scaling, limits and units.
+- Optional data zoom: zoom and pan the time axis with the wheel, a drag or a slider.
 - Optional area fills, gradient fills and fill-between-two-lines bands.
 - Per-theme colors (light/dark) and access to the Home Assistant energy palette.
 - Aggregation overrides per picker range, with an optional fallback interval.
@@ -107,6 +108,7 @@ the range you select there. For other modes see [Timespan](#timespan).
 | `color_cycle` | list | energy palette | Colors for series without an explicit `color`. Each entry is a string or a `{light, dark}` object. |
 | `y_axes` | list | – | Configuration of the left and right Y axis, see below. |
 | `aggregation` | object | auto | Recorder interval overrides, see below. |
+| `data_zoom` | boolean or object | `false` | Zoom into the time axis with the mouse wheel or a slider, see below. |
 | `series` | list | – | One or more series definitions, see below. At least one is required. |
 
 ### Timespan
@@ -267,6 +269,89 @@ axis is configured.
 | `logarithmic_scale` | boolean | `false` | Logarithmic axis. |
 | `hide_grid` | boolean | `false` | Hide the horizontal grid lines of this axis. |
 | `unit` | string | – | Unit label drawn at the axis. |
+
+### Data zoom
+
+Narrows the visible part of the time axis without loading anything: the card
+keeps fetching the configured range, the zoom is only a view of it.
+
+```yaml
+data_zoom: true     # shorthand for type: inside
+```
+
+```yaml
+data_zoom:
+  type: both               # inside, slider, both
+  zoom_on_mouse_wheel: ctrl
+  move_on_mouse_move: true
+  start: 50                # show the second half at first
+  end: 100
+  min_span: 5
+```
+
+| Key | Type | Default | Description |
+| --- | --- | --- | --- |
+| `type` | `inside`, `slider`, `both` | `inside` | `inside` zooms on the plot itself, `slider` adds a handle bar below it. |
+| `zoom_on_mouse_wheel` | boolean, `shift`, `ctrl`, `alt` | `true` | Wheel zooms; a modifier requires that key to be held (`inside` only). |
+| `move_on_mouse_move` | boolean, `shift`, `ctrl`, `alt` | `true` | Dragging pans the window (`inside` only). |
+| `move_on_mouse_wheel` | boolean, `shift`, `ctrl`, `alt` | `false` | Wheel pans instead of zooming (`inside` only). |
+| `zoom_lock` | boolean | `false` | Fixes the window width, so it can only be panned. |
+| `start` | number | `0` | Left edge of the initial window, in percent of the range. |
+| `end` | number | `100` | Right edge of the initial window, in percent of the range. |
+| `min_span` | number | – | Smallest window the user can zoom into, in percent of the range. |
+| `refine` | boolean | `false` | Load high resolution data for the zoom window, see below. |
+
+The window survives data refreshes and live updates - it is reset to `start` /
+`end` when the visible range itself changes, e.g. through the energy date
+picker. Values outside the window are clipped, never dropped, so stacks,
+compare series and the y axis stay stable while panning.
+
+A drag that pans the chart does not select a period; only a click that stays in
+place does (see [Time selection](#time-selection)).
+
+#### Higher resolution when zooming in (`refine`)
+
+Without `refine` the zoom is purely visual: it magnifies the monthly bars of a
+year, it does not turn them into daily ones.
+
+```yaml
+data_zoom:
+  type: inside
+  refine: true
+```
+
+With `refine: true` the card loads a second, high resolution data set for the
+zoom window and draws it in place of the coarse one. The window is small by
+definition, so its interval is chosen from its own length alone and hits no
+point budget: zooming into a year drills down through `day` and `hour` to
+`5minute`.
+
+| Zoom window | Interval of the detail |
+| --- | --- |
+| a few months | `day` |
+| a few days | `hour` |
+| a few hours | `5minute` |
+
+The detail reaches one window width beyond each edge, so panning inside the
+zoom stays instant. Leaving that area falls back to the coarse data in the same
+frame - the chart never goes blank - and the detail is reloaded for the new
+window. Compare series and `time_offset` series are loaded at the same
+resolution, so the chart never mixes intervals, and the x axis keeps describing
+the full range, so zooming back out always has somewhere to go.
+
+Two limits are worth knowing:
+
+- Home Assistant deletes `5minute` statistics after about ten days, so zooming
+  into an older period never gets finer than `hour`. The empty answer marks
+  that region, the coarse data stays on screen, and the region is not requested
+  again.
+- Every zoom into a new window is a fetch. The card waits until the gesture came
+  to rest (400 ms) and only loads when the resolution actually changes, but on a
+  slow recorder this is noticeable. Live updates of the current hour land in the
+  coarse data; the detail follows with the next refresh.
+
+A change of the visible range (e.g. through the energy date picker) resets the
+window and the detail with it.
 
 ### Aggregation options
 
