@@ -11,7 +11,7 @@ import { OnceLogger } from "./core/logger";
 import { assembleChart } from "./chart/assemble";
 import { createZeroSnapshot } from "./chart/lines";
 import { dropZoomWindow } from "./chart/zoom";
-import { refinesOnZoom } from "./config/data-zoom";
+import { refinesOnZoom } from "./config/zoom";
 import { SelectionInput } from "./chart/selection-input";
 import { ZoomInput } from "./chart/zoom-input";
 import { resolveBucket } from "./chart/selection";
@@ -397,7 +397,7 @@ export class StatisticsExtendedGraph extends LitElement {
 
   /** Only a refining zoom needs the events; a visual one is chart-internal. */
   private get _refinesOnZoom(): boolean {
-    return refinesOnZoom(this._config?.data_zoom);
+    return refinesOnZoom(this._config?.zoom);
   }
 
   /**

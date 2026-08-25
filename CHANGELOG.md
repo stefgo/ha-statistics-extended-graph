@@ -11,10 +11,10 @@ asset is what HACS installs.
 
 ### Added
 
-- `data_zoom`: zoom and pan the time axis with the mouse wheel, a drag or a slider below the
+- `zoom`: zoom and pan the time axis with the mouse wheel, a drag or a slider below the
   chart (`type: inside | slider | both`). The zoom is a pure view of the loaded range and does
   not trigger any fetch; a drag that pans the chart no longer selects a period.
-- `data_zoom.refine`: load high resolution data for the zoom window, next to the coarse data of
+- `zoom.refine`: load high resolution data for the zoom window, next to the coarse data of
   the full range. A window has no bucket budget to respect, so zooming into a year drills down
   through days and hours to five-minute data; leaving the loaded detail falls back to the coarse
   data instantly. Compare and `time_offset` series are loaded at the same resolution.

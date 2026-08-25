@@ -42,8 +42,8 @@ card.ts                  Lit element: rendering, placeholders, animation
 | `src/chart/selection-input.ts` | Reads the clicked x value from the chart instance `<ha-chart-base>` exposes. |
 | `src/chart/dimming.ts` | Fades everything outside the selected bucket. |
 | `src/chart/zoom.ts` | Optional data zoom: builds the ECharts components and keeps the panned window across refreshes. |
-| `src/chart/zoom-input.ts` | Reports the settled zoom window to the controller, which refines the resolution with it (`data_zoom.refine`). |
-| `src/time/detail.ts` | Plans the detail layer of `data_zoom.refine`: which range to load around the window, and at which interval. |
+| `src/chart/zoom-input.ts` | Reports the settled zoom window to the controller, which refines the resolution with it (`zoom.refine`). |
+| `src/time/detail.ts` | Plans the detail layer of `zoom.refine`: which range to load around the window, and at which interval. |
 | `src/chart/axes.ts`, `bars.ts`, `lines.ts`, `compare.ts` | Presentation details: axis options, bar bucket alignment and labels, line normalization/extension, compare styling and stack layout. |
 | `src/chart/assemble.ts` | Combines all of the above into `{ series, options }`. |
 | `src/types/echarts.ts` | Structural typings for the option subset the card produces. Home Assistant provides the runtime. |

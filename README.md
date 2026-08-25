@@ -108,7 +108,7 @@ the range you select there. For other modes see [Timespan](#timespan).
 | `color_cycle` | list | energy palette | Colors for series without an explicit `color`. Each entry is a string or a `{light, dark}` object. |
 | `y_axes` | list | – | Configuration of the left and right Y axis, see below. |
 | `aggregation` | object | auto | Recorder interval overrides, see below. |
-| `data_zoom` | boolean or object | `false` | Zoom into the time axis with the mouse wheel or a slider, see below. |
+| `zoom` | boolean or object | `false` | Zoom into the time axis with the mouse wheel or a slider, see below. |
 | `series` | list | – | One or more series definitions, see below. At least one is required. |
 
 ### Timespan
@@ -272,18 +272,15 @@ axis is configured.
 
 ### Data zoom
 
-Narrows the visible part of the time axis without loading anything: the card
-keeps fetching the configured range, the zoom is only a view of it.
+Narrows the visible part of the time axis: the wheel zooms, a drag pans.
 
 ```yaml
-data_zoom: true     # shorthand for type: inside
+zoom: true     # shorthand for type: inside
 ```
 
 ```yaml
-data_zoom:
+zoom:
   type: both               # inside, slider, both
-  zoom_on_mouse_wheel: ctrl
-  move_on_mouse_move: true
   start: 50                # show the second half at first
   end: 100
   min_span: 5
@@ -292,9 +289,6 @@ data_zoom:
 | Key | Type | Default | Description |
 | --- | --- | --- | --- |
 | `type` | `inside`, `slider`, `both` | `inside` | `inside` zooms on the plot itself, `slider` adds a handle bar below it. |
-| `zoom_on_mouse_wheel` | boolean, `shift`, `ctrl`, `alt` | `true` | Wheel zooms; a modifier requires that key to be held (`inside` only). |
-| `move_on_mouse_move` | boolean, `shift`, `ctrl`, `alt` | `true` | Dragging pans the window (`inside` only). |
-| `move_on_mouse_wheel` | boolean, `shift`, `ctrl`, `alt` | `false` | Wheel pans instead of zooming (`inside` only). |
 | `zoom_lock` | boolean | `false` | Fixes the window width, so it can only be panned. |
 | `start` | number | `0` | Left edge of the initial window, in percent of the range. |
 | `end` | number | `100` | Right edge of the initial window, in percent of the range. |
@@ -315,7 +309,7 @@ Without `refine` the zoom is purely visual: it magnifies the monthly bars of a
 year, it does not turn them into daily ones.
 
 ```yaml
-data_zoom:
+zoom:
   type: inside
   refine: true
 ```

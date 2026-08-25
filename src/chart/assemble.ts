@@ -17,7 +17,8 @@ import { BarStackLayout, createCompareTransform, styleCompareSeries } from "./co
 import { extendLineSeries, normalizeLineSeries, toTuple } from "./lines";
 import { buildXAxis, buildYAxes } from "./axes";
 import { applySelectionDimming } from "./dimming";
-import { buildDataZoom, hasSlider, resolveDataZoom, SLIDER_GRID_BOTTOM } from "./zoom";
+import { buildDataZoom, hasSlider, SLIDER_GRID_BOTTOM } from "./zoom";
+import { resolveZoom } from "../config/zoom";
 import {
   buildSelectionAxis,
   buildSelectionMarker,
@@ -378,7 +379,7 @@ export const assembleChart = ({
     );
   }
 
-  const dataZoom = resolveDataZoom(config.data_zoom);
+  const zoom = resolveZoom(config.zoom);
 
   const options: ChartOptions = {
     xAxis: buildXAxis({
@@ -405,10 +406,10 @@ export const assembleChart = ({
       left: 1,
       right: 1,
       // The slider sits below the plotting area and needs its own room.
-      bottom: dataZoom && hasSlider(dataZoom) ? SLIDER_GRID_BOTTOM : 0,
+      bottom: zoom && hasSlider(zoom) ? SLIDER_GRID_BOTTOM : 0,
       containLabel: true,
     },
-    ...(dataZoom ? { dataZoom: buildDataZoom(dataZoom) } : {}),
+    ...(zoom ? { dataZoom: buildDataZoom(zoom) } : {}),
     // This card renders neither a legend nor a tooltip or axis pointers.
     legend: { show: false },
     tooltip: { show: false, showContent: false, axisPointer: { type: "none" } },

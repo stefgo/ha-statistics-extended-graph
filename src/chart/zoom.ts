@@ -5,8 +5,7 @@
  * trigger a reload.
  */
 
-import type { DataZoomConfig, ZoomGesture } from "../config/types";
-import { resolveDataZoom } from "../config/data-zoom";
+import type { ZoomConfig } from "../config/types";
 import type { ChartOptions, DataZoomOption } from "../types/echarts";
 
 /** Height of the slider handle bar plus its gap to the plotting area. */
@@ -20,14 +19,7 @@ const clampPercent = (value: number | undefined): number | undefined =>
     ? Math.min(100, Math.max(0, value))
     : undefined;
 
-const gesture = (
-  value: ZoomGesture | undefined,
-  fallback: ZoomGesture
-): ZoomGesture => (value === undefined ? fallback : value);
-
-export { resolveDataZoom };
-
-export const hasSlider = (config: DataZoomConfig): boolean =>
+export const hasSlider = (config: ZoomConfig): boolean =>
   config.type === "slider" || config.type === "both";
 
 /**
@@ -35,7 +27,7 @@ export const hasSlider = (config: DataZoomConfig): boolean =>
  * point in place: values outside the window are only clipped, so stacks and
  * compare series stay aligned and the y axis does not jump while panning.
  */
-export const buildDataZoom = (config: DataZoomConfig): DataZoomOption[] => {
+export const buildDataZoom = (config: ZoomConfig): DataZoomOption[] => {
   const start = clampPercent(config.start);
   const end = clampPercent(config.end);
   const window = {
@@ -54,13 +46,9 @@ export const buildDataZoom = (config: DataZoomConfig): DataZoomOption[] => {
   const zooms: DataZoomOption[] = [];
 
   if (config.type !== "slider") {
-    zooms.push({
-      ...shared,
-      type: "inside",
-      zoomOnMouseWheel: gesture(config.zoom_on_mouse_wheel, true),
-      moveOnMouseMove: gesture(config.move_on_mouse_move, true),
-      moveOnMouseWheel: gesture(config.move_on_mouse_wheel, false),
-    });
+    // The gestures stay at the ECharts defaults: the wheel zooms and a drag
+    // pans, which is what a chart in a dashboard is expected to do.
+    zooms.push({ ...shared, type: "inside" });
   }
 
   if (hasSlider(config)) {

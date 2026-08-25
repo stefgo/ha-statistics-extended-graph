@@ -80,9 +80,6 @@ export interface DataZoomOption {
   end?: number;
   minSpan?: number;
   zoomLock?: boolean;
-  zoomOnMouseWheel?: boolean | "shift" | "ctrl" | "alt";
-  moveOnMouseMove?: boolean | "shift" | "ctrl" | "alt";
-  moveOnMouseWheel?: boolean | "shift" | "ctrl" | "alt";
   [key: string]: unknown;
 }
 

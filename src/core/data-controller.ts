@@ -31,7 +31,7 @@ import {
 import { EnergyCollectionBinding } from "../energy/collection";
 import { resolveAggregationPlan } from "../time/aggregation";
 import type { ZoomWindow } from "../time/aggregation";
-import { refinesOnZoom } from "../config/data-zoom";
+import { refinesOnZoom } from "../config/zoom";
 import { covers, planDetailRange } from "../time/detail";
 import type { DetailPlan } from "../time/detail";
 import { getNextRefreshTime } from "../time/refresh";
@@ -269,7 +269,7 @@ export class GraphDataController {
 
   /**
    * Reports the part of the range the user zoomed into. With
-   * `data_zoom.refine` the detail layer follows it: a window that deserves a
+   * `zoom.refine` the detail layer follows it: a window that deserves a
    * finer interval than the loaded one is loaded separately at that interval.
    * `null` clears the window again.
    */
@@ -317,7 +317,7 @@ export class GraphDataController {
   }
 
   private get _refinesOnZoom(): boolean {
-    return refinesOnZoom(this._config?.data_zoom);
+    return refinesOnZoom(this._config?.zoom);
   }
 
   private _hasTimeOffsets(config = this._config): boolean {
