@@ -15,7 +15,7 @@
 import type { AggregationTarget } from "../config/types";
 import type { StatisticsPeriod } from "../data/statistics";
 import { estimateBucketCount, MAX_BUCKETS } from "./buckets";
-import { deriveAutoPeriod, periodRank } from "./aggregation";
+import { deriveAutoPeriod, periodRank, PERIOD_ORDER } from "./aggregation";
 import type { ZoomWindow } from "./aggregation";
 
 /** How much of the window's width is loaded on each side of it. */
@@ -72,6 +72,26 @@ export const planDetailRange = (
   }
 
   return { start: detailStart, end: detailEnd, aggregation };
+};
+
+/**
+ * Every interval worth trying for a detail plan, finest first: from the one
+ * the window deserves up to - but not including - the one the full range is
+ * already loaded at. Home Assistant purges `5minute` statistics after a few
+ * days, so the finest interval regularly has no data while a coarser one
+ * still does; without the ladder such a window would fall all the way back to
+ * the loaded interval instead of to the next best one.
+ */
+export const detailPlanLadder = (
+  aggregation: StatisticsPeriod,
+  loaded: AggregationTarget | undefined
+): StatisticsPeriod[] => {
+  const loadedRank = periodRank(loaded);
+  const start = periodRank(aggregation);
+  if (start < 0 || loadedRank <= start) {
+    return [aggregation];
+  }
+  return PERIOD_ORDER.slice(start, loadedRank);
 };
 
 /** True while `window` lies inside the range a detail layer has loaded. */

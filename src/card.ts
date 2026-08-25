@@ -321,11 +321,28 @@ export class StatisticsExtendedGraph extends LitElement {
     }
 
     const snapshot = this._controller.snapshot;
-    if (snapshot.periodStart) {
-      this._dropSelectionOnRangeChange({
-        start: snapshot.periodStart.getTime(),
-        end: snapshot.periodEnd?.getTime() ?? null,
-      });
+    const range = snapshot.periodStart
+      ? {
+          start: snapshot.periodStart.getTime(),
+          end: snapshot.periodEnd?.getTime() ?? null,
+        }
+      : undefined;
+    if (range) {
+      this._dropSelectionOnRangeChange(range);
+    }
+
+    const rangeChanged =
+      !range ||
+      !this._renderedRange ||
+      this._renderedRange.start !== range.start ||
+      this._renderedRange.end !== range.end;
+
+    // Before the assembly, not after it: the window describes buckets of a
+    // range the card has left, and a frame drawn from it would put the detail
+    // layer of the old range under the axis of the new one.
+    if (rangeChanged) {
+      this._zoomWindow = null;
+      this._zoomed = false;
     }
 
     const assembled = assembleChart({
@@ -362,11 +379,6 @@ export class StatisticsExtendedGraph extends LitElement {
       return;
     }
 
-    const range = {
-      start: snapshot.periodStart!.getTime(),
-      end: snapshot.periodEnd?.getTime() ?? null,
-    };
-
     this._assembledSeries = assembled.series;
     this._selection = assembled.selection;
     // The click may have snapped to a bucket of its own, so the stored value
@@ -374,16 +386,6 @@ export class StatisticsExtendedGraph extends LitElement {
     this._selectedX = assembled.selection?.bucket ?? null;
     this._selectedRange = assembled.selection ? range : undefined;
     this._emitSelection(assembled.selection);
-    const rangeChanged =
-      !this._renderedRange ||
-      this._renderedRange.start !== range.start ||
-      this._renderedRange.end !== range.end;
-
-    if (rangeChanged) {
-      // The window described buckets of a range the card has left.
-      this._zoomWindow = null;
-      this._zoomed = false;
-    }
 
     this._hasData = assembled.hasData;
     // Growing out of zero looks better than morphing the previous range's data
@@ -407,7 +409,7 @@ export class StatisticsExtendedGraph extends LitElement {
     this._animationFrame = requestAnimationFrame(() => {
       this._animationFrame = undefined;
       this._chartData = assembled.series;
-      this._renderedRange = range;
+      this._renderedRange = range!;
     });
   }
 

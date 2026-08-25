@@ -32,7 +32,7 @@ import { EnergyCollectionBinding } from "../energy/collection";
 import { resolveAggregationPlan } from "../time/aggregation";
 import type { ZoomWindow } from "../time/aggregation";
 import { refinesOnZoom } from "../config/zoom";
-import { covers, planDetailRange } from "../time/detail";
+import { covers, detailPlanLadder, planDetailRange } from "../time/detail";
 import type { DetailPlan } from "../time/detail";
 import { getNextRefreshTime } from "../time/refresh";
 import {
@@ -94,7 +94,13 @@ interface TargetState {
 export interface DetailState {
   range: RangeState;
   compareRange?: RangeState;
+  /**
+   * The interval the data actually came back at. It can be coarser than
+   * {@link requested} when the recorder has already purged the finer one.
+   */
   aggregation: AggregationTarget;
+  /** The interval the window asked for; what a repeated plan is matched on. */
+  requested: AggregationTarget;
   main: TargetState;
   compare: TargetState;
   shiftedStatistics: Map<number, StatisticValue[]>;
@@ -449,8 +455,12 @@ export class GraphDataController {
       this._periodEnd = resolved.end;
       // The window described a range the card has left; the next zoom reports
       // a new one, and until then the interval follows the full range again.
+      // The detail goes with it: its range is absolute, so an overlapping new
+      // period would otherwise keep looking covered and leave the old layer -
+      // and with it the old compare shift - on screen.
       this._zoomWindow = undefined;
       this._detailMiss = undefined;
+      this._clearDetail();
       this._main.lastRawEnd = undefined;
       // A new range is a fresh start, not a continuation of a failing one.
       this._failures.main = 0;
@@ -477,6 +487,9 @@ export class GraphDataController {
       this._comparePeriodStart = range.start;
       this._comparePeriodEnd = range.end;
       this._compare = emptyTargetState();
+      // The detail layer carries a compare set of its own, mapped by the shift
+      // between the two periods. A new compare period invalidates that shift.
+      this._clearDetail();
       this._failures.compare = 0;
     }
     return changed;
@@ -873,7 +886,9 @@ export class GraphDataController {
     return (
       !!this._detail &&
       !!this._zoomWindow &&
-      this._detail.aggregation === plan.aggregation &&
+      // Matched on the request: a plan that fell back to a coarser interval
+      // would otherwise never look satisfied and reload on every gesture.
+      this._detail.requested === plan.aggregation &&
       covers(this._detail.range, this._zoomWindow)
     );
   }
@@ -931,7 +946,10 @@ export class GraphDataController {
     if (!hass || !plan || !this._periodStart || !this._visible) {
       return;
     }
-    if (this._detailIsCurrent(plan) || this._detailIsKnownMiss(plan)) {
+    // Only the known miss is checked here. A plan that is already loaded is
+    // deliberately loaded again: this is also the path an auto refresh takes,
+    // and it is the only way new samples reach a chart that stays zoomed in.
+    if (this._detailIsKnownMiss(plan)) {
       return;
     }
 
@@ -943,10 +961,11 @@ export class GraphDataController {
     };
 
     try {
+      const ladder = detailPlanLadder(plan.aggregation, this._main.aggregation);
       const metadata = await this._loadMetadata(hass, ids);
       const result = await this._fetchWithPlan(
         hass,
-        [plan.aggregation],
+        ladder,
         plan.start,
         plan.end,
         ids,
@@ -958,10 +977,18 @@ export class GraphDataController {
         return;
       }
 
+      // A request that threw says nothing about the data. Remembering it as a
+      // miss would keep the region from ever being tried again, so a failure
+      // only leaves the coarse data standing and waits for the next attempt.
+      if (result.failed) {
+        return;
+      }
+
       // Five-minute statistics only exist inside the recorder retention, and
-      // the frontend cannot ask how far that reaches. An empty answer is that
-      // answer: the region is remembered, the coarse data stays on screen.
-      if (result.failed || !statisticsHaveData(result.statistics, ids)) {
+      // the frontend cannot ask how far that reaches. An empty answer from
+      // every interval on the ladder is that answer: the region is
+      // remembered, the coarse data stays on screen.
+      if (!statisticsHaveData(result.statistics, ids)) {
         this._detailMiss = {
           start: plan.start.getTime(),
           end: plan.end.getTime(),
@@ -971,12 +998,16 @@ export class GraphDataController {
         return;
       }
 
+      // Whatever the ladder ended on: compare and shifted series are loaded
+      // at exactly that interval, so the chart never mixes two of them.
+      const aggregation = result.aggregation;
+
       const main: TargetState = {
         metadata,
         calculated: new Map(),
         statistics: result.statistics,
         range,
-        aggregation: plan.aggregation,
+        aggregation,
       };
       main.calculated = this._computeCalculations(main, false, plan.start, plan.end);
 
@@ -991,7 +1022,7 @@ export class GraphDataController {
 
         const compareResult = await this._fetchWithPlan(
           hass,
-          [plan.aggregation],
+          [aggregation],
           compareStart,
           compareEnd,
           ids,
@@ -1002,10 +1033,17 @@ export class GraphDataController {
         if (!this._isCurrentDetail(generation)) {
           return;
         }
+        // Installing the empty result of a failed request would drop the
+        // compare series from the zoom until the next gesture. The coarse
+        // data still has both, so the whole layer is left for the next try.
+        if (compareResult.failed) {
+          log("warn", "Zoom detail skipped: the compare range failed to load");
+          return;
+        }
         compare.metadata = metadata;
         compare.statistics = compareResult.statistics;
         compare.range = compareRange;
-        compare.aggregation = plan.aggregation;
+        compare.aggregation = aggregation;
         compare.calculated = this._computeCalculations(
           compare,
           true,
@@ -1018,7 +1056,7 @@ export class GraphDataController {
         plan.start,
         plan.end,
         () => this._isCurrentDetail(generation),
-        plan.aggregation
+        aggregation
       );
       if (!this._isCurrentDetail(generation)) {
         return;
@@ -1028,7 +1066,8 @@ export class GraphDataController {
       this._detail = {
         range,
         compareRange,
-        aggregation: plan.aggregation,
+        aggregation,
+        requested: plan.aggregation,
         main,
         compare,
         shiftedStatistics: shifted?.statistics ?? new Map(),
