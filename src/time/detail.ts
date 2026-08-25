@@ -15,7 +15,12 @@
 import type { AggregationTarget } from "../config/types";
 import type { StatisticsPeriod } from "../data/statistics";
 import { estimateBucketCount, MAX_BUCKETS } from "./buckets";
-import { deriveAutoPeriod, periodRank, PERIOD_ORDER } from "./aggregation";
+import {
+  AUTO_PERIODS,
+  deriveAutoPeriod,
+  periodRank,
+  PERIOD_ORDER,
+} from "./aggregation";
 import type { ZoomWindow } from "./aggregation";
 
 /** How much of the window's width is loaded on each side of it. */
@@ -81,6 +86,12 @@ export const planDetailRange = (
  * days, so the finest interval regularly has no data while a coarser one
  * still does; without the ladder such a window would fall all the way back to
  * the loaded interval instead of to the next best one.
+ *
+ * Only intervals the automatic choice can produce are stepped through. `week`
+ * and `year` sit on the ladder for comparisons, but as a rung between two
+ * others they buy nothing: an interval that close to the one already loaded
+ * is not the finer detail the window asked for, and it costs a request that
+ * is empty whenever its neighbour below already was.
  */
 export const detailPlanLadder = (
   aggregation: StatisticsPeriod,
@@ -91,7 +102,10 @@ export const detailPlanLadder = (
   if (start < 0 || loadedRank <= start) {
     return [aggregation];
   }
-  return PERIOD_ORDER.slice(start, loadedRank);
+  const ladder = PERIOD_ORDER.slice(start, loadedRank).filter((period) =>
+    AUTO_PERIODS.includes(period)
+  );
+  return ladder.length ? ladder : [aggregation];
 };
 
 /** True while `window` lies inside the range a detail layer has loaded. */

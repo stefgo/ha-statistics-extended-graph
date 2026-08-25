@@ -57,6 +57,7 @@ import {
 } from "../series/time-offset";
 import { FetchQueue, TimeoutError, withTimeout } from "./fetch-queue";
 import { log, OnceLogger } from "./logger";
+import type { LogLevel } from "./logger";
 
 const FETCH_TIMEOUT_MS = 60_000;
 const RAW_DELTA_OVERLAP_MS = 60_000;
@@ -772,7 +773,8 @@ export class GraphDataController {
     ids: string[],
     types: string[],
     isCompare: boolean,
-    range: RangeState
+    range: RangeState,
+    stepLevel: LogLevel = "warn"
   ): Promise<{
     statistics: Statistics;
     aggregation: AggregationTarget;
@@ -832,7 +834,7 @@ export class GraphDataController {
         }
         if (idx < plan.length - 1) {
           log(
-            "warn",
+            stepLevel,
             `Aggregation "${aggregation}" returned no data. Trying "${plan[idx + 1]}".`
           );
         }
@@ -982,6 +984,8 @@ export class GraphDataController {
     try {
       const ladder = detailPlanLadder(plan.aggregation, this._main.aggregation);
       const metadata = await this._loadMetadata(hass, ids);
+      // Walking the ladder is the normal course for a detail layer, not a
+      // symptom: an empty rung is expected wherever the recorder has purged.
       const result = await this._fetchWithPlan(
         hass,
         ladder,
@@ -990,7 +994,8 @@ export class GraphDataController {
         ids,
         types,
         false,
-        range
+        range,
+        "debug"
       );
       if (!this._isCurrentDetail(generation)) {
         return;

@@ -30,6 +30,14 @@ export const deriveAutoPeriod = (
   return "hour";
 };
 
+/** The intervals `deriveAutoPeriod` can actually return. */
+export const AUTO_PERIODS: StatisticsPeriod[] = [
+  "5minute",
+  "hour",
+  "day",
+  "month",
+];
+
 /** Intervals from finest to coarsest, for comparing two of them. */
 export const PERIOD_ORDER: StatisticsPeriod[] = [
   "5minute",
