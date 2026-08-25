@@ -124,6 +124,8 @@ export interface GraphSnapshot {
   shiftedCalculated: Map<string, StatisticValue[]>;
   /** Present while a zoom window is backed by higher resolution data. */
   detail?: DetailState;
+  /** True while the detail layer of the current zoom window is being loaded. */
+  detailLoading: boolean;
 }
 
 const emptyTargetState = (): TargetState => ({
@@ -167,6 +169,13 @@ export class GraphDataController {
   private _zoomWindow?: ZoomWindow;
   private _detail?: DetailState;
   private _detailGeneration = 0;
+  private _detailLoading = false;
+  /**
+   * The load that owns {@link _detailLoading}. A response only clears the flag
+   * while it is still the newest one; a load that was superseded leaves it to
+   * the load that replaced it.
+   */
+  private _detailLoadingGeneration = 0;
   /**
    * The detail plan that came back without data. The recorder keeps short-term
    * statistics for a few days only, so a window in the past has a floor - and
@@ -246,6 +255,7 @@ export class GraphDataController {
     }
     this._energyBinding.disconnect();
     this._queue.dispose();
+    this._detailLoading = false;
     this._clearTimer("_autoRefreshTimeout");
     this._clearTimer("_liveHourTimeout");
     this._clearTimer("_visibilityResumeTimeout");
@@ -309,6 +319,7 @@ export class GraphDataController {
       shiftedMetadata: this._shiftedMetadata,
       shiftedCalculated: this._shiftedCalculated,
       detail: this._detail,
+      detailLoading: this._detailLoading,
     };
   }
 
@@ -914,7 +925,11 @@ export class GraphDataController {
    */
   private _clearDetail(): void {
     this._detailGeneration += 1;
-    if (!this._detail) {
+    // A load still in flight has just been superseded, so its indicator goes
+    // with it rather than standing until its response arrives and is dropped.
+    const wasLoading = this._detailLoading;
+    this._detailLoading = false;
+    if (!this._detail && !wasLoading) {
       return;
     }
     this._detail = undefined;
@@ -954,6 +969,10 @@ export class GraphDataController {
     }
 
     const generation = ++this._detailGeneration;
+    this._detailLoading = true;
+    this._detailLoadingGeneration = generation;
+    this._onChange();
+
     const { ids, types } = this._collectStatisticRequests();
     const range: RangeState = {
       start: plan.start.getTime(),
@@ -1074,12 +1093,18 @@ export class GraphDataController {
         shiftedMetadata: shifted?.metadata ?? new Map(),
         shiftedCalculated: shifted?.calculated ?? new Map(),
       };
-      this._onChange();
+      // Drawn by the `finally` below, which clears the indicator: one frame
+      // carries both the detail layer and the end of the load.
     } catch (error) {
       log("error", "Failed to load zoom detail", {
         error: error instanceof Error ? error.message : error,
       });
       // The coarse data is still on screen; the next zoom tries again.
+    } finally {
+      if (this._detailLoading && this._detailLoadingGeneration === generation) {
+        this._detailLoading = false;
+        this._onChange();
+      }
     }
   }
 

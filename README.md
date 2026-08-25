@@ -368,7 +368,11 @@ Two limits are worth knowing:
 - Every zoom into a new window is a fetch. The card waits until the gesture came
   to rest (400 ms) and only loads when the resolution actually changes, but on a
   slow recorder this is noticeable. Live updates of the current hour land in the
-  coarse data; the detail follows with the next refresh.
+  coarse data; the detail follows with the next refresh. While such a load runs,
+  a small spinner appears in the top right corner of the chart. It waits out the
+  first 150 ms, so a fast answer never flashes it, and the chart stays visible
+  and interactive underneath: what is on screen is final once the spinner is
+  gone.
 
 A change of the visible range (e.g. through the energy date picker) resets the
 window and the detail with it.

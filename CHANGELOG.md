@@ -26,6 +26,9 @@ asset is what HACS installs.
   keeps its detail up to date with every refresh. The interval follows the thresholds of the
   core energy cards, which know no weekly step: a year is refined once the window drops below
   about ten weeks, not before.
+- `zoom.refine`: a spinner in the top right corner of the chart while the detail layer loads,
+  so a zoom that is still fetching is told apart from one that is done. It appears only after
+  150 ms and leaves the chart readable and interactive underneath.
 
 ## [0.5.0] — 2026-08-24
 

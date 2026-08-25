@@ -27,6 +27,13 @@ interface LovelaceGridOptions {
   min_rows?: number;
 }
 
+/**
+ * How long a detail load may run before the refine indicator appears. Short
+ * enough to catch anything the user would wait on, long enough that a cached
+ * or fast answer never flashes it.
+ */
+const REFINE_INDICATOR_DELAY_MS = 150;
+
 /** Name of the event the card fires whenever the selected period changes. */
 export const SELECTION_EVENT = "custom-graph-selection";
 
@@ -86,6 +93,8 @@ export class StatisticsExtendedGraph extends LitElement {
   @state() private _hasData = false;
   @state() private _loading = false;
   @state() private _disabled = false;
+  /** Drives the refine indicator; lags {@link _detailLoading} by the grace. */
+  @state() private _refining = false;
   @state() private _usesSectionLayout = false;
 
   private readonly _logger = new OnceLogger();
@@ -95,6 +104,10 @@ export class StatisticsExtendedGraph extends LitElement {
   /** Frame the zoomed-state rebuild waits for; see {@link _onZoomed}. */
   private _zoomFrame?: number;
   private _darkMode = false;
+  /** Whether the controller is loading the detail layer right now. */
+  private _detailLoading = false;
+  /** Timer of the grace period before the refine indicator appears. */
+  private _refineTimeout?: number;
   /** The one selected x value; `null` while nothing is selected. */
   private _selectedX: number | null = null;
   /** Bucket and period of the last assembly, used to toggle and to report. */
@@ -173,6 +186,7 @@ export class StatisticsExtendedGraph extends LitElement {
       cancelAnimationFrame(this._animationFrame);
       this._animationFrame = undefined;
     }
+    this._setDetailLoading(false);
   }
 
   protected override shouldUpdate(changedProps: PropertyValues): boolean {
@@ -219,7 +233,34 @@ export class StatisticsExtendedGraph extends LitElement {
     const snapshot = this._controller.snapshot;
     this._loading = snapshot.loading;
     this._disabled = snapshot.aggregationDisabled;
+    this._setDetailLoading(snapshot.detailLoading);
     this._rebuildChart();
+  }
+
+  /**
+   * Tracks the detail load behind a short grace period: `zoom.refine` reloads
+   * on every settled gesture, and most of those answer within a few frames.
+   * Showing the indicator right away would make it flicker on each of them, so
+   * it only appears once a load outlasts the grace - and disappears at once.
+   */
+  private _setDetailLoading(loading: boolean): void {
+    if (loading === this._detailLoading) {
+      return;
+    }
+    this._detailLoading = loading;
+
+    if (this._refineTimeout !== undefined) {
+      clearTimeout(this._refineTimeout);
+      this._refineTimeout = undefined;
+    }
+    if (!loading) {
+      this._refining = false;
+      return;
+    }
+    this._refineTimeout = window.setTimeout(() => {
+      this._refineTimeout = undefined;
+      this._refining = this._detailLoading;
+    }, REFINE_INDICATOR_DELAY_MS);
   }
 
   /** Section layouts size the card through grid rows instead of `chart_height`. */
@@ -564,8 +605,26 @@ export class StatisticsExtendedGraph extends LitElement {
           @wheel=${this._attachChartInput}
           @chart-click=${this._onChartClick}
         ></ha-chart-base>
+        ${this._renderRefineIndicator()}
       </div>
     `;
+  }
+
+  /**
+   * Sits on top of the chart instead of replacing it: the zoomed view stays
+   * readable and interactive while the finer data is on its way.
+   */
+  private _renderRefineIndicator() {
+    if (!this._refining) {
+      return nothing;
+    }
+    return html`<div class="refining" role="status" aria-live="polite">
+      <span class="refining__spinner"></span>
+      ${this._localize(
+        "ui.components.statistics_charts.loading_statistics",
+        "Loading statistics…"
+      )}
+    </div>`;
   }
 
   static override styles = css`
@@ -613,6 +672,49 @@ export class StatisticsExtendedGraph extends LitElement {
 
     .chart--section ha-chart-base {
       height: 100%;
+    }
+
+    .chart {
+      position: relative;
+    }
+
+    .refining {
+      position: absolute;
+      top: 4px;
+      right: 4px;
+      z-index: 1;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 3px 8px;
+      border-radius: 12px;
+      font-size: 12px;
+      line-height: 16px;
+      color: var(--secondary-text-color);
+      background: var(--card-background-color, var(--ha-card-background, #fff));
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+      pointer-events: none;
+    }
+
+    .refining__spinner {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      border: 2px solid var(--divider-color, rgba(127, 127, 127, 0.4));
+      border-top-color: var(--primary-color);
+      animation: refine-spin 0.8s linear infinite;
+    }
+
+    @keyframes refine-spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .refining__spinner {
+        animation-duration: 2.4s;
+      }
     }
 
     .placeholder {
