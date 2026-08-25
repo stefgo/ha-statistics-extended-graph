@@ -7,6 +7,10 @@
  * pixel into a value of the time axis. That is a direct read of the click and
  * needs neither a tooltip formatter nor the transient axis pointer state.
  *
+ * With the data zoom enabled a drag pans the chart and still ends in a
+ * `click`, so the press position is remembered and a click that moved is
+ * discarded - only a real tap selects a period.
+ *
  * Home Assistant creates the instance inside `<ha-chart-base>` lazily, so the
  * subscription is made on the way into a click: `pointerdown` runs before the
  * click is handled, and by then the chart certainly exists. Versions without a
@@ -20,9 +24,14 @@ interface ChartHost extends Element {
   chart?: ChartInstance;
 }
 
+/** Pixels the pointer may travel between press and release and still count. */
+const DRAG_THRESHOLD = 4;
+
 export class SelectionInput {
   private _chart?: ChartInstance;
   private _zr?: ReturnType<ChartInstance["getZr"]>;
+  /** Position of the press the pending click belongs to. */
+  private _pressed?: { x: number; y: number };
 
   constructor(
     private readonly _onPick: (x: number) => void,
@@ -53,11 +62,14 @@ export class SelectionInput {
     this.detach();
     this._chart = chart;
     this._zr = chart.getZr();
+    this._zr?.on("mousedown", this._onZrPress);
     this._zr?.on("click", this._onZrClick);
   }
 
   public detach(): void {
+    this._zr?.off("mousedown", this._onZrPress);
     this._zr?.off("click", this._onZrClick);
+    this._pressed = undefined;
     this._zr = undefined;
     this._chart = undefined;
   }
@@ -74,9 +86,24 @@ export class SelectionInput {
     }
   }
 
+  private _onZrPress = (event: ZRenderEvent): void => {
+    this._pressed = { x: event.offsetX, y: event.offsetY };
+  };
+
   private _onZrClick = (event: ZRenderEvent): void => {
     const chart = this._chart;
     if (!chart) {
+      return;
+    }
+
+    // A pan of the data zoom ends in a click as well; only a tap selects.
+    const pressed = this._pressed;
+    this._pressed = undefined;
+    if (
+      pressed &&
+      (Math.abs(event.offsetX - pressed.x) > DRAG_THRESHOLD ||
+        Math.abs(event.offsetY - pressed.y) > DRAG_THRESHOLD)
+    ) {
       return;
     }
 

@@ -21,7 +21,7 @@ export const deriveAutoPeriod = (
     return "5minute";
   }
   const days = Math.max(differenceInDays(effectiveEnd, start), 0);
-  if (days > 35) {
+  if (days > 70) {
     return "month";
   }
   if (days > 2) {
@@ -29,6 +29,34 @@ export const deriveAutoPeriod = (
   }
   return "hour";
 };
+
+/** The intervals `deriveAutoPeriod` can actually return. */
+export const AUTO_PERIODS: StatisticsPeriod[] = [
+  "5minute",
+  "hour",
+  "day",
+  "month",
+];
+
+/** Intervals from finest to coarsest, for comparing two of them. */
+export const PERIOD_ORDER: StatisticsPeriod[] = [
+  "5minute",
+  "hour",
+  "day",
+  "week",
+  "month",
+  "year",
+];
+
+/** Position of an interval on that ladder; `-1` for "raw" and "disabled". */
+export const periodRank = (target: AggregationTarget | undefined): number =>
+  PERIOD_ORDER.indexOf(target as StatisticsPeriod);
+
+/** A window of the visible range the user zoomed into, in epoch milliseconds. */
+export interface ZoomWindow {
+  start: number;
+  end: number;
+}
 
 /** Classifies a range into the button the energy date picker would have used. */
 export const getEnergyPickerRange = (

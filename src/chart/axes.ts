@@ -3,12 +3,40 @@ import { differenceInDays, subHours } from "date-fns";
 import type { AggregationTarget, AxisConfig, SeriesConfig } from "../config/types";
 import type { SeriesOption, XAxisOption, YAxisOption } from "../types/echarts";
 import { formatDatePart, formatNumber } from "../core/format";
+import { BUCKET_LENGTH_MS } from "../time/buckets";
 import { toTuple } from "./lines";
 
-const HOUR_MS = 60 * 60 * 1000;
-const DAY_MS = 24 * HOUR_MS;
-const MONTH_AXIS_MIN_INTERVAL_MS = 28 * DAY_MS;
-const YEAR_AXIS_MIN_INTERVAL_MS = 365 * DAY_MS;
+/**
+ * Smallest distance between two axis ticks, so a tick never subdivides a
+ * bucket. Coarser spacing stays ECharts' decision, and an axis that says
+ * nothing is left to the default of `<ha-chart-base>`.
+ *
+ * A zoomable axis has to say something for every interval, not just for the
+ * ones with a custom label: `<ha-chart-base>` fills in a `minInterval` of its
+ * own whenever the axis leaves it undefined, and derives it from the distance
+ * between `min` and `max` - for ranges beyond two days that is a full day. The
+ * axis deliberately spans the whole period even while zoomed in, and the zoom
+ * does not feed back into that default, so a zoomed-in window would inherit
+ * day-spaced ticks and end up with a single label, or none at all.
+ *
+ * Without a zoom there is nothing to correct: the default is derived from the
+ * range that is actually drawn, so the axis keeps the spacing it always had
+ * and only months and years still ask for their bucket length.
+ */
+const axisMinInterval = (
+  aggregation: AggregationTarget | undefined,
+  zoomable: boolean
+): number | undefined => {
+  if (!aggregation || aggregation === "raw" || aggregation === "disabled") {
+    // Explicitly unconstrained - leaving it out would hand a zoomable axis
+    // back to the default.
+    return zoomable ? 0 : undefined;
+  }
+  if (!zoomable && aggregation !== "month" && aggregation !== "year") {
+    return undefined;
+  }
+  return BUCKET_LENGTH_MS[aggregation];
+};
 
 const formatMonthLabel = (value: number, hass?: HomeAssistant): string => {
   const date = new Date(value);
@@ -70,6 +98,10 @@ export interface XAxisParams {
   start: Date;
   end?: Date;
   aggregation: AggregationTarget | undefined;
+  /** Interval the labels are written for; defaults to `aggregation`. */
+  labelAggregation?: AggregationTarget;
+  /** Whether a zoom can narrow this axis; see {@link axisMinInterval}. */
+  zoomable?: boolean;
   buckets?: number[];
   fallbackEnd: number | null;
   hass?: HomeAssistant;
@@ -79,6 +111,8 @@ export const buildXAxis = ({
   start,
   end,
   aggregation,
+  labelAggregation = aggregation,
+  zoomable = false,
   buckets,
   fallbackEnd,
   hass,
@@ -91,13 +125,18 @@ export const buildXAxis = ({
     axisPointer: { show: false },
   };
 
-  if (aggregation === "month") {
-    primary.minInterval = MONTH_AXIS_MIN_INTERVAL_MS;
+  // Follows what is drawn, so the detail layer of a zoom is labelled at its
+  // own resolution instead of the one the full range was loaded at.
+  const minInterval = axisMinInterval(labelAggregation, zoomable);
+  if (minInterval !== undefined) {
+    primary.minInterval = minInterval;
+  }
+
+  if (labelAggregation === "month") {
     primary.axisLabel = {
       formatter: (value: number) => formatMonthLabel(value, hass),
     };
-  } else if (aggregation === "year") {
-    primary.minInterval = YEAR_AXIS_MIN_INTERVAL_MS;
+  } else if (labelAggregation === "year") {
     primary.axisLabel = {
       formatter: (value: number) =>
         formatDatePart(new Date(value), { year: "numeric" }, hass),

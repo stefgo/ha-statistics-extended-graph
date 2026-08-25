@@ -10,9 +10,13 @@ import type { GraphSnapshot } from "./core/data-controller";
 import { OnceLogger } from "./core/logger";
 import { assembleChart } from "./chart/assemble";
 import { createZeroSnapshot } from "./chart/lines";
+import { applyZoomWindow, dropZoomWindow } from "./chart/zoom";
+import { slidesInOnZoom, tracksZoomWindow } from "./config/zoom";
 import { SelectionInput } from "./chart/selection-input";
+import { ZoomInput } from "./chart/zoom-input";
 import { resolveBucket } from "./chart/selection";
 import type { SelectedPeriod } from "./chart/selection";
+import type { ZoomWindow } from "./time/aggregation";
 import type { ChartOptions, SeriesOption } from "./types/echarts";
 import { CARD_VERSION } from "./version";
 
@@ -22,6 +26,13 @@ interface LovelaceGridOptions {
   min_columns?: number;
   min_rows?: number;
 }
+
+/**
+ * How long a detail load may run before the refine indicator appears. Short
+ * enough to catch anything the user would wait on, long enough that a cached
+ * or fast answer never flashes it.
+ */
+const REFINE_INDICATOR_DELAY_MS = 150;
 
 /** Name of the event the card fires whenever the selected period changes. */
 export const SELECTION_EVENT = "custom-graph-selection";
@@ -82,13 +93,21 @@ export class StatisticsExtendedGraph extends LitElement {
   @state() private _hasData = false;
   @state() private _loading = false;
   @state() private _disabled = false;
+  /** Drives the refine indicator; lags {@link _detailLoading} by the grace. */
+  @state() private _refining = false;
   @state() private _usesSectionLayout = false;
 
   private readonly _logger = new OnceLogger();
   private readonly _controller = new GraphDataController(() => this._onData());
   private _renderedRange?: { start: number; end: number | null };
   private _animationFrame?: number;
+  /** Frame the zoomed-state rebuild waits for; see {@link _onZoomed}. */
+  private _zoomFrame?: number;
   private _darkMode = false;
+  /** Whether the controller is loading the detail layer right now. */
+  private _detailLoading = false;
+  /** Timer of the grace period before the refine indicator appears. */
+  private _refineTimeout?: number;
   /** The one selected x value; `null` while nothing is selected. */
   private _selectedX: number | null = null;
   /** Bucket and period of the last assembly, used to toggle and to report. */
@@ -106,11 +125,32 @@ export class StatisticsExtendedGraph extends LitElement {
     (x) => this._onPick(x),
     this._logger
   );
+  private readonly _zoomInput = new ZoomInput(
+    (window) => this._onZoomWindow(window),
+    () => this._renderedAxisRange(),
+    this._logger,
+    () => this._onZoomed()
+  );
+  /** Part of the range the chart currently shows; drives the detail layer. */
+  private _zoomWindow: ZoomWindow | null = null;
+  /**
+   * Whether the chart is zoomed, for the slider of `zoom.type: "auto"`. Kept
+   * apart from `_zoomWindow` because it is set while the gesture is still
+   * running, where the window is not known yet.
+   */
+  @state() private _zoomed = false;
+  /**
+   * Set for the one rebuild that follows a theme switch, where the window has
+   * to be written into the options rather than left to the chart.
+   */
+  private _restoreZoomWindow = false;
 
   public setConfig(config: StatisticsExtendedGraphConfig): void {
     this._config = normalizeConfig(config);
     this._logger.reset();
     this._renderedRange = undefined;
+    this._zoomWindow = null;
+    this._zoomed = false;
     this._clearSelection();
     this._controller.setConfig(this._config);
   }
@@ -142,10 +182,16 @@ export class StatisticsExtendedGraph extends LitElement {
     super.disconnectedCallback();
     this._controller.disconnect();
     this._selectionInput.detach();
+    this._zoomInput.detach();
+    if (this._zoomFrame !== undefined) {
+      cancelAnimationFrame(this._zoomFrame);
+      this._zoomFrame = undefined;
+    }
     if (this._animationFrame !== undefined) {
       cancelAnimationFrame(this._animationFrame);
       this._animationFrame = undefined;
     }
+    this._setDetailLoading(false);
   }
 
   protected override shouldUpdate(changedProps: PropertyValues): boolean {
@@ -174,7 +220,18 @@ export class StatisticsExtendedGraph extends LitElement {
     this._darkMode = darkMode;
 
     if (changedProps.has("_config") || themeChanged) {
+      // The chart element throws its ECharts instance away on a theme flip, so
+      // the next option set has to name the window again instead of relying on
+      // the merge that normally carries it.
+      this._restoreZoomWindow = themeChanged;
       this._rebuildChart();
+    }
+
+    // Cheap way in for the common case: by the time data has been drawn the
+    // chart usually exists. The gestures below catch the case where it does
+    // not, so a failed attempt here is silent and simply left to them.
+    if (this._tracksZoomWindow) {
+      this._zoomInput.attach(this.renderRoot?.querySelector("ha-chart-base"), true);
     }
   }
 
@@ -186,7 +243,34 @@ export class StatisticsExtendedGraph extends LitElement {
     const snapshot = this._controller.snapshot;
     this._loading = snapshot.loading;
     this._disabled = snapshot.aggregationDisabled;
+    this._setDetailLoading(snapshot.detailLoading);
     this._rebuildChart();
+  }
+
+  /**
+   * Tracks the detail load behind a short grace period: `zoom.refine` reloads
+   * on every settled gesture, and most of those answer within a few frames.
+   * Showing the indicator right away would make it flicker on each of them, so
+   * it only appears once a load outlasts the grace - and disappears at once.
+   */
+  private _setDetailLoading(loading: boolean): void {
+    if (loading === this._detailLoading) {
+      return;
+    }
+    this._detailLoading = loading;
+
+    if (this._refineTimeout !== undefined) {
+      clearTimeout(this._refineTimeout);
+      this._refineTimeout = undefined;
+    }
+    if (!loading) {
+      this._refining = false;
+      return;
+    }
+    this._refineTimeout = window.setTimeout(() => {
+      this._refineTimeout = undefined;
+      this._refining = this._detailLoading;
+    }, REFINE_INDICATOR_DELAY_MS);
   }
 
   /** Section layouts size the card through grid rows instead of `chart_height`. */
@@ -287,12 +371,32 @@ export class StatisticsExtendedGraph extends LitElement {
       return;
     }
 
+    const restoreZoomWindow = this._restoreZoomWindow;
+    this._restoreZoomWindow = false;
+
     const snapshot = this._controller.snapshot;
-    if (snapshot.periodStart) {
-      this._dropSelectionOnRangeChange({
-        start: snapshot.periodStart.getTime(),
-        end: snapshot.periodEnd?.getTime() ?? null,
-      });
+    const range = snapshot.periodStart
+      ? {
+          start: snapshot.periodStart.getTime(),
+          end: snapshot.periodEnd?.getTime() ?? null,
+        }
+      : undefined;
+    if (range) {
+      this._dropSelectionOnRangeChange(range);
+    }
+
+    const rangeChanged =
+      !range ||
+      !this._renderedRange ||
+      this._renderedRange.start !== range.start ||
+      this._renderedRange.end !== range.end;
+
+    // Before the assembly, not after it: the window describes buckets of a
+    // range the card has left, and a frame drawn from it would put the detail
+    // layer of the old range under the axis of the new one.
+    if (rangeChanged) {
+      this._zoomWindow = null;
+      this._zoomed = false;
     }
 
     const assembled = assembleChart({
@@ -305,6 +409,8 @@ export class StatisticsExtendedGraph extends LitElement {
       darkMode: this._isDarkMode(),
       logger: this._logger,
       selectedX: this._selectedX,
+      zoomWindow: this._zoomWindow,
+      zoomed: this._zoomed,
     });
 
     if (!assembled) {
@@ -327,11 +433,6 @@ export class StatisticsExtendedGraph extends LitElement {
       return;
     }
 
-    const range = {
-      start: snapshot.periodStart!.getTime(),
-      end: snapshot.periodEnd?.getTime() ?? null,
-    };
-
     this._assembledSeries = assembled.series;
     this._selection = assembled.selection;
     // The click may have snapped to a bucket of its own, so the stored value
@@ -339,15 +440,20 @@ export class StatisticsExtendedGraph extends LitElement {
     this._selectedX = assembled.selection?.bucket ?? null;
     this._selectedRange = assembled.selection ? range : undefined;
     this._emitSelection(assembled.selection);
-    const rangeChanged =
-      !this._renderedRange ||
-      this._renderedRange.start !== range.start ||
-      this._renderedRange.end !== range.end;
 
     this._hasData = assembled.hasData;
     // Growing out of zero looks better than morphing the previous range's data
     // into the new one, so a range switch always animates from a flat chart.
-    this._chartOptions = { ...assembled.options, animation: rangeChanged };
+    // A new range starts from the configured zoom window, a refresh of the
+    // same range keeps the window the user panned to.
+    this._chartOptions = {
+      ...(rangeChanged
+        ? assembled.options
+        : restoreZoomWindow && this._zoomWindow
+          ? applyZoomWindow(assembled.options, this._zoomWindow)
+          : dropZoomWindow(assembled.options)),
+      animation: rangeChanged,
+    };
 
     if (!rangeChanged) {
       this._chartData = assembled.series;
@@ -361,13 +467,98 @@ export class StatisticsExtendedGraph extends LitElement {
     this._animationFrame = requestAnimationFrame(() => {
       this._animationFrame = undefined;
       this._chartData = assembled.series;
-      this._renderedRange = range;
+      this._renderedRange = range!;
     });
   }
 
-  /** Home Assistant creates the chart lazily; a click proves it exists. */
-  private _attachSelectionInput = (): void => {
-    this._selectionInput.attach(this.renderRoot?.querySelector("ha-chart-base"));
+  /**
+   * Only these two need the zoom events; a purely visual zoom is
+   * chart-internal. A refining zoom needs the window itself, an automatic
+   * slider only whether there is one.
+   */
+  private get _tracksZoomWindow(): boolean {
+    return tracksZoomWindow(this._config?.zoom);
+  }
+
+  /**
+   * A gesture has left the full range. The slider of `zoom.type: "auto"` is
+   * shown right away, without waiting for the window to settle.
+   *
+   * The rebuild is deferred by a frame: this runs inside the chart's own
+   * `datazoom` handler, and setting a new option from there re-enters ECharts
+   * while it is still dispatching the gesture, which leaves the `dataZoom`
+   * components in a broken state - the slider disappears until the next full
+   * render.
+   */
+  private _onZoomed(): void {
+    // Only an automatic slider changes with the state. Every other type has
+    // the bar it is going to have, and rebuilding mid-gesture would disturb
+    // the very gesture that is drawing it.
+    if (!slidesInOnZoom(this._config?.zoom)) {
+      return;
+    }
+    if (this._zoomed || this._zoomFrame !== undefined) {
+      return;
+    }
+    this._zoomFrame = requestAnimationFrame(() => {
+      this._zoomFrame = undefined;
+      this._zoomed = true;
+      this._rebuildChart();
+    });
+  }
+
+  /**
+   * The zoom came to rest. The controller decides whether that needs data;
+   * the chart is rebuilt either way, because a window that left the loaded
+   * detail has to fall back to the coarse data right away instead of waiting
+   * for a fetch.
+   */
+  private _onZoomWindow(window: ZoomWindow | null): void {
+    this._zoomWindow = window;
+    this._zoomed = window !== null;
+    this._controller.setZoomWindow(window);
+    this._rebuildChart();
+  }
+
+  /** The range the time axis spans, for a zoom reported in percentages. */
+  private _renderedAxisRange(): { start: number; end: number } | undefined {
+    const snapshot = this._controller.snapshot;
+    if (!snapshot.periodStart) {
+      return undefined;
+    }
+    const end = snapshot.periodEnd?.getTime() ?? snapshot.main.range?.end ?? null;
+    return end === null
+      ? undefined
+      : { start: snapshot.periodStart.getTime(), end };
+  }
+
+  /**
+   * Subscribes to the chart on the way into a gesture.
+   *
+   * `<ha-chart-base>` imports ECharts on demand and builds its instance once
+   * the element has a size, so on a freshly loaded page the last render of the
+   * card regularly comes first and finds nothing to subscribe to. A gesture is
+   * the reliable proof instead: it can only zoom a chart that exists.
+   *
+   * The listeners run in the capture phase, before the canvas below sees the
+   * event. That matters for the wheel: ECharts stops the event it zooms with,
+   * so a listener in the bubble phase never runs while the chart is being
+   * zoomed - which is exactly when the subscription is needed. Capturing also
+   * puts the subscription in place before the gesture is handled, so even the
+   * first wheel tick reports its window.
+   */
+  private readonly _chartInput = {
+    handleEvent: (): void => {
+      const host = this.renderRoot?.querySelector("ha-chart-base");
+      this._selectionInput.attach(host);
+      if (this._tracksZoomWindow) {
+        this._zoomInput.attach(host);
+      }
+    },
+    capture: true,
+    // Nothing here calls `preventDefault`; saying so keeps the wheel gesture
+    // off the browser's slow path.
+    passive: true,
   };
 
   private _onChartClick = (event: CustomEvent): void => {
@@ -447,11 +638,30 @@ export class StatisticsExtendedGraph extends LitElement {
           .data=${this._chartData}
           .options=${this._chartOptions}
           .height=${height}
-          @pointerdown=${this._attachSelectionInput}
+          @pointerdown=${this._chartInput}
+          @wheel=${this._chartInput}
           @chart-click=${this._onChartClick}
         ></ha-chart-base>
+        ${this._renderRefineIndicator()}
       </div>
     `;
+  }
+
+  /**
+   * Sits on top of the chart instead of replacing it: the zoomed view stays
+   * readable and interactive while the finer data is on its way.
+   */
+  private _renderRefineIndicator() {
+    if (!this._refining) {
+      return nothing;
+    }
+    return html`<div class="refining" role="status" aria-live="polite">
+      <span class="refining__spinner"></span>
+      ${this._localize(
+        "ui.components.statistics_charts.loading_statistics",
+        "Loading statistics…"
+      )}
+    </div>`;
   }
 
   static override styles = css`
@@ -499,6 +709,49 @@ export class StatisticsExtendedGraph extends LitElement {
 
     .chart--section ha-chart-base {
       height: 100%;
+    }
+
+    .chart {
+      position: relative;
+    }
+
+    .refining {
+      position: absolute;
+      top: 4px;
+      right: 4px;
+      z-index: 1;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 3px 8px;
+      border-radius: 12px;
+      font-size: 12px;
+      line-height: 16px;
+      color: var(--secondary-text-color);
+      background: var(--card-background-color, var(--ha-card-background, #fff));
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+      pointer-events: none;
+    }
+
+    .refining__spinner {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      border: 2px solid var(--divider-color, rgba(127, 127, 127, 0.4));
+      border-top-color: var(--primary-color);
+      animation: refine-spin 0.8s linear infinite;
+    }
+
+    @keyframes refine-spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .refining__spinner {
+        animation-duration: 2.4s;
+      }
     }
 
     .placeholder {

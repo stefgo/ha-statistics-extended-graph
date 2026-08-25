@@ -7,6 +7,36 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html). A release
 its `v*` tag by the release workflow, which attaches the bundle to the GitHub release — that
 asset is what HACS installs.
 
+## [Unreleased]
+
+### Added
+
+- `zoom`: zoom and pan the time axis with the mouse wheel, a drag or a slider below the
+  chart (`type: inside | slider | both`). The zoom is a pure view of the loaded range and does
+  not trigger any fetch; a drag that pans the chart no longer selects a period.
+- `zoom.type: auto`: the slider shows itself only while a zoom window exists. It appears with
+  the gesture that zooms in and leaves once the chart rests at the full range again, so an
+  unzoomed card spends no room on a handle bar nobody is using.
+- `zoom.refine`: load high resolution data for the zoom window, next to the coarse data of
+  the full range. A window has no bucket budget to respect, so zooming into a year drills down
+  through days and hours to five-minute data; leaving the loaded detail falls back to the coarse
+  data instantly. Compare and `time_offset` series are loaded at the same resolution. When the
+  recorder has already purged the finest interval for a window, the detail steps back to the
+  next best one instead of all the way to the coarse data, and a chart that stays zoomed in
+  keeps its detail up to date with every refresh. The interval follows the thresholds of the
+  core energy cards, which know no weekly step: a year is refined once the window drops below
+  about ten weeks, not before.
+- `zoom.refine`: a spinner in the top right corner of the chart while the detail layer loads,
+  so a zoom that is still fetching is told apart from one that is done. It appears only after
+  150 ms and leaves the chart readable and interactive underneath.
+
+### Fixed
+
+- `zoom`: a theme switch no longer throws the zoom away. `<ha-chart-base>` rebuilds its chart
+  when the theme flips, and the fresh instance opened on the full range while the loaded detail
+  still belonged to the zoomed window. The window is now written into the option set of that one
+  rebuild instead of being left to the merge that carries it through a refresh.
+
 ## [0.5.0] — 2026-08-24
 
 ### Changed
@@ -67,6 +97,12 @@ gathered into this one entry rather than split into versions nobody could instal
 
 ### Fixed
 
+- `zoom`: the slider and the detail layer no longer stay dead after a page reload. The card
+  subscribes to the chart's zoom events in the capture phase of the gesture now:
+  `<ha-chart-base>` builds its ECharts instance lazily, so on a freshly loaded page the last
+  render regularly comes before the chart exists, and the wheel event that zooms is stopped by
+  ECharts before it reaches a listener in the bubble phase. Until a click happened to hook the
+  events up, a zoom moved the chart without showing the `auto` slider or loading any detail.
 - A failed load no longer blanks the card, and the chart keeps standing while the next range
   loads instead of flashing empty.
 - An aggregation that would have produced enough buckets to hang the browser is refused rather

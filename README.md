@@ -23,22 +23,60 @@ contributes the legend rows with their sums and the self-sufficiency total row.*
 
 ## Features
 
-- Time range follows the energy date picker (`energy-date-selection`), or is set
-  manually as a relative or fixed range.
-- Any long-term statistic, with a per-series statistic type
+The card is configured entirely in YAML — there is no visual editor — and draws on
+the ECharts runtime Home Assistant already ships, so no extra chart library is
+loaded.
+
+**Time range** — [`timespan`](#timespan)
+
+- Follows the energy date picker (`energy-date-selection`), including its compare
+  toggle, and binds to a specific picker on dashboards with multiple collections.
+- Or set manually: a calendar period (`hour` … `year`, with `count` and `offset`),
+  a rolling window (`last_60_minutes` … `last_12_months`), or a fixed ISO range.
+
+**Data sources** — [series](#series-options), [calculations](#calculated-series),
+[aggregation](#aggregation-options)
+
+- Any entity with long-term statistics, with a per-series statistic type
   (`change`, `sum`, `mean`, `min`, `max`, `state`).
-- Raw recorder history for short ranges, including live streaming updates.
-- Bar, line and step charts, freely mixed and stackable.
-- Calculated series: add, subtract, multiply and divide several statistics into
-  one computed signal.
-- Per-series time offset, e.g. to show this year and last year side by side.
-- Compare support for the energy date picker's compare toggle.
-- Left and right Y axis with independent scaling, limits and units.
-- Optional area fills, gradient fills and fill-between-two-lines bands.
-- Per-theme colors (light/dark) and access to the Home Assistant energy palette.
-- Aggregation overrides per picker range, with an optional fallback interval.
-- Optional live estimate for the current hour, built from 5-minute statistics.
+- Raw recorder history for short ranges, kept current through a live history stream.
+- Calculated series: add, subtract, multiply and divide several statistics — or
+  plain constants — into one computed signal.
+- Per-series [time offset](#time-offset), e.g. this year and last year side by side.
+- Per-series value transformation: `multiply`, `add` and clipping to bounds.
 - Boolean-like states (`on/off`, `open/closed`, `true/false`) are mapped to 1/0.
+
+**Chart types and styling** — [series](#series-options)
+
+- Bar, line and step charts, freely mixed and stacked by a shared stack key.
+- Area fills, gradient fills towards the zero line, and
+  [bands between two lines](#fill-between-two-lines).
+- Line width, style (`solid`, `dashed`, `dotted`), opacity and smoothing.
+- Optional value labels at the end of each bar, with configurable precision.
+
+**Axes** — [`y_axes`](#y-axis-options-y_axes)
+
+- Left and right Y axis with independent scaling, limits and unit labels.
+- Tight fit to the data, a symmetric range around zero, a logarithmic scale, or
+  grid lines hidden per axis.
+
+**Interaction** — [`zoom`](#data-zoom), [time selection](#time-selection)
+
+- Optional data zoom: zoom and pan the time axis with the wheel, a drag or a
+  slider — which can [show itself only while the chart is zoomed](#a-slider-only-when-it-is-needed-type-auto).
+- Optionally [load higher-resolution data](#higher-resolution-when-zooming-in-refine)
+  for the zoom window instead of magnifying the same buckets.
+- A click selects a single bucket, dims everything outside it and fires a
+  `custom-graph-selection` event other cards can listen to.
+
+**Colors and performance** — [colors](#separate-colors-for-light-and-dark-mode),
+[aggregation](#aggregation-options)
+
+- Per-theme colors (light/dark) for series, compare series and the color cycle,
+  plus access to the Home Assistant energy palette via CSS variables.
+- Aggregation overrides per picker range, with an optional fallback interval and a
+  `disabled` setting that skips expensive requests entirely.
+- Optional live estimate for the current hour, built from 5-minute statistics.
 
 ## Installation
 
@@ -94,20 +132,29 @@ the range you select there. For other modes see [Timespan](#timespan).
 
 ## Configuration
 
+Detail sections: [Timespan](#timespan) · [Series options](#series-options) ·
+[Time offset](#time-offset) · [Calculated series](#calculated-series) ·
+[Fill between two lines](#fill-between-two-lines) ·
+[Y axis options](#y-axis-options-y_axes) · [Data zoom](#data-zoom) ·
+[Aggregation options](#aggregation-options) · [Time selection](#time-selection)
+
 ### Card options
+
+Listed from the options every card needs to the ones only some do.
 
 | Key | Type | Default | Description |
 | --- | --- | --- | --- |
 | `type` | string | – | Must be `custom:statistics-extended-graph`. |
+| `series` | list | – | One or more [series definitions](#series-options). At least one is required. |
 | `title` | string | – | Optional card header. |
+| `timespan` | object | `{mode: energy}` | Time range shown by the card, see [Timespan](#timespan). |
+| `y_axes` | list | – | Configuration of the left and right Y axis, see [Y axis options](#y-axis-options-y_axes). |
+| `aggregation` | object | auto | Recorder interval overrides, see [Aggregation options](#aggregation-options). |
+| `zoom` | boolean or object | `false` | Zoom into the time axis with the mouse wheel or a slider, see [Data zoom](#data-zoom). |
 | `chart_height` | string | auto | CSS height (e.g. `300px`). Ignored in section layouts, where the grid rows define the height. |
-| `timespan` | object | `{mode: energy}` | Time range shown by the card, see below. |
+| `color_cycle` | list | energy palette | Colors for series without an explicit `color`. Each entry is a string or a `{light, dark}` object, see [per-theme colors](#separate-colors-for-light-and-dark-mode). |
 | `collection_key` | string | – | Key of the energy date picker to bind to, when a dashboard has [multiple collections](https://www.home-assistant.io/dashboards/energy/#using-multiple-collections). |
-| `allow_compare` | boolean | `true` | Honour the picker's compare toggle. Ignored when any series uses `time_offset`. |
-| `color_cycle` | list | energy palette | Colors for series without an explicit `color`. Each entry is a string or a `{light, dark}` object. |
-| `y_axes` | list | – | Configuration of the left and right Y axis, see below. |
-| `aggregation` | object | auto | Recorder interval overrides, see below. |
-| `series` | list | – | One or more series definitions, see below. At least one is required. |
+| `allow_compare` | boolean | `true` | Honour the picker's compare toggle. Ignored when any series uses [`time_offset`](#time-offset). |
 
 ### Timespan
 
@@ -152,16 +199,20 @@ timespan:
 
 ### Series options
 
+Grouped from what a series *is* down to how it *looks*: identity and data source
+first, then placement and color, then value transformation, then styling.
+
 | Key | Type | Default | Description |
 | --- | --- | --- | --- |
 | `statistic_id` | string | – | Entity providing long-term statistics. Required unless `calculation` is used. |
-| `source` | `statistic`, `calculation` | inferred | Data source. Detected automatically from `statistic_id` / `calculation`. |
 | `name` | string | entity name | Display name of the series. |
-| `stat_type` | `change`, `sum`, `mean`, `min`, `max`, `state` | `change` | Statistic type. Calculation terms have their own setting. |
+| `stat_type` | `change`, `sum`, `mean`, `min`, `max`, `state` | `change` | Statistic type. [Calculation terms](#calculated-series) have their own setting. |
 | `chart_type` | `bar`, `line`, `step` | `bar` | How the series is drawn. |
+| `calculation` | object | – | Computed series instead of a single statistic, see [Calculated series](#calculated-series). |
+| `time_offset` | object | – | Load this series from a shifted source range, see [Time offset](#time-offset). |
 | `stack` | string | – | Series sharing a stack key are stacked on top of each other. |
-| `y_axis` | `left`, `right` | `left` | Axis the series is drawn against. |
-| `color` | string or object | palette | `#rrggbb`, `rgb()`, a CSS variable such as `--energy-solar-color`, or `{light, dark}`. |
+| `y_axis` | `left`, `right` | `left` | Axis the series is drawn against, see [Y axis options](#y-axis-options-y_axes). |
+| `color` | string or object | palette | `#rrggbb`, `rgb()`, a CSS variable such as `--energy-solar-color`, or [`{light, dark}`](#separate-colors-for-light-and-dark-mode). |
 | `compare_color` | string or object | inherited | Color of the compare series. Defaults to the series color at reduced opacity. |
 | `multiply` | number | `1` | Factor applied to every value. |
 | `add` | number | `0` | Offset added after `multiply`. |
@@ -170,15 +221,14 @@ timespan:
 | `fill` | boolean | `false` | Fill the area below a line/step series. |
 | `fill_opacity` | number | `0.15` line / `0.5` bar | Opacity of the fill. |
 | `gradient_fill` | boolean | `false` | Fade the fill towards the zero line (line/step only). |
-| `fill_to_series` | string | – | Fill the band between this line and the named line series. |
-| `line_opacity` | number | `0.85` line / `1.0` bar border | Stroke opacity. |
+| `fill_to_series` | string | – | Fill the band between this line and the named line series, see [Fill between two lines](#fill-between-two-lines). |
 | `line_width` | number | `1.5` | Line thickness in pixels (lines only). |
 | `line_style` | `solid`, `dashed`, `dotted` | `solid` | Line pattern (lines only). |
+| `line_opacity` | number | `0.85` line / `1.0` bar border | Stroke opacity. |
 | `smooth` | boolean or number | `true` | Line smoothing; a number between 0 and 1 controls the amount. Ignored for step charts. |
 | `show_value_labels` | boolean | `false` | Draw the value at the end of each non-zero bar. Unstacked bars only. |
 | `value_label_precision` | number | `0` | Decimals of the value labels. |
-| `calculation` | object | – | Computed series, see below. |
-| `time_offset` | object | – | Load this series from a shifted source range, see below. |
+| `source` | `statistic`, `calculation` | inferred | Data source. Rarely needed - it is detected automatically from `statistic_id` / `calculation`. |
 
 #### Time offset
 
@@ -219,7 +269,7 @@ Each term accepts:
 | `operation` | `add`, `subtract`, `multiply`, `divide` | `add` | Operation of this step. |
 | `statistic_id` | string | – | Statistic used by this term. |
 | `constant` | number | – | Constant instead of a statistic. All other term keys are ignored then. |
-| `stat_type` | see above | series value | Statistic type of this term. |
+| `stat_type` | see [Series options](#series-options) | series value | Statistic type of this term. |
 | `multiply` | number | `1` | Factor applied to the term value. |
 | `add` | number | `0` | Offset added after `multiply`. |
 | `clip_min` / `clip_max` | number | – | Bounds applied to the term value. |
@@ -260,13 +310,135 @@ axis is configured.
 | Key | Type | Default | Description |
 | --- | --- | --- | --- |
 | `id` | `left`, `right` | – | Axis this entry configures. |
+| `unit` | string | – | Unit label drawn at the axis. |
 | `min` | number | auto | Lower bound. Ignored when `center_zero` is active. |
 | `max` | number | auto | Upper bound. With `center_zero` it defines both bounds (`max: 10` → -10 … +10). |
 | `fit_y_data` | boolean | `false` | Scale tightly to the data instead of including zero. |
 | `center_zero` | boolean | `false` | Symmetric range around zero, calculated from the data when `max` is unset. |
 | `logarithmic_scale` | boolean | `false` | Logarithmic axis. |
 | `hide_grid` | boolean | `false` | Hide the horizontal grid lines of this axis. |
-| `unit` | string | – | Unit label drawn at the axis. |
+
+### Data zoom
+
+Narrows the visible part of the time axis: the wheel zooms, a drag pans.
+
+```yaml
+zoom: true     # shorthand for type: inside
+```
+
+```yaml
+zoom:
+  type: both               # inside, slider, both, auto
+  start: 50                # show the second half at first
+  end: 100
+```
+
+| Key | Type | Default | Description |
+| --- | --- | --- | --- |
+| `type` | `inside`, `slider`, `both`, `auto` | `inside` | `inside` zooms on the plot itself, `slider` adds a handle bar below it, `both` has the two. [`auto`](#a-slider-only-when-it-is-needed-type-auto) is `both` with a slider that only shows while a zoom window exists. |
+| `start` | number | `0` | Left edge of the initial window, in percent of the range. |
+| `end` | number | `100` | Right edge of the initial window, in percent of the range. |
+| `zoom_lock` | boolean | `false` | Fixes the window width, so it can only be panned. |
+| `refine` | boolean | `false` | Load high resolution data for the zoom window, see [Higher resolution when zooming in](#higher-resolution-when-zooming-in-refine). |
+
+The window survives data refreshes and live updates - it is reset to `start` /
+`end` when the visible range itself changes, e.g. through the energy date
+picker. Values outside the window are clipped, never dropped, so stacks,
+compare series and the y axis stay stable while panning.
+
+A drag that pans the chart does not select a period; only a click that stays in
+place does (see [Time selection](#time-selection)).
+
+![A zoomed PV generation chart: three daily bell curves of hourly bars stacked from east and west modules, the zoom slider below the plot marking the window over the middle of the range, and three legend rows with their sums underneath](https://raw.githubusercontent.com/stefgo/ha-statistics-extended-graph/main/screenshots/statistics-legend-with-dynamic-zoom.png)
+
+*[`type: auto`](#a-slider-only-when-it-is-needed-type-auto) and
+[`refine: true`](#higher-resolution-when-zooming-in-refine) together: the slider
+has appeared with the zoom and marks the window inside the full range, and the
+bars are hourly because the window is short enough for the detail to be loaded at
+that resolution. The legend rows with their sums and the `PV gesamt` total come
+from [Statistics Table and Legend](https://github.com/stefgo/ha-statistics-legend-table)
+in the same `ha-card`, not from this card.*
+
+```yaml
+zoom:
+  type: auto
+  refine: true
+```
+
+#### A slider only when it is needed (`type: auto`)
+
+```yaml
+zoom:
+  type: auto
+```
+
+The handle bar costs a fixed strip below the plotting area, which is a poor
+trade on a card that is usually looked at unzoomed. With `type: auto` the bar
+appears with the first zoom - as an orientation and as the way back out - and
+leaves again once the chart is back at the full range. The plotting area takes
+the freed strip, so the curve grows and shrinks by that much when the bar comes
+and goes.
+
+The bar appears with the gesture that calls for it, but it is only removed once
+a gesture has come to rest at the full range, so it never vanishes from under
+the handle that is dragging it there.
+
+#### Higher resolution when zooming in (`refine`)
+
+Without `refine` the zoom is purely visual: it magnifies the monthly bars of a
+year, it does not turn them into daily ones.
+
+```yaml
+zoom:
+  type: inside
+  refine: true
+```
+
+With `refine: true` the card loads a second, high resolution data set for the
+zoom window and draws it in place of the coarse one. The window is small by
+definition, so its interval is chosen from its own length alone and hits no
+point budget: zooming into a year drills down through `day` and `hour` to
+`5minute`.
+
+The interval follows the same thresholds the core energy cards use, applied to
+the window instead of the full range:
+
+| Zoom window | Interval of the detail |
+| --- | --- |
+| more than ~10 weeks | `month` |
+| a few days up to ~10 weeks | `day` |
+| up to 2 days | `hour` |
+| up to 2 hours | `5minute` |
+
+There is no weekly step between `day` and `month`. A year is loaded at `month`
+already, so zooming into it changes nothing until the window drops below about
+ten weeks - from there the detail is daily and gets finer with every further
+step.
+
+The detail reaches one window width beyond each edge, so panning inside the
+zoom stays instant. Leaving that area falls back to the coarse data in the same
+frame - the chart never goes blank - and the detail is reloaded for the new
+window. Compare series and `time_offset` series are loaded at the same
+resolution, so the chart never mixes intervals, and the x axis keeps describing
+the full range, so zooming back out always has somewhere to go.
+
+Two limits are worth knowing:
+
+- Home Assistant deletes `5minute` statistics after about ten days, so zooming
+  into an older period never gets finer than `hour`. The empty answer marks
+  that region, the coarse data stays on screen, and the region is not requested
+  again.
+- Every zoom into a new window is a fetch. The card waits until the gesture came
+  to rest (400 ms) and only loads when the resolution actually changes, but on a
+  slow recorder this is noticeable. Live updates of the current hour land in the
+  coarse data; the detail follows with the next refresh. While such a load runs,
+  a small spinner appears in the top right corner of the chart. It waits out the
+  first 150 ms, so a fast answer never flashes it, and the chart stays visible
+  and interactive underneath: what is on screen is final once the spinner is
+  gone.
+
+A change of the visible range (e.g. through the energy date picker) resets the
+window and the detail with it.
 
 ### Aggregation options
 
@@ -488,11 +660,11 @@ document.addEventListener("custom-graph-selection", (event) => {
 
 | Symptom | Cause and fix |
 | --- | --- |
-| "No statistics available for the selected period" | The entity has no long-term statistics in the range. Check that recorder and statistics are enabled for it, or switch the range to `raw`. |
-| "Choose a shorter time range" | The resolved aggregation is `disabled` for this range - by design of your `aggregation.energy_picker` configuration. |
-| Chart does not follow the date picker | The dashboard has no `energy-date-selection` card, or the wrong `collection_key`. Without a picker the card falls back to today. |
+| "No statistics available for the selected period" | The entity has no long-term statistics in the range. Check that recorder and statistics are enabled for it, or switch the range to [`raw`](#aggregation-options). |
+| "Choose a shorter time range" | The resolved aggregation is `disabled` for this range - by design of your [`aggregation.energy_picker`](#aggregation-options) configuration. |
+| Chart does not follow the date picker | The dashboard has no `energy-date-selection` card, or the wrong `collection_key`. Without a picker the card falls back to today, see [Timespan](#timespan). |
 | Warning about unsupported options | The configuration contains options of the full-featured upstream card (legend, tooltip, axis pointers, forecast). Remove them. |
-| Series is missing | Check the browser console: misconfigured series, empty calculations and unresolved `fill_to_series` references are logged there. |
+| Series is missing | Check the browser console: misconfigured series, empty calculations and unresolved [`fill_to_series`](#fill-between-two-lines) references are logged there. |
 
 ## Development
 

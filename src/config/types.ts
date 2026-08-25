@@ -120,6 +120,28 @@ export interface AxisConfig {
   unit?: string;
 }
 
+export type ZoomType = "inside" | "slider" | "both" | "auto";
+
+export interface ZoomConfig {
+  /**
+   * `inside` zooms on the plot itself, `slider` adds a bar below it, `both`
+   * has the two. `auto` behaves like `both`, but keeps the slider away until
+   * a zoom window exists - it appears with the first zoom and leaves with it.
+   */
+  type?: ZoomType;
+  /** Locks the width of the window, so a drag only pans it. */
+  zoom_lock?: boolean;
+  /** Initially visible window in percent of the range. */
+  start?: number;
+  end?: number;
+  /**
+   * Load high resolution data for the zoom window, so zooming in shows more
+   * than a magnified version of the same buckets. Off by default, because
+   * every step into a new window is a fetch.
+   */
+  refine?: boolean;
+}
+
 export interface StatisticsExtendedGraphConfig extends LovelaceCardConfig {
   type: string;
   title?: string;
@@ -130,5 +152,7 @@ export interface StatisticsExtendedGraphConfig extends LovelaceCardConfig {
   color_cycle?: ColorConfig[];
   y_axes?: AxisConfig[];
   aggregation?: AggregationConfig;
+  /** `true` enables the inside zoom with its defaults. */
+  zoom?: boolean | ZoomConfig;
   series: SeriesConfig[];
 }

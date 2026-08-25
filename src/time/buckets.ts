@@ -26,7 +26,7 @@ export const WEEK_OPTIONS = { weekStartsOn: 1 as const };
 export const MAX_BUCKETS = 5_000;
 
 /** Nominal length of one bucket, used to size a range before it is built. */
-const BUCKET_LENGTH_MS: Record<StatisticsPeriod, number> = {
+export const BUCKET_LENGTH_MS: Record<StatisticsPeriod, number> = {
   "5minute": 5 * 60_000,
   hour: 60 * 60_000,
   day: 24 * 60 * 60_000,

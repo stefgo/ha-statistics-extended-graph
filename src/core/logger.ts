@@ -9,8 +9,13 @@ const LEVEL_ORDER: Record<LogLevel, number> = {
 
 const LOG_PREFIX = "[statistics-extended-graph]";
 
-/** Minimum level that reaches the browser console. */
-const ACTIVE_LEVEL: LogLevel = "warn";
+/**
+ * Minimum level that reaches the browser console. `info` carries the two cases
+ * in which the `zoom.refine` detail layer stays away for good - no finer data
+ * in the recorder, or a failed request. Neither is shown in the UI yet, and
+ * both leave a chart that looks exactly like one that is still loading.
+ */
+const ACTIVE_LEVEL: LogLevel = "info";
 
 export type Logger = (
   level: LogLevel,

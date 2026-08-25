@@ -30,6 +30,10 @@ import {
 } from "../data/live-hour";
 import { EnergyCollectionBinding } from "../energy/collection";
 import { resolveAggregationPlan } from "../time/aggregation";
+import type { ZoomWindow } from "../time/aggregation";
+import { refinesOnZoom } from "../config/zoom";
+import { covers, detailPlanLadder, planDetailRange } from "../time/detail";
+import type { DetailPlan } from "../time/detail";
 import { getNextRefreshTime } from "../time/refresh";
 import {
   DEFAULT_TIMESPAN,
@@ -53,6 +57,7 @@ import {
 } from "../series/time-offset";
 import { FetchQueue, TimeoutError, withTimeout } from "./fetch-queue";
 import { log, OnceLogger } from "./logger";
+import type { LogLevel } from "./logger";
 
 const FETCH_TIMEOUT_MS = 60_000;
 const RAW_DELTA_OVERLAP_MS = 60_000;
@@ -65,7 +70,7 @@ const LIVE_HOUR_MIN_DELAY_MS = 30_000;
  */
 const RETRY_DELAYS_MS = [5_000, 15_000, 60_000];
 
-type FetchKey = "main" | "compare" | "live";
+type FetchKey = "main" | "compare" | "live" | "detail";
 
 interface RangeState {
   start: number;
@@ -79,6 +84,29 @@ interface TargetState {
   range?: RangeState;
   aggregation?: AggregationTarget;
   lastRawEnd?: number;
+}
+
+/**
+ * High resolution data for the zoom window, loaded next to the full range.
+ * It replaces the regular data while the window lies inside {@link range} -
+ * outside of it the coarse data is still on screen, so leaving the detail
+ * behind is instant and the reload only sharpens the picture again.
+ */
+export interface DetailState {
+  range: RangeState;
+  compareRange?: RangeState;
+  /**
+   * The interval the data actually came back at. It can be coarser than
+   * {@link requested} when the recorder has already purged the finer one.
+   */
+  aggregation: AggregationTarget;
+  /** The interval the window asked for; what a repeated plan is matched on. */
+  requested: AggregationTarget;
+  main: TargetState;
+  compare: TargetState;
+  shiftedStatistics: Map<number, StatisticValue[]>;
+  shiftedMetadata: Map<number, StatisticsMetaData | undefined>;
+  shiftedCalculated: Map<string, StatisticValue[]>;
 }
 
 /** Everything the card needs in order to draw one frame. */
@@ -95,12 +123,22 @@ export interface GraphSnapshot {
   shiftedStatistics: Map<number, StatisticValue[]>;
   shiftedMetadata: Map<number, StatisticsMetaData | undefined>;
   shiftedCalculated: Map<string, StatisticValue[]>;
+  /** Present while a zoom window is backed by higher resolution data. */
+  detail?: DetailState;
+  /** True while the detail layer of the current zoom window is being loaded. */
+  detailLoading: boolean;
 }
 
 const emptyTargetState = (): TargetState => ({
   metadata: {},
   calculated: new Map(),
 });
+
+interface ShiftedSeriesData {
+  statistics: Map<number, StatisticValue[]>;
+  metadata: Map<number, StatisticsMetaData | undefined>;
+  calculated: Map<string, StatisticValue[]>;
+}
 
 interface ShiftedFetchGroup {
   key: string;
@@ -128,6 +166,23 @@ export class GraphDataController {
   private _energyRange?: TimeRange;
   private _energyCompareRange?: TimeRange;
   private _energyFallbackActive = false;
+  /** Zoomed-in part of the visible range; drives the detail layer. */
+  private _zoomWindow?: ZoomWindow;
+  private _detail?: DetailState;
+  private _detailGeneration = 0;
+  private _detailLoading = false;
+  /**
+   * The load that owns {@link _detailLoading}. A response only clears the flag
+   * while it is still the newest one; a load that was superseded leaves it to
+   * the load that replaced it.
+   */
+  private _detailLoadingGeneration = 0;
+  /**
+   * The detail plan that came back without data. The recorder keeps short-term
+   * statistics for a few days only, so a window in the past has a floor - and
+   * without this it would be requested again on every zoom event.
+   */
+  private _detailMiss?: { start: number; end: number; aggregation: AggregationTarget };
 
   private _main: TargetState = emptyTargetState();
   private _compare: TargetState = emptyTargetState();
@@ -201,6 +256,7 @@ export class GraphDataController {
     }
     this._energyBinding.disconnect();
     this._queue.dispose();
+    this._detailLoading = false;
     this._clearTimer("_autoRefreshTimeout");
     this._clearTimer("_liveHourTimeout");
     this._clearTimer("_visibilityResumeTimeout");
@@ -228,6 +284,28 @@ export class GraphDataController {
     }
   }
 
+  /**
+   * Reports the part of the range the user zoomed into. With
+   * `zoom.refine` the detail layer follows it: a window that deserves a
+   * finer interval than the loaded one is loaded separately at that interval.
+   * `null` clears the window again.
+   */
+  public setZoomWindow(window: ZoomWindow | null): void {
+    const next = window ?? undefined;
+    if (
+      next?.start === this._zoomWindow?.start &&
+      next?.end === this._zoomWindow?.end
+    ) {
+      return;
+    }
+    this._zoomWindow = next;
+
+    if (!this._connected || !this._periodStart || !this._refinesOnZoom) {
+      return;
+    }
+    this._syncDetail();
+  }
+
   public get snapshot(): GraphSnapshot {
     return {
       loading: this._isLoading,
@@ -241,6 +319,8 @@ export class GraphDataController {
       shiftedStatistics: this._shiftedStatistics,
       shiftedMetadata: this._shiftedMetadata,
       shiftedCalculated: this._shiftedCalculated,
+      detail: this._detail,
+      detailLoading: this._detailLoading,
     };
   }
 
@@ -252,6 +332,10 @@ export class GraphDataController {
 
   private get _usesEnergyPicker(): boolean {
     return this._timespan.mode === "energy";
+  }
+
+  private get _refinesOnZoom(): boolean {
+    return refinesOnZoom(this._config?.zoom);
   }
 
   private _hasTimeOffsets(config = this._config): boolean {
@@ -300,6 +384,8 @@ export class GraphDataController {
     if (periodChanged || seriesChanged) {
       void this._teardownRawStream();
       this._clearShifted();
+      this._detailMiss = undefined;
+      this._clearDetail();
     }
 
     if (periodChanged || seriesChanged || !this._main.statistics) {
@@ -379,6 +465,14 @@ export class GraphDataController {
     if (changed) {
       this._periodStart = resolved.start;
       this._periodEnd = resolved.end;
+      // The window described a range the card has left; the next zoom reports
+      // a new one, and until then the interval follows the full range again.
+      // The detail goes with it: its range is absolute, so an overlapping new
+      // period would otherwise keep looking covered and leave the old layer -
+      // and with it the old compare shift - on screen.
+      this._zoomWindow = undefined;
+      this._detailMiss = undefined;
+      this._clearDetail();
       this._main.lastRawEnd = undefined;
       // A new range is a fresh start, not a continuation of a failing one.
       this._failures.main = 0;
@@ -405,6 +499,9 @@ export class GraphDataController {
       this._comparePeriodStart = range.start;
       this._comparePeriodEnd = range.end;
       this._compare = emptyTargetState();
+      // The detail layer carries a compare set of its own, mapped by the shift
+      // between the two periods. A new compare period invalidates that shift.
+      this._clearDetail();
       this._failures.compare = 0;
     }
     return changed;
@@ -473,6 +570,10 @@ export class GraphDataController {
   private async _runFetch(key: FetchKey): Promise<void> {
     if (key === "live") {
       await this._loadLiveHour();
+      return;
+    }
+    if (key === "detail") {
+      await this._loadDetail();
       return;
     }
     await this._loadStatistics(key === "compare");
@@ -579,6 +680,9 @@ export class GraphDataController {
         }
         this._scheduleAutoRefresh();
         this._scheduleLiveHour();
+        if (this._refinesOnZoom && this._zoomWindow) {
+          this._queue.schedule("detail");
+        }
       }
     } catch (error) {
       if (this._isCurrent(targetKey, generation)) {
@@ -669,7 +773,8 @@ export class GraphDataController {
     ids: string[],
     types: string[],
     isCompare: boolean,
-    range: RangeState
+    range: RangeState,
+    stepLevel: LogLevel = "warn"
   ): Promise<{
     statistics: Statistics;
     aggregation: AggregationTarget;
@@ -729,7 +834,7 @@ export class GraphDataController {
         }
         if (idx < plan.length - 1) {
           log(
-            "warn",
+            stepLevel,
             `Aggregation "${aggregation}" returned no data. Trying "${plan[idx + 1]}".`
           );
         }
@@ -774,6 +879,249 @@ export class GraphDataController {
       "fetchRawHistoryStates"
     );
     return historyStatesToStatistics(history);
+  }
+
+  // -------------------------------------------------------------- detail layer
+
+  /** The detail the current zoom window asks for, if it asks for any. */
+  private _detailPlan(): DetailPlan | undefined {
+    if (!this._refinesOnZoom || !this._periodStart) {
+      return undefined;
+    }
+    return planDetailRange(
+      { start: this._periodStart, end: this._periodEnd },
+      this._zoomWindow,
+      this._main.aggregation
+    );
+  }
+
+  private _detailIsCurrent(plan: DetailPlan): boolean {
+    return (
+      !!this._detail &&
+      !!this._zoomWindow &&
+      // Matched on the request: a plan that fell back to a coarser interval
+      // would otherwise never look satisfied and reload on every gesture.
+      this._detail.requested === plan.aggregation &&
+      covers(this._detail.range, this._zoomWindow)
+    );
+  }
+
+  /** True while the plan asks for data an earlier attempt proved absent. */
+  private _detailIsKnownMiss(plan: DetailPlan): boolean {
+    const miss = this._detailMiss;
+    return (
+      !!miss &&
+      miss.aggregation === plan.aggregation &&
+      plan.start.getTime() >= miss.start &&
+      plan.end.getTime() <= miss.end
+    );
+  }
+
+  private _isCurrentDetail(generation: number): boolean {
+    return this._connected && generation === this._detailGeneration;
+  }
+
+  /**
+   * Drops the detail layer. The generation is always bumped, so a load that is
+   * still in flight for the window just left cannot install itself afterwards.
+   */
+  private _clearDetail(): void {
+    this._detailGeneration += 1;
+    // A load still in flight has just been superseded, so its indicator goes
+    // with it rather than standing until its response arrives and is dropped.
+    const wasLoading = this._detailLoading;
+    this._detailLoading = false;
+    if (!this._detail && !wasLoading) {
+      return;
+    }
+    this._detail = undefined;
+    this._onChange();
+  }
+
+  /**
+   * Brings the detail layer in line with the zoom window: dropped once the
+   * window needs nothing finer, reloaded once it leaves what is loaded or
+   * deserves another interval.
+   */
+  private _syncDetail(): void {
+    const plan = this._detailPlan();
+    if (!plan) {
+      this._clearDetail();
+      return;
+    }
+    if (this._detailIsCurrent(plan) || this._detailIsKnownMiss(plan)) {
+      return;
+    }
+    // The gesture has already settled in the card, so this needs no debounce
+    // of its own beyond collapsing the events of one wheel.
+    this._queue.schedule("detail", 150);
+  }
+
+  private async _loadDetail(): Promise<void> {
+    const hass = this._hass;
+    const plan = this._detailPlan();
+    if (!hass || !plan || !this._periodStart || !this._visible) {
+      return;
+    }
+    // Only the known miss is checked here. A plan that is already loaded is
+    // deliberately loaded again: this is also the path an auto refresh takes,
+    // and it is the only way new samples reach a chart that stays zoomed in.
+    if (this._detailIsKnownMiss(plan)) {
+      log("info", "Zoom detail: window is a known gap, nothing is loaded", {
+        interval: plan.aggregation,
+      });
+      return;
+    }
+
+    const generation = ++this._detailGeneration;
+    this._detailLoading = true;
+    this._detailLoadingGeneration = generation;
+    this._onChange();
+
+    const { ids, types } = this._collectStatisticRequests();
+    const range: RangeState = {
+      start: plan.start.getTime(),
+      end: plan.end.getTime(),
+    };
+
+    try {
+      const ladder = detailPlanLadder(plan.aggregation, this._main.aggregation);
+      const metadata = await this._loadMetadata(hass, ids);
+      // Walking the ladder is the normal course for a detail layer, not a
+      // symptom: an empty rung is expected wherever the recorder has purged.
+      const result = await this._fetchWithPlan(
+        hass,
+        ladder,
+        plan.start,
+        plan.end,
+        ids,
+        types,
+        false,
+        range,
+        "debug"
+      );
+      if (!this._isCurrentDetail(generation)) {
+        return;
+      }
+
+      // A request that threw says nothing about the data. Remembering it as a
+      // miss would keep the region from ever being tried again, so a failure
+      // only leaves the coarse data standing and waits for the next attempt.
+      if (result.failed) {
+        log("warn", "Zoom detail: the request failed, the coarse data stays", {
+          interval: plan.aggregation,
+        });
+        return;
+      }
+
+      // Five-minute statistics only exist inside the recorder retention, and
+      // the frontend cannot ask how far that reaches. An empty answer from
+      // every interval on the ladder is that answer: the region is
+      // remembered, the coarse data stays on screen.
+      if (!statisticsHaveData(result.statistics, ids)) {
+        log("info", "Zoom detail: the recorder holds nothing finer for this window", {
+          requested: plan.aggregation,
+          from: plan.start.toISOString(),
+          to: plan.end.toISOString(),
+        });
+        this._detailMiss = {
+          start: plan.start.getTime(),
+          end: plan.end.getTime(),
+          aggregation: plan.aggregation,
+        };
+        this._clearDetail();
+        return;
+      }
+
+      // Whatever the ladder ended on: compare and shifted series are loaded
+      // at exactly that interval, so the chart never mixes two of them.
+      const aggregation = result.aggregation;
+
+      const main: TargetState = {
+        metadata,
+        calculated: new Map(),
+        statistics: result.statistics,
+        range,
+        aggregation,
+      };
+      main.calculated = this._computeCalculations(main, false, plan.start, plan.end);
+
+      const compare = emptyTargetState();
+      let compareRange: RangeState | undefined;
+      if (this._comparePeriodStart) {
+        const shift =
+          this._comparePeriodStart.getTime() - this._periodStart.getTime();
+        const compareStart = new Date(plan.start.getTime() + shift);
+        const compareEnd = new Date(plan.end.getTime() + shift);
+        compareRange = { start: compareStart.getTime(), end: compareEnd.getTime() };
+
+        const compareResult = await this._fetchWithPlan(
+          hass,
+          [aggregation],
+          compareStart,
+          compareEnd,
+          ids,
+          types,
+          true,
+          compareRange
+        );
+        if (!this._isCurrentDetail(generation)) {
+          return;
+        }
+        // Installing the empty result of a failed request would drop the
+        // compare series from the zoom until the next gesture. The coarse
+        // data still has both, so the whole layer is left for the next try.
+        if (compareResult.failed) {
+          log("warn", "Zoom detail skipped: the compare range failed to load");
+          return;
+        }
+        compare.metadata = metadata;
+        compare.statistics = compareResult.statistics;
+        compare.range = compareRange;
+        compare.aggregation = aggregation;
+        compare.calculated = this._computeCalculations(
+          compare,
+          true,
+          compareStart,
+          compareEnd
+        );
+      }
+
+      const shifted = await this._fetchShiftedSeries(
+        plan.start,
+        plan.end,
+        () => this._isCurrentDetail(generation),
+        aggregation
+      );
+      if (!this._isCurrentDetail(generation)) {
+        return;
+      }
+
+      this._detailMiss = undefined;
+      this._detail = {
+        range,
+        compareRange,
+        aggregation,
+        requested: plan.aggregation,
+        main,
+        compare,
+        shiftedStatistics: shifted?.statistics ?? new Map(),
+        shiftedMetadata: shifted?.metadata ?? new Map(),
+        shiftedCalculated: shifted?.calculated ?? new Map(),
+      };
+      // Drawn by the `finally` below, which clears the indicator: one frame
+      // carries both the detail layer and the end of the load.
+    } catch (error) {
+      log("error", "Failed to load zoom detail", {
+        error: error instanceof Error ? error.message : error,
+      });
+      // The coarse data is still on screen; the next zoom tries again.
+    } finally {
+      if (this._detailLoading && this._detailLoadingGeneration === generation) {
+        this._detailLoading = false;
+        this._onChange();
+      }
+    }
   }
 
   // ------------------------------------------------------ time offset series
@@ -856,11 +1204,37 @@ export class GraphDataController {
     end: Date | undefined,
     generation: number
   ): Promise<void> {
+    const result = await this._fetchShiftedSeries(start, end, () =>
+      this._isCurrent("main", generation)
+    );
+    // A superseded load must not clear what the newer one already stored.
+    if (!this._isCurrent("main", generation)) {
+      return;
+    }
+    if (!result) {
+      this._clearShifted();
+      return;
+    }
+    this._shiftedStatistics = result.statistics;
+    this._shiftedMetadata = result.metadata;
+    this._shiftedCalculated = result.calculated;
+  }
+
+  /**
+   * Loads every series that configures `time_offset` from its shifted source
+   * range. Returns the projected samples instead of storing them, so the
+   * detail layer can load its own set with the same code.
+   */
+  private async _fetchShiftedSeries(
+    start: Date,
+    end: Date | undefined,
+    isCurrent: () => boolean,
+    forcedAggregation?: AggregationTarget
+  ): Promise<ShiftedSeriesData | undefined> {
     const hass = this._hass;
     const groups = hass ? this._buildShiftedGroups(start, end) : [];
     if (!hass || !groups.length) {
-      this._clearShifted();
-      return;
+      return undefined;
     }
 
     const statisticsByIndex = new Map<number, StatisticValue[]>();
@@ -869,12 +1243,16 @@ export class GraphDataController {
 
     for (const group of groups) {
       const { ids, types } = this._shiftedGroupRequests(group);
-      const plan = resolveAggregationPlan(
-        group.sourceStart,
-        group.sourceEnd,
-        this._config?.aggregation,
-        this._usesEnergyPicker,
-        this._logger
+      const plan = (
+        forcedAggregation
+          ? [forcedAggregation]
+          : resolveAggregationPlan(
+              group.sourceStart,
+              group.sourceEnd,
+              this._config?.aggregation,
+              this._usesEnergyPicker,
+              this._logger
+            )
       ).filter((aggregation) => aggregation !== "raw");
 
       if (!plan.length || plan[0] === "disabled") {
@@ -897,8 +1275,8 @@ export class GraphDataController {
         { start: group.sourceStart.getTime(), end: group.sourceEnd?.getTime() ?? null }
       );
 
-      if (!this._isCurrent("main", generation)) {
-        return;
+      if (!isCurrent()) {
+        return undefined;
       }
       if (result.aggregation === "disabled") {
         continue;
@@ -936,15 +1314,32 @@ export class GraphDataController {
       });
     }
 
-    this._shiftedStatistics = statisticsByIndex;
-    this._shiftedMetadata = metadataByIndex;
-    this._shiftedCalculated = calculatedByKey;
+    return {
+      statistics: statisticsByIndex,
+      metadata: metadataByIndex,
+      calculated: calculatedByKey,
+    };
   }
 
   // ------------------------------------------------------------- calculations
 
   private _rebuildCalculations(isCompare: boolean): void {
     const target = isCompare ? this._compare : this._main;
+    target.calculated = this._computeCalculations(
+      target,
+      isCompare,
+      isCompare ? this._comparePeriodStart : this._periodStart,
+      isCompare ? this._comparePeriodEnd : this._periodEnd
+    );
+  }
+
+  /** Evaluates every calculation series against one loaded target state. */
+  private _computeCalculations(
+    target: TargetState,
+    isCompare: boolean,
+    start: Date | undefined,
+    end: Date | undefined
+  ): Map<string, StatisticValue[]> {
     const calculated = new Map<string, StatisticValue[]>();
 
     this._config?.series.forEach((series, index) => {
@@ -960,11 +1355,7 @@ export class GraphDataController {
         series.calculation,
         target.statistics ?? {},
         index,
-        {
-          start: isCompare ? this._comparePeriodStart : this._periodStart,
-          end: isCompare ? this._comparePeriodEnd : this._periodEnd,
-          period: target.aggregation,
-        },
+        { start, end, period: target.aggregation },
         this._logger
       );
       if (result) {
@@ -972,7 +1363,7 @@ export class GraphDataController {
       }
     });
 
-    target.calculated = calculated;
+    return calculated;
   }
 
   // --------------------------------------------------------------- raw stream

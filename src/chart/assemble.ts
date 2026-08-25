@@ -3,6 +3,8 @@ import type { StatisticsExtendedGraphConfig, SeriesConfig } from "../config/type
 import type { Statistics, StatisticsMetaDataMap, StatisticValue } from "../data/statistics";
 import type { BarSeriesOption, ChartOptions, SeriesOption } from "../types/echarts";
 import type { GraphSnapshot } from "../core/data-controller";
+import type { ZoomWindow } from "../time/aggregation";
+import { covers } from "../time/detail";
 import { OnceLogger } from "../core/logger";
 import { formatNumber } from "../core/format";
 import { resolveColorToken, resolveThemedColor } from "../core/color";
@@ -15,6 +17,8 @@ import { BarStackLayout, createCompareTransform, styleCompareSeries } from "./co
 import { extendLineSeries, normalizeLineSeries, toTuple } from "./lines";
 import { buildXAxis, buildYAxes } from "./axes";
 import { applySelectionDimming } from "./dimming";
+import { buildDataZoom, sliderVisible, SLIDER_GRID_BOTTOM } from "./zoom";
+import { resolveZoom } from "../config/zoom";
 import {
   buildSelectionAxis,
   buildSelectionMarker,
@@ -31,6 +35,14 @@ export interface AssembleParams {
   logger: OnceLogger;
   /** Clicked x value of the selection; every other bucket is dimmed. */
   selectedX?: number | null;
+  /** Part of the range the user zoomed into, if any. */
+  zoomWindow?: ZoomWindow | null;
+  /**
+   * Whether the chart is zoomed, for `zoom.type: "auto"`. It leads
+   * `zoomWindow`: the window is only reported once the gesture rests, while
+   * the slider is meant to appear with the first turn of the wheel.
+   */
+  zoomed?: boolean;
 }
 
 export interface AssembledChart {
@@ -40,6 +52,75 @@ export interface AssembledChart {
   /** Period the click snapped to, `null` while nothing is selected. */
   selection: SelectedPeriod | null;
 }
+
+type TargetData = GraphSnapshot["main"];
+
+/**
+ * The data one frame is drawn from. Normally that is the loaded range as it
+ * is; while the zoom window lies inside a loaded detail layer it is that
+ * layer, which covers a shorter range at a finer interval. Only the x axis
+ * stays with the full range in both cases, so zooming out has a place to go.
+ */
+interface ChartView {
+  main: TargetData;
+  compare: TargetData;
+  shiftedStatistics: GraphSnapshot["shiftedStatistics"];
+  shiftedMetadata: GraphSnapshot["shiftedMetadata"];
+  shiftedCalculated: GraphSnapshot["shiftedCalculated"];
+  start: Date;
+  end?: Date;
+  compareStart?: Date;
+  compareEnd?: Date;
+  isDetail: boolean;
+}
+
+const pickView = (
+  snapshot: GraphSnapshot,
+  periodStart: Date,
+  zoomWindow: ZoomWindow | null | undefined
+): ChartView => {
+  const detail = snapshot.detail;
+  if (
+    detail?.main.statistics &&
+    detail.range.end !== null &&
+    zoomWindow &&
+    covers(detail.range, zoomWindow)
+  ) {
+    return {
+      main: detail.main,
+      compare: detail.compare,
+      shiftedStatistics: detail.shiftedStatistics,
+      shiftedMetadata: detail.shiftedMetadata,
+      shiftedCalculated: detail.shiftedCalculated,
+      start: new Date(detail.range.start),
+      end: new Date(detail.range.end),
+      compareStart:
+        detail.compareRange && snapshot.comparePeriodStart
+          ? new Date(detail.compareRange.start)
+          : undefined,
+      compareEnd:
+        detail.compareRange?.end !== undefined &&
+        detail.compareRange?.end !== null &&
+        snapshot.comparePeriodStart
+          ? new Date(detail.compareRange.end)
+          : undefined,
+      isDetail: true,
+    };
+  }
+
+  return {
+    main: snapshot.main,
+    compare: snapshot.compare,
+    shiftedStatistics: snapshot.shiftedStatistics,
+    shiftedMetadata: snapshot.shiftedMetadata,
+    shiftedCalculated: snapshot.shiftedCalculated,
+    start: periodStart,
+    end: snapshot.periodEnd,
+    compareStart: snapshot.comparePeriodStart,
+    compareEnd: snapshot.comparePeriodEnd,
+    isDetail: false,
+  };
+};
 
 interface MainInputs {
   statistics: Statistics;
@@ -55,13 +136,13 @@ interface MainInputs {
  */
 const buildMainInputs = (
   config: StatisticsExtendedGraphConfig,
-  snapshot: GraphSnapshot,
+  view: ChartView,
   hass: HomeAssistant
 ): MainInputs => {
-  const statistics: Statistics = { ...(snapshot.main.statistics ?? {}) };
-  const metadata: StatisticsMetaDataMap = { ...snapshot.main.metadata };
-  const calculated = new Map(snapshot.main.calculated);
-  snapshot.shiftedCalculated.forEach((value, key) => calculated.set(key, value));
+  const statistics: Statistics = { ...(view.main.statistics ?? {}) };
+  const metadata: StatisticsMetaDataMap = { ...view.main.metadata };
+  const calculated = new Map(view.main.calculated);
+  view.shiftedCalculated.forEach((value, key) => calculated.set(key, value));
 
   const configSeries = config.series.map((series, index) => {
     const statisticId = getStatisticId(series);
@@ -70,10 +151,10 @@ const buildMainInputs = (
     }
 
     const shiftedId = shiftedStatisticId(index, statisticId);
-    statistics[shiftedId] = snapshot.shiftedStatistics.get(index) ?? [];
+    statistics[shiftedId] = view.shiftedStatistics.get(index) ?? [];
 
     const shiftedMetadata =
-      snapshot.shiftedMetadata.get(index) ?? snapshot.main.metadata[statisticId];
+      view.shiftedMetadata.get(index) ?? view.main.metadata[statisticId];
     if (shiftedMetadata) {
       metadata[shiftedId] = { ...shiftedMetadata, statistic_id: shiftedId };
     }
@@ -92,12 +173,11 @@ const buildMainInputs = (
   return { statistics, metadata, configSeries, calculated };
 };
 
-const compareDataIsCurrent = (snapshot: GraphSnapshot): boolean =>
-  !!snapshot.comparePeriodStart &&
-  !!snapshot.compare.statistics &&
-  snapshot.compare.range?.start === snapshot.comparePeriodStart.getTime() &&
-  (snapshot.compare.range?.end ?? null) ===
-    (snapshot.comparePeriodEnd?.getTime() ?? null);
+const compareDataIsCurrent = (view: ChartView): boolean =>
+  !!view.compareStart &&
+  !!view.compare.statistics &&
+  view.compare.range?.start === view.compareStart.getTime() &&
+  (view.compare.range?.end ?? null) === (view.compareEnd?.getTime() ?? null);
 
 const remapTimestamps = (
   serie: SeriesOption,
@@ -136,6 +216,8 @@ export const assembleChart = ({
   darkMode,
   logger,
   selectedX = null,
+  zoomWindow = null,
+  zoomed,
 }: AssembleParams): AssembledChart | undefined => {
   const { periodStart, periodEnd } = snapshot;
   if (!periodStart || !snapshot.main.statistics || !snapshot.main.range) {
@@ -150,7 +232,8 @@ export const assembleChart = ({
     return undefined;
   }
 
-  const inputs = buildMainInputs(config, snapshot, hass);
+  const view = pickView(snapshot, periodStart, zoomWindow);
+  const inputs = buildMainInputs(config, view, hass);
   const colorCycle = config.color_cycle ?? [];
 
   const main = buildSeries({
@@ -174,23 +257,25 @@ export const assembleChart = ({
   });
 
   const compareSeries: SeriesOption[] = [];
-  if (compareDataIsCurrent(snapshot) && snapshot.comparePeriodStart) {
+  if (compareDataIsCurrent(view) && view.compareStart) {
     const compare = buildSeries({
       hass,
       configSeries: inputs.configSeries,
-      statistics: snapshot.compare.statistics!,
-      metadata: snapshot.compare.metadata,
-      calculatedData: snapshot.compare.calculated,
+      statistics: view.compare.statistics!,
+      metadata: view.compare.metadata,
+      calculatedData: view.compare.calculated,
       colorCycle,
       darkMode,
       computedStyle,
       logger,
     });
 
-    const transform = createCompareTransform(
-      periodStart,
-      snapshot.comparePeriodStart
-    );
+    // A detail layer is shifted by plain milliseconds, so it is mapped back
+    // the same way; only whole periods get the calendar-aware transform.
+    const shift = view.start.getTime() - view.compareStart.getTime();
+    const transform = view.isDetail
+      ? (timestamp: number) => timestamp + shift
+      : createCompareTransform(view.start, view.compareStart);
 
     compare.series.forEach((serie, index) => {
       const baseId = serie.id ?? `compare_${index}`;
@@ -234,11 +319,11 @@ export const assembleChart = ({
     return undefined;
   }
 
-  const displayEnd = periodEnd?.getTime() ?? snapshot.main.range.end ?? null;
+  const displayEnd = view.end?.getTime() ?? view.main.range?.end ?? null;
   const buckets = buildBucketSequence(
-    periodStart.getTime(),
+    view.start.getTime(),
     displayEnd,
-    snapshot.main.aggregation
+    view.main.aggregation
   );
 
   if (buckets?.length) {
@@ -249,8 +334,8 @@ export const assembleChart = ({
     displayEnd,
     // Compare data was already remapped onto the visible range.
     compareDisplayEnd: displayEnd,
-    extendMain: snapshot.main.aggregation === "raw",
-    extendCompare: snapshot.compare.aggregation === "raw",
+    extendMain: view.main.aggregation === "raw",
+    extendCompare: view.compare.aggregation === "raw",
     chartTypeOf: (id) => configById.get(toBaseId(id ?? ""))?.chart_type ?? configById.get(id ?? "")?.chart_type,
     isCompare: (id) => !!id && isCompareId(id),
   });
@@ -273,7 +358,7 @@ export const assembleChart = ({
   const selection = resolveSelection(selectedX, {
     series,
     buckets,
-    aggregation: snapshot.main.aggregation,
+    aggregation: view.main.aggregation,
     displayEnd,
   });
 
@@ -301,17 +386,43 @@ export const assembleChart = ({
     );
   }
 
+  const zoom = resolveZoom(config.zoom);
+  // The window leads the report while a gesture is still running.
+  const isZoomed = zoomed ?? zoomWindow !== null;
+  const showsSlider = zoom !== undefined && sliderVisible(zoom, isZoomed);
+
   const options: ChartOptions = {
     xAxis: buildXAxis({
       start: periodStart,
       end: periodEnd,
+      // The axis always describes the full range, so its bounds - and with
+      // them the meaning of the zoom window - do not move when the detail
+      // layer comes and goes. Only the labels follow what is drawn.
       aggregation: snapshot.main.aggregation,
-      buckets,
+      // A zoom narrows what is drawn without narrowing the axis, so the tick
+      // spacing has to be pinned to the buckets rather than to the span.
+      zoomable: zoom !== undefined,
+      buckets: view.isDetail
+        ? buildBucketSequence(
+            periodStart.getTime(),
+            periodEnd?.getTime() ?? snapshot.main.range.end ?? null,
+            snapshot.main.aggregation
+          )
+        : buckets,
+      labelAggregation: view.main.aggregation,
       fallbackEnd: snapshot.main.range.end,
       hass,
     }),
     yAxis,
-    grid: { top: 15, left: 1, right: 1, bottom: 0, containLabel: true },
+    grid: {
+      top: 15,
+      left: 1,
+      right: 1,
+      // The slider sits below the plotting area and needs its own room.
+      bottom: showsSlider ? SLIDER_GRID_BOTTOM : 0,
+      containLabel: true,
+    },
+    ...(zoom ? { dataZoom: buildDataZoom(zoom, isZoomed) } : {}),
     // This card renders neither a legend nor a tooltip or axis pointers.
     legend: { show: false },
     tooltip: { show: false, showContent: false, axisPointer: { type: "none" } },
