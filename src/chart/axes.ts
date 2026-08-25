@@ -3,12 +3,26 @@ import { differenceInDays, subHours } from "date-fns";
 import type { AggregationTarget, AxisConfig, SeriesConfig } from "../config/types";
 import type { SeriesOption, XAxisOption, YAxisOption } from "../types/echarts";
 import { formatDatePart, formatNumber } from "../core/format";
+import { BUCKET_LENGTH_MS } from "../time/buckets";
 import { toTuple } from "./lines";
 
-const HOUR_MS = 60 * 60 * 1000;
-const DAY_MS = 24 * HOUR_MS;
-const MONTH_AXIS_MIN_INTERVAL_MS = 28 * DAY_MS;
-const YEAR_AXIS_MIN_INTERVAL_MS = 365 * DAY_MS;
+/**
+ * Smallest distance between two axis ticks, so a tick never subdivides a
+ * bucket. Coarser spacing stays ECharts' decision.
+ *
+ * This has to be set for every interval, not just the ones with a custom
+ * label: `<ha-chart-base>` fills in a `minInterval` of its own whenever the
+ * axis leaves it undefined, and derives it from the distance between `min` and
+ * `max` - for ranges beyond two days that is a full day. The axis deliberately
+ * spans the whole period even while zoomed in, and the zoom does not feed back
+ * into that default, so a zoomed-in window would inherit day-spaced ticks and
+ * end up with a single label, or none at all.
+ */
+const axisMinInterval = (aggregation: AggregationTarget | undefined): number =>
+  aggregation && aggregation !== "raw" && aggregation !== "disabled"
+    ? BUCKET_LENGTH_MS[aggregation]
+    : // Explicitly unconstrained - `??` would hand the axis back to the default.
+      0;
 
 const formatMonthLabel = (value: number, hass?: HomeAssistant): string => {
   const date = new Date(value);
@@ -92,15 +106,16 @@ export const buildXAxis = ({
     min: start,
     max: computeAxisMax(start, end, aggregation, buckets, fallbackEnd),
     axisPointer: { show: false },
+    // Follows what is drawn, so the detail layer of a zoom is labelled at its
+    // own resolution instead of the one the full range was loaded at.
+    minInterval: axisMinInterval(labelAggregation),
   };
 
   if (labelAggregation === "month") {
-    primary.minInterval = MONTH_AXIS_MIN_INTERVAL_MS;
     primary.axisLabel = {
       formatter: (value: number) => formatMonthLabel(value, hass),
     };
   } else if (labelAggregation === "year") {
-    primary.minInterval = YEAR_AXIS_MIN_INTERVAL_MS;
     primary.axisLabel = {
       formatter: (value: number) =>
         formatDatePart(new Date(value), { year: "numeric" }, hass),
