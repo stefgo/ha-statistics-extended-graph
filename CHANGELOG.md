@@ -90,6 +90,12 @@ gathered into this one entry rather than split into versions nobody could instal
 
 ### Fixed
 
+- `zoom`: the slider and the detail layer no longer stay dead after a page reload. The card
+  subscribes to the chart's zoom events in the capture phase of the gesture now:
+  `<ha-chart-base>` builds its ECharts instance lazily, so on a freshly loaded page the last
+  render regularly comes before the chart exists, and the wheel event that zooms is stopped by
+  ECharts before it reaches a listener in the bubble phase. Until a click happened to hook the
+  events up, a zoom moved the chart without showing the `auto` slider or loading any detail.
 - A failed load no longer blanks the card, and the chart keeps standing while the next range
   loads instead of flashing empty.
 - An aggregation that would have produced enough buckets to hang the browser is refused rather

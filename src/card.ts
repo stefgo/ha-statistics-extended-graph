@@ -218,8 +218,9 @@ export class StatisticsExtendedGraph extends LitElement {
       this._rebuildChart();
     }
 
-    // A wheel zoom is not preceded by a pointer event, so the subscription
-    // cannot wait for one: it is tried after every render until it takes.
+    // Cheap way in for the common case: by the time data has been drawn the
+    // chart usually exists. The gestures below catch the case where it does
+    // not, so a failed attempt here is silent and simply left to them.
     if (this._tracksZoomWindow) {
       this._zoomInput.attach(this.renderRoot?.querySelector("ha-chart-base"), true);
     }
@@ -515,13 +516,33 @@ export class StatisticsExtendedGraph extends LitElement {
       : { start: snapshot.periodStart.getTime(), end };
   }
 
-  /** Home Assistant creates the chart lazily; a pointer proves it exists. */
-  private _attachChartInput = (): void => {
-    const host = this.renderRoot?.querySelector("ha-chart-base");
-    this._selectionInput.attach(host);
-    if (this._tracksZoomWindow) {
-      this._zoomInput.attach(host);
-    }
+  /**
+   * Subscribes to the chart on the way into a gesture.
+   *
+   * `<ha-chart-base>` imports ECharts on demand and builds its instance once
+   * the element has a size, so on a freshly loaded page the last render of the
+   * card regularly comes first and finds nothing to subscribe to. A gesture is
+   * the reliable proof instead: it can only zoom a chart that exists.
+   *
+   * The listeners run in the capture phase, before the canvas below sees the
+   * event. That matters for the wheel: ECharts stops the event it zooms with,
+   * so a listener in the bubble phase never runs while the chart is being
+   * zoomed - which is exactly when the subscription is needed. Capturing also
+   * puts the subscription in place before the gesture is handled, so even the
+   * first wheel tick reports its window.
+   */
+  private readonly _chartInput = {
+    handleEvent: (): void => {
+      const host = this.renderRoot?.querySelector("ha-chart-base");
+      this._selectionInput.attach(host);
+      if (this._tracksZoomWindow) {
+        this._zoomInput.attach(host);
+      }
+    },
+    capture: true,
+    // Nothing here calls `preventDefault`; saying so keeps the wheel gesture
+    // off the browser's slow path.
+    passive: true,
   };
 
   private _onChartClick = (event: CustomEvent): void => {
@@ -601,8 +622,8 @@ export class StatisticsExtendedGraph extends LitElement {
           .data=${this._chartData}
           .options=${this._chartOptions}
           .height=${height}
-          @pointerdown=${this._attachChartInput}
-          @wheel=${this._attachChartInput}
+          @pointerdown=${this._chartInput}
+          @wheel=${this._chartInput}
           @chart-click=${this._onChartClick}
         ></ha-chart-base>
         ${this._renderRefineIndicator()}
