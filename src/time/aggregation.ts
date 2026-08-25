@@ -21,7 +21,7 @@ export const deriveAutoPeriod = (
     return "5minute";
   }
   const days = Math.max(differenceInDays(effectiveEnd, start), 0);
-  if (days > 35) {
+  if (days > 70) {
     return "month";
   }
   if (days > 2) {
