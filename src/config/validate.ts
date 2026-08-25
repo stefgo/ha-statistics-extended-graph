@@ -23,7 +23,7 @@ const UNSUPPORTED_SERIES_OPTIONS = [
   "pv_production_entity",
 ];
 
-const ZOOM_TYPES = ["inside", "slider", "both"];
+const ZOOM_TYPES = ["inside", "slider", "both", "auto"];
 
 const isPercent = (value: unknown): boolean =>
   typeof value === "number" && Number.isFinite(value) && value >= 0 && value <= 100;

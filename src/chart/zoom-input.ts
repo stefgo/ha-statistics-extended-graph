@@ -31,7 +31,16 @@ export class ZoomInput {
     private readonly _onWindow: (window: ZoomWindow | null) => void,
     /** The range the axis spans, used when the option reports percentages. */
     private readonly _resolveRange: () => ZoomWindow | undefined,
-    private readonly _logger: OnceLogger
+    private readonly _logger: OnceLogger,
+    /**
+     * Reports that the chart is zoomed, on every event and without the debounce
+     * - `zoom.type: "auto"` shows its slider from this, and a bar that only
+     * appeared once the gesture rested would arrive after the gesture that
+     * called for it. Only the way into a zoom is reported here; leaving one is
+     * left to the debounced window, so the slider does not vanish from under
+     * the hand that is dragging it back to the full range.
+     */
+    private readonly _onZoomed?: () => void
   ) {}
 
   /**
@@ -74,6 +83,9 @@ export class ZoomInput {
   }
 
   private _onDataZoom = (): void => {
+    if (this._onZoomed && this._readWindow() !== null) {
+      this._onZoomed();
+    }
     this._clearTimer();
     this._timeout = window.setTimeout(() => {
       this._timeout = undefined;

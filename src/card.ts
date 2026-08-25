@@ -11,7 +11,7 @@ import { OnceLogger } from "./core/logger";
 import { assembleChart } from "./chart/assemble";
 import { createZeroSnapshot } from "./chart/lines";
 import { dropZoomWindow } from "./chart/zoom";
-import { refinesOnZoom } from "./config/zoom";
+import { slidesInOnZoom, tracksZoomWindow } from "./config/zoom";
 import { SelectionInput } from "./chart/selection-input";
 import { ZoomInput } from "./chart/zoom-input";
 import { resolveBucket } from "./chart/selection";
@@ -92,6 +92,8 @@ export class StatisticsExtendedGraph extends LitElement {
   private readonly _controller = new GraphDataController(() => this._onData());
   private _renderedRange?: { start: number; end: number | null };
   private _animationFrame?: number;
+  /** Frame the zoomed-state rebuild waits for; see {@link _onZoomed}. */
+  private _zoomFrame?: number;
   private _darkMode = false;
   /** The one selected x value; `null` while nothing is selected. */
   private _selectedX: number | null = null;
@@ -113,16 +115,24 @@ export class StatisticsExtendedGraph extends LitElement {
   private readonly _zoomInput = new ZoomInput(
     (window) => this._onZoomWindow(window),
     () => this._renderedAxisRange(),
-    this._logger
+    this._logger,
+    () => this._onZoomed()
   );
   /** Part of the range the chart currently shows; drives the detail layer. */
   private _zoomWindow: ZoomWindow | null = null;
+  /**
+   * Whether the chart is zoomed, for the slider of `zoom.type: "auto"`. Kept
+   * apart from `_zoomWindow` because it is set while the gesture is still
+   * running, where the window is not known yet.
+   */
+  @state() private _zoomed = false;
 
   public setConfig(config: StatisticsExtendedGraphConfig): void {
     this._config = normalizeConfig(config);
     this._logger.reset();
     this._renderedRange = undefined;
     this._zoomWindow = null;
+    this._zoomed = false;
     this._clearSelection();
     this._controller.setConfig(this._config);
   }
@@ -155,6 +165,10 @@ export class StatisticsExtendedGraph extends LitElement {
     this._controller.disconnect();
     this._selectionInput.detach();
     this._zoomInput.detach();
+    if (this._zoomFrame !== undefined) {
+      cancelAnimationFrame(this._zoomFrame);
+      this._zoomFrame = undefined;
+    }
     if (this._animationFrame !== undefined) {
       cancelAnimationFrame(this._animationFrame);
       this._animationFrame = undefined;
@@ -192,7 +206,7 @@ export class StatisticsExtendedGraph extends LitElement {
 
     // A wheel zoom is not preceded by a pointer event, so the subscription
     // cannot wait for one: it is tried after every render until it takes.
-    if (this._refinesOnZoom) {
+    if (this._tracksZoomWindow) {
       this._zoomInput.attach(this.renderRoot?.querySelector("ha-chart-base"), true);
     }
   }
@@ -325,6 +339,7 @@ export class StatisticsExtendedGraph extends LitElement {
       logger: this._logger,
       selectedX: this._selectedX,
       zoomWindow: this._zoomWindow,
+      zoomed: this._zoomed,
     });
 
     if (!assembled) {
@@ -367,6 +382,7 @@ export class StatisticsExtendedGraph extends LitElement {
     if (rangeChanged) {
       // The window described buckets of a range the card has left.
       this._zoomWindow = null;
+      this._zoomed = false;
     }
 
     this._hasData = assembled.hasData;
@@ -395,9 +411,40 @@ export class StatisticsExtendedGraph extends LitElement {
     });
   }
 
-  /** Only a refining zoom needs the events; a visual one is chart-internal. */
-  private get _refinesOnZoom(): boolean {
-    return refinesOnZoom(this._config?.zoom);
+  /**
+   * Only these two need the zoom events; a purely visual zoom is
+   * chart-internal. A refining zoom needs the window itself, an automatic
+   * slider only whether there is one.
+   */
+  private get _tracksZoomWindow(): boolean {
+    return tracksZoomWindow(this._config?.zoom);
+  }
+
+  /**
+   * A gesture has left the full range. The slider of `zoom.type: "auto"` is
+   * shown right away, without waiting for the window to settle.
+   *
+   * The rebuild is deferred by a frame: this runs inside the chart's own
+   * `datazoom` handler, and setting a new option from there re-enters ECharts
+   * while it is still dispatching the gesture, which leaves the `dataZoom`
+   * components in a broken state - the slider disappears until the next full
+   * render.
+   */
+  private _onZoomed(): void {
+    // Only an automatic slider changes with the state. Every other type has
+    // the bar it is going to have, and rebuilding mid-gesture would disturb
+    // the very gesture that is drawing it.
+    if (!slidesInOnZoom(this._config?.zoom)) {
+      return;
+    }
+    if (this._zoomed || this._zoomFrame !== undefined) {
+      return;
+    }
+    this._zoomFrame = requestAnimationFrame(() => {
+      this._zoomFrame = undefined;
+      this._zoomed = true;
+      this._rebuildChart();
+    });
   }
 
   /**
@@ -408,6 +455,7 @@ export class StatisticsExtendedGraph extends LitElement {
    */
   private _onZoomWindow(window: ZoomWindow | null): void {
     this._zoomWindow = window;
+    this._zoomed = window !== null;
     this._controller.setZoomWindow(window);
     this._rebuildChart();
   }
@@ -428,7 +476,7 @@ export class StatisticsExtendedGraph extends LitElement {
   private _attachChartInput = (): void => {
     const host = this.renderRoot?.querySelector("ha-chart-base");
     this._selectionInput.attach(host);
-    if (this._refinesOnZoom) {
+    if (this._tracksZoomWindow) {
       this._zoomInput.attach(host);
     }
   };

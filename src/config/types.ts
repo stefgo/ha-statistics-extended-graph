@@ -120,10 +120,14 @@ export interface AxisConfig {
   unit?: string;
 }
 
-export type ZoomType = "inside" | "slider" | "both";
+export type ZoomType = "inside" | "slider" | "both" | "auto";
 
 export interface ZoomConfig {
-  /** `inside` zooms on the plot itself, `slider` adds a bar below it. */
+  /**
+   * `inside` zooms on the plot itself, `slider` adds a bar below it, `both`
+   * has the two. `auto` behaves like `both`, but keeps the slider away until
+   * a zoom window exists - it appears with the first zoom and leaves with it.
+   */
   type?: ZoomType;
   /** Locks the width of the window, so a drag only pans it. */
   zoom_lock?: boolean;

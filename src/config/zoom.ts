@@ -18,3 +18,20 @@ export const resolveZoom = (
 export const refinesOnZoom = (
   config: boolean | ZoomConfig | undefined
 ): boolean => resolveZoom(config)?.refine === true;
+
+/** True when the slider only appears while a zoom window exists. */
+export const slidesInOnZoom = (
+  config: boolean | ZoomConfig | undefined
+): boolean => resolveZoom(config)?.type === "auto";
+
+/**
+ * True when the card has to follow the zoom window instead of leaving the
+ * zoom to the chart: `refine` turns the window into a fetch, `auto` into the
+ * slider's visibility.
+ */
+export const tracksZoomWindow = (
+  config: boolean | ZoomConfig | undefined
+): boolean => {
+  const zoom = resolveZoom(config);
+  return zoom !== undefined && (zoom.refine === true || zoom.type === "auto");
+};

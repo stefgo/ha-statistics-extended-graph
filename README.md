@@ -34,7 +34,8 @@ contributes the legend rows with their sums and the self-sufficiency total row.*
 - Per-series time offset, e.g. to show this year and last year side by side.
 - Compare support for the energy date picker's compare toggle.
 - Left and right Y axis with independent scaling, limits and units.
-- Optional data zoom: zoom and pan the time axis with the wheel, a drag or a slider.
+- Optional data zoom: zoom and pan the time axis with the wheel, a drag or a slider, which
+  can show itself only while the chart is zoomed.
 - Optional area fills, gradient fills and fill-between-two-lines bands.
 - Per-theme colors (light/dark) and access to the Home Assistant energy palette.
 - Aggregation overrides per picker range, with an optional fallback interval.
@@ -280,14 +281,14 @@ zoom: true     # shorthand for type: inside
 
 ```yaml
 zoom:
-  type: both               # inside, slider, both
+  type: both               # inside, slider, both, auto
   start: 50                # show the second half at first
   end: 100
 ```
 
 | Key | Type | Default | Description |
 | --- | --- | --- | --- |
-| `type` | `inside`, `slider`, `both` | `inside` | `inside` zooms on the plot itself, `slider` adds a handle bar below it. |
+| `type` | `inside`, `slider`, `both`, `auto` | `inside` | `inside` zooms on the plot itself, `slider` adds a handle bar below it, `both` has the two. `auto` is `both` with a slider that only shows while a zoom window exists. |
 | `zoom_lock` | boolean | `false` | Fixes the window width, so it can only be panned. |
 | `start` | number | `0` | Left edge of the initial window, in percent of the range. |
 | `end` | number | `100` | Right edge of the initial window, in percent of the range. |
@@ -300,6 +301,24 @@ compare series and the y axis stay stable while panning.
 
 A drag that pans the chart does not select a period; only a click that stays in
 place does (see [Time selection](#time-selection)).
+
+#### A slider only when it is needed (`type: auto`)
+
+```yaml
+zoom:
+  type: auto
+```
+
+The handle bar costs a fixed strip below the plotting area, which is a poor
+trade on a card that is usually looked at unzoomed. With `type: auto` the bar
+appears with the first zoom - as an orientation and as the way back out - and
+leaves again once the chart is back at the full range. The plotting area takes
+the freed strip, so the curve grows and shrinks by that much when the bar comes
+and goes.
+
+The bar appears with the gesture that calls for it, but it is only removed once
+a gesture has come to rest at the full range, so it never vanishes from under
+the handle that is dragging it there.
 
 #### Higher resolution when zooming in (`refine`)
 

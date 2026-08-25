@@ -25,15 +25,27 @@ const clampPercent = (value: number | undefined): number | undefined =>
     ? Math.min(100, Math.max(0, value))
     : undefined;
 
-export const hasSlider = (config: ZoomConfig): boolean =>
-  config.type === "slider" || config.type === "both";
+/**
+ * Whether the slider bar is on screen. `auto` shows it only while a zoom
+ * window exists, so the plotting area keeps the room the bar would take as
+ * long as the chart shows the whole range.
+ */
+export const sliderVisible = (config: ZoomConfig, zoomed: boolean): boolean =>
+  config.type === "slider" || config.type === "both" || (config.type === "auto" && zoomed);
+
+/** Whether the option set carries a slider at all, shown or hidden. */
+const hasSliderComponent = (config: ZoomConfig): boolean =>
+  config.type === "slider" || config.type === "both" || config.type === "auto";
 
 /**
  * Builds the `dataZoom` option array. `filterMode: "none"` keeps every data
  * point in place: values outside the window are only clipped, so stacks and
  * compare series stay aligned and the y axis does not jump while panning.
  */
-export const buildDataZoom = (config: ZoomConfig): DataZoomOption[] => {
+export const buildDataZoom = (
+  config: ZoomConfig,
+  zoomed: boolean
+): DataZoomOption[] => {
   const start = clampPercent(config.start);
   const end = clampPercent(config.end);
   const window = {
@@ -56,10 +68,14 @@ export const buildDataZoom = (config: ZoomConfig): DataZoomOption[] => {
     zooms.push({ ...shared, type: "inside" });
   }
 
-  if (hasSlider(config)) {
+  if (hasSliderComponent(config)) {
     zooms.push({
       ...shared,
       type: "slider",
+      // A hidden slider stays in the array rather than leaving it: ECharts
+      // merges `dataZoom` by index, so a shorter array would leave a bar that
+      // is already on screen standing. `show` is the only reliable switch.
+      show: sliderVisible(config, zoomed),
       height: SLIDER_HEIGHT,
       bottom: SLIDER_BOTTOM,
       left: SLIDER_SIDE_INSET,

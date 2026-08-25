@@ -14,6 +14,9 @@ asset is what HACS installs.
 - `zoom`: zoom and pan the time axis with the mouse wheel, a drag or a slider below the
   chart (`type: inside | slider | both`). The zoom is a pure view of the loaded range and does
   not trigger any fetch; a drag that pans the chart no longer selects a period.
+- `zoom.type: auto`: the slider shows itself only while a zoom window exists. It appears with
+  the gesture that zooms in and leaves once the chart rests at the full range again, so an
+  unzoomed card spends no room on a handle bar nobody is using.
 - `zoom.refine`: load high resolution data for the zoom window, next to the coarse data of
   the full range. A window has no bucket budget to respect, so zooming into a year drills down
   through days and hours to five-minute data; leaving the loaded detail falls back to the coarse

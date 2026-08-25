@@ -17,7 +17,7 @@ import { BarStackLayout, createCompareTransform, styleCompareSeries } from "./co
 import { extendLineSeries, normalizeLineSeries, toTuple } from "./lines";
 import { buildXAxis, buildYAxes } from "./axes";
 import { applySelectionDimming } from "./dimming";
-import { buildDataZoom, hasSlider, SLIDER_GRID_BOTTOM } from "./zoom";
+import { buildDataZoom, sliderVisible, SLIDER_GRID_BOTTOM } from "./zoom";
 import { resolveZoom } from "../config/zoom";
 import {
   buildSelectionAxis,
@@ -37,6 +37,12 @@ export interface AssembleParams {
   selectedX?: number | null;
   /** Part of the range the user zoomed into, if any. */
   zoomWindow?: ZoomWindow | null;
+  /**
+   * Whether the chart is zoomed, for `zoom.type: "auto"`. It leads
+   * `zoomWindow`: the window is only reported once the gesture rests, while
+   * the slider is meant to appear with the first turn of the wheel.
+   */
+  zoomed?: boolean;
 }
 
 export interface AssembledChart {
@@ -211,6 +217,7 @@ export const assembleChart = ({
   logger,
   selectedX = null,
   zoomWindow = null,
+  zoomed,
 }: AssembleParams): AssembledChart | undefined => {
   const { periodStart, periodEnd } = snapshot;
   if (!periodStart || !snapshot.main.statistics || !snapshot.main.range) {
@@ -380,6 +387,9 @@ export const assembleChart = ({
   }
 
   const zoom = resolveZoom(config.zoom);
+  // The window leads the report while a gesture is still running.
+  const isZoomed = zoomed ?? zoomWindow !== null;
+  const showsSlider = zoom !== undefined && sliderVisible(zoom, isZoomed);
 
   const options: ChartOptions = {
     xAxis: buildXAxis({
@@ -406,10 +416,10 @@ export const assembleChart = ({
       left: 1,
       right: 1,
       // The slider sits below the plotting area and needs its own room.
-      bottom: zoom && hasSlider(zoom) ? SLIDER_GRID_BOTTOM : 0,
+      bottom: showsSlider ? SLIDER_GRID_BOTTOM : 0,
       containLabel: true,
     },
-    ...(zoom ? { dataZoom: buildDataZoom(zoom) } : {}),
+    ...(zoom ? { dataZoom: buildDataZoom(zoom, isZoomed) } : {}),
     // This card renders neither a legend nor a tooltip or axis pointers.
     legend: { show: false },
     tooltip: { show: false, showContent: false, axisPointer: { type: "none" } },
