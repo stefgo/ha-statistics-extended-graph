@@ -967,6 +967,9 @@ export class GraphDataController {
     // deliberately loaded again: this is also the path an auto refresh takes,
     // and it is the only way new samples reach a chart that stays zoomed in.
     if (this._detailIsKnownMiss(plan)) {
+      log("info", "Zoom detail: window is a known gap, nothing is loaded", {
+        interval: plan.aggregation,
+      });
       return;
     }
 
@@ -1005,6 +1008,9 @@ export class GraphDataController {
       // miss would keep the region from ever being tried again, so a failure
       // only leaves the coarse data standing and waits for the next attempt.
       if (result.failed) {
+        log("warn", "Zoom detail: the request failed, the coarse data stays", {
+          interval: plan.aggregation,
+        });
         return;
       }
 
@@ -1013,6 +1019,11 @@ export class GraphDataController {
       // every interval on the ladder is that answer: the region is
       // remembered, the coarse data stays on screen.
       if (!statisticsHaveData(result.statistics, ids)) {
+        log("info", "Zoom detail: the recorder holds nothing finer for this window", {
+          requested: plan.aggregation,
+          from: plan.start.toISOString(),
+          to: plan.end.toISOString(),
+        });
         this._detailMiss = {
           start: plan.start.getTime(),
           end: plan.end.getTime(),
