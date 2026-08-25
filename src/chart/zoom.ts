@@ -13,6 +13,12 @@ export const SLIDER_GRID_BOTTOM = 38;
 
 const SLIDER_HEIGHT = 26;
 const SLIDER_BOTTOM = 4;
+/**
+ * The handles are centred on the window edges, so half of one hangs over the
+ * end of the bar. Without this inset the handle at 100% is clipped by the card.
+ */
+const SLIDER_HANDLE_SIZE = 18;
+const SLIDER_SIDE_INSET = SLIDER_HANDLE_SIZE / 2 + 1;
 
 const clampPercent = (value: number | undefined): number | undefined =>
   typeof value === "number" && Number.isFinite(value)
@@ -57,6 +63,9 @@ export const buildDataZoom = (config: ZoomConfig): DataZoomOption[] => {
       type: "slider",
       height: SLIDER_HEIGHT,
       bottom: SLIDER_BOTTOM,
+      left: SLIDER_SIDE_INSET,
+      right: SLIDER_SIDE_INSET,
+      handleSize: SLIDER_HANDLE_SIZE,
       // The card draws no axis pointer, so the slider stays a plain handle bar.
       showDetail: false,
       brushSelect: false,
