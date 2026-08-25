@@ -10,7 +10,7 @@ import type { GraphSnapshot } from "./core/data-controller";
 import { OnceLogger } from "./core/logger";
 import { assembleChart } from "./chart/assemble";
 import { createZeroSnapshot } from "./chart/lines";
-import { dropZoomWindow } from "./chart/zoom";
+import { applyZoomWindow, dropZoomWindow } from "./chart/zoom";
 import { slidesInOnZoom, tracksZoomWindow } from "./config/zoom";
 import { SelectionInput } from "./chart/selection-input";
 import { ZoomInput } from "./chart/zoom-input";
@@ -139,6 +139,11 @@ export class StatisticsExtendedGraph extends LitElement {
    * running, where the window is not known yet.
    */
   @state() private _zoomed = false;
+  /**
+   * Set for the one rebuild that follows a theme switch, where the window has
+   * to be written into the options rather than left to the chart.
+   */
+  private _restoreZoomWindow = false;
 
   public setConfig(config: StatisticsExtendedGraphConfig): void {
     this._config = normalizeConfig(config);
@@ -215,6 +220,10 @@ export class StatisticsExtendedGraph extends LitElement {
     this._darkMode = darkMode;
 
     if (changedProps.has("_config") || themeChanged) {
+      // The chart element throws its ECharts instance away on a theme flip, so
+      // the next option set has to name the window again instead of relying on
+      // the merge that normally carries it.
+      this._restoreZoomWindow = themeChanged;
       this._rebuildChart();
     }
 
@@ -362,6 +371,9 @@ export class StatisticsExtendedGraph extends LitElement {
       return;
     }
 
+    const restoreZoomWindow = this._restoreZoomWindow;
+    this._restoreZoomWindow = false;
+
     const snapshot = this._controller.snapshot;
     const range = snapshot.periodStart
       ? {
@@ -435,7 +447,11 @@ export class StatisticsExtendedGraph extends LitElement {
     // A new range starts from the configured zoom window, a refresh of the
     // same range keeps the window the user panned to.
     this._chartOptions = {
-      ...(rangeChanged ? assembled.options : dropZoomWindow(assembled.options)),
+      ...(rangeChanged
+        ? assembled.options
+        : restoreZoomWindow && this._zoomWindow
+          ? applyZoomWindow(assembled.options, this._zoomWindow)
+          : dropZoomWindow(assembled.options)),
       animation: rangeChanged,
     };
 

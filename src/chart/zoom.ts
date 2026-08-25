@@ -115,3 +115,28 @@ export const dropZoomWindow = (options: ChartOptions): ChartOptions => {
     dataZoom: options.dataZoom.map(({ start, end, ...rest }) => rest as DataZoomOption),
   };
 };
+
+/**
+ * Pins an already built option set to an explicit window. `<ha-chart-base>`
+ * rebuilds its ECharts instance when the theme flips, and a fresh instance
+ * starts at the full range - so the merge that keeps the user's zoom alive
+ * (`dropZoomWindow`) has nothing left to keep. Naming the window in values
+ * rather than percentages restores exactly the buckets the detail layer was
+ * loaded for.
+ */
+export const applyZoomWindow = (
+  options: ChartOptions,
+  window: { start: number; end: number }
+): ChartOptions => {
+  if (!options.dataZoom?.length) {
+    return options;
+  }
+  return {
+    ...options,
+    dataZoom: options.dataZoom.map(({ start, end, ...rest }) => ({
+      ...rest,
+      startValue: window.start,
+      endValue: window.end,
+    })) as DataZoomOption[],
+  };
+};

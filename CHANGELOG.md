@@ -30,6 +30,13 @@ asset is what HACS installs.
   so a zoom that is still fetching is told apart from one that is done. It appears only after
   150 ms and leaves the chart readable and interactive underneath.
 
+### Fixed
+
+- `zoom`: a theme switch no longer throws the zoom away. `<ha-chart-base>` rebuilds its chart
+  when the theme flips, and the fresh instance opened on the full range while the loaded detail
+  still belonged to the zoomed window. The window is now written into the option set of that one
+  rebuild instead of being left to the merge that carries it through a refresh.
+
 ## [0.5.0] — 2026-08-24
 
 ### Changed

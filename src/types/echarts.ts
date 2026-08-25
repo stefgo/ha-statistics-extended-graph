@@ -78,6 +78,8 @@ export interface DataZoomOption {
   filterMode?: "filter" | "weakFilter" | "empty" | "none";
   start?: number;
   end?: number;
+  startValue?: number;
+  endValue?: number;
   zoomLock?: boolean;
   [key: string]: unknown;
 }
