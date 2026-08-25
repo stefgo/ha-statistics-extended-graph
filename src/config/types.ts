@@ -130,8 +130,6 @@ export interface ZoomConfig {
   /** Initially visible window in percent of the range. */
   start?: number;
   end?: number;
-  /** Smallest window the user can zoom into, in percent of the range. */
-  min_span?: number;
   /**
    * Load high resolution data for the zoom window, so zooming in shows more
    * than a magnified version of the same buckets. Off by default, because

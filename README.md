@@ -283,7 +283,6 @@ zoom:
   type: both               # inside, slider, both
   start: 50                # show the second half at first
   end: 100
-  min_span: 5
 ```
 
 | Key | Type | Default | Description |
@@ -292,7 +291,6 @@ zoom:
 | `zoom_lock` | boolean | `false` | Fixes the window width, so it can only be panned. |
 | `start` | number | `0` | Left edge of the initial window, in percent of the range. |
 | `end` | number | `100` | Right edge of the initial window, in percent of the range. |
-| `min_span` | number | – | Smallest window the user can zoom into, in percent of the range. |
 | `refine` | boolean | `false` | Load high resolution data for the zoom window, see below. |
 
 The window survives data refreshes and live updates - it is reset to `start` /

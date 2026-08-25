@@ -48,7 +48,7 @@ const validateZoom = (config: boolean | ZoomConfig | undefined): void => {
     );
   }
 
-  (["start", "end", "min_span"] as const).forEach((key) => {
+  (["start", "end"] as const).forEach((key) => {
     if (config[key] !== undefined && !isPercent(config[key])) {
       log("warn", `zoom.${key} must be a percentage between 0 and 100. It is ignored.`);
     }

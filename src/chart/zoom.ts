@@ -45,7 +45,6 @@ export const buildDataZoom = (config: ZoomConfig): DataZoomOption[] => {
     xAxisIndex: 0,
     filterMode: "none" as const,
     ...window,
-    ...(config.min_span !== undefined ? { minSpan: clampPercent(config.min_span) } : {}),
     ...(config.zoom_lock !== undefined ? { zoomLock: config.zoom_lock } : {}),
   };
 
