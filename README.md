@@ -337,11 +337,20 @@ definition, so its interval is chosen from its own length alone and hits no
 point budget: zooming into a year drills down through `day` and `hour` to
 `5minute`.
 
+The interval follows the same thresholds the core energy cards use, applied to
+the window instead of the full range:
+
 | Zoom window | Interval of the detail |
 | --- | --- |
-| a few months | `day` |
-| a few days | `hour` |
-| a few hours | `5minute` |
+| more than ~10 weeks | `month` |
+| a few days up to ~10 weeks | `day` |
+| up to 2 days | `hour` |
+| up to 2 hours | `5minute` |
+
+There is no weekly step between `day` and `month`. A year is loaded at `month`
+already, so zooming into it changes nothing until the window drops below about
+ten weeks - from there the detail is daily and gets finer with every further
+step.
 
 The detail reaches one window width beyond each edge, so panning inside the
 zoom stays instant. Leaving that area falls back to the coarse data in the same

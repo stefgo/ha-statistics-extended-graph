@@ -23,7 +23,9 @@ asset is what HACS installs.
   data instantly. Compare and `time_offset` series are loaded at the same resolution. When the
   recorder has already purged the finest interval for a window, the detail steps back to the
   next best one instead of all the way to the coarse data, and a chart that stays zoomed in
-  keeps its detail up to date with every refresh.
+  keeps its detail up to date with every refresh. The interval follows the thresholds of the
+  core energy cards, which know no weekly step: a year is refined once the window drops below
+  about ten weeks, not before.
 
 ## [0.5.0] — 2026-08-24
 
