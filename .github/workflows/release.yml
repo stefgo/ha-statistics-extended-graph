@@ -40,7 +40,13 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           TAG: ${{ github.event.inputs.tag || github.ref_name }}
         run: |
+          # The release body leads with this version's CHANGELOG entry, so the
+          # release page says what changed; --generate-notes appends the commit
+          # list below it. A tag the CHANGELOG does not know writes an empty
+          # file and the release falls back to the generated notes alone.
+          node scripts/release-notes.mjs "$TAG" > release-notes.md
           gh release create "$TAG" \
             --title "$TAG" \
+            --notes-file release-notes.md \
             --generate-notes \
             dist/statistics-extended-graph.js
