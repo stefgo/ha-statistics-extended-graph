@@ -349,6 +349,17 @@ compare series and the y axis stay stable while panning.
 A drag that pans the chart does not select a period; only a click that stays in
 place does (see [Time selection](#time-selection)).
 
+The zoom stops where the data does: the window never narrows below about six
+buckets of the finest interval the card can still *reach* for it. Without
+[`refine`](#higher-resolution-when-zooming-in-refine) that is the interval the
+range is loaded at - a chart of daily bars stops at roughly six days. With
+`refine` it is whatever the detail layer can still fetch, which is `5minute`
+until the recorder says otherwise, so the same chart keeps zooming down to about
+half an hour - the interval currently on screen is not the limit, it only
+follows the window down. Below the last bucket there is nothing left to reveal:
+the chart would only stretch the same points and draw the straight line between
+two of them.
+
 ![A zoomed PV generation chart: three daily bell curves of hourly bars stacked from east and west modules, the zoom slider below the plot marking the window over the middle of the range, and three legend rows with their sums underneath](https://raw.githubusercontent.com/stefgo/ha-statistics-extended-graph/main/screenshots/statistics-legend-with-dynamic-zoom.png)
 
 *[`type: auto`](#a-slider-only-when-it-is-needed-type-auto) and
@@ -427,7 +438,9 @@ Two limits are worth knowing:
 - Home Assistant deletes `5minute` statistics after about ten days, so zooming
   into an older period never gets finer than `hour`. The empty answer marks
   that region, the coarse data stays on screen, and the region is not requested
-  again.
+  again - and the zoom stops there rather than magnifying it further, at the
+  interval the recorder still had. A window that is already open is never pushed
+  back out by that, only kept from narrowing beyond a single bucket.
 - Every zoom into a new window is a fetch. The card waits until the gesture came
   to rest (400 ms) and only loads when the resolution actually changes, but on a
   slow recorder this is noticeable. Live updates of the current hour land in the

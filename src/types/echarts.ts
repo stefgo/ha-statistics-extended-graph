@@ -81,6 +81,8 @@ export interface DataZoomOption {
   startValue?: number;
   endValue?: number;
   zoomLock?: boolean;
+  /** Narrowest window in axis values, `0` for no limit. */
+  minValueSpan?: number;
   [key: string]: unknown;
 }
 

@@ -7,6 +7,21 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html). A release
 its `v*` tag by the release workflow, which attaches the bundle to the GitHub release — that
 asset is what HACS installs.
 
+## [Unreleased]
+
+### Fixed
+
+- `zoom`: the window no longer narrows past the data behind it. It stops at about
+  six buckets of the finest interval the card can still reach - what the range is
+  loaded at, or, with `zoom.refine`, what the detail layer could still fetch for
+  that window. The interval currently on screen is deliberately not the limit: it
+  follows the window down, so a day-wide window drawn at `hour` still zooms
+  through to `5minute`. Only a recorder that answers coarser than it was asked,
+  or not at all, lowers the floor. Below the last bucket the chart only stretched
+  the same points and drew the straight line between two of them, which read as
+  resolution that never existed. A window that is already open is never pushed
+  back out; it can be narrowed down to a single bucket at most.
+
 ## [0.6.0] — 2026-08-26
 
 ### Added
