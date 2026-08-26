@@ -7,6 +7,21 @@ import { BUCKET_LENGTH_MS } from "../time/buckets";
 import { toTuple } from "./lines";
 
 /**
+ * ECharts raises its approximated tick distance to `minInterval`, but picks the
+ * actual spacing from its own ladder of time steps afterwards - and that step
+ * regularly lands below the value it was given. A 30 minute window of
+ * `5minute` data divided by the ten ticks the chart aims for lands at three
+ * minutes, which the ladder answers with two: every bucket subdivided, and the
+ * requested five minutes ignored. Asking for twice the bucket pushes the
+ * choice onto the next step at or above it; measured across window widths from
+ * 3 to 400 buckets it never falls short. The other intervals sit on that ladder themselves and
+ * need no such margin - doubling `year` would only label every second one.
+ */
+const MIN_INTERVAL_FACTOR: Partial<Record<AggregationTarget, number>> = {
+  "5minute": 2,
+};
+
+/**
  * Smallest distance between two axis ticks, so a tick never subdivides a
  * bucket. Coarser spacing stays ECharts' decision, and an axis that says
  * nothing is left to the default of `<ha-chart-base>`.
@@ -35,7 +50,7 @@ const axisMinInterval = (
   if (!zoomable && aggregation !== "month" && aggregation !== "year") {
     return undefined;
   }
-  return BUCKET_LENGTH_MS[aggregation];
+  return BUCKET_LENGTH_MS[aggregation] * (MIN_INTERVAL_FACTOR[aggregation] ?? 1);
 };
 
 const formatMonthLabel = (value: number, hass?: HomeAssistant): string => {

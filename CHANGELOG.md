@@ -21,6 +21,11 @@ asset is what HACS installs.
   the same points and drew the straight line between two of them, which read as
   resolution that never existed. A window that is already open is never pushed
   back out; it can be narrowed down to a single bucket at most.
+- `zoom`: the x axis no longer labels a zoomed window below its bucket length.
+  ECharts answered the requested five minute spacing with ticks every two, so a
+  chart of `5minute` bars was scaled in steps that subdivide every bar; the axis
+  now asks for twice the bucket, which is what it takes to land on the next step
+  at or above it.
 
 ## [0.6.0] — 2026-08-26
 
