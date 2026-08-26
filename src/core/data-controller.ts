@@ -29,7 +29,11 @@ import {
   computeLiveHourWindow,
 } from "../data/live-hour";
 import { EnergyCollectionBinding } from "../energy/collection";
-import { resolveAggregationPlan } from "../time/aggregation";
+import {
+  AUTO_PERIODS,
+  periodRank,
+  resolveAggregationPlan,
+} from "../time/aggregation";
 import type { ZoomWindow } from "../time/aggregation";
 import { refinesOnZoom } from "../config/zoom";
 import { covers, detailPlanLadder, planDetailRange } from "../time/detail";
@@ -127,6 +131,12 @@ export interface GraphSnapshot {
   detail?: DetailState;
   /** True while the detail layer of the current zoom window is being loaded. */
   detailLoading: boolean;
+  /**
+   * The finest interval the current window can still reach - what is loaded,
+   * or what a detail layer could yet bring in. It is the floor the zoom is
+   * limited to, so nobody zooms into a stretch of interpolated line.
+   */
+  finestAggregation?: AggregationTarget;
 }
 
 const emptyTargetState = (): TargetState => ({
@@ -321,7 +331,40 @@ export class GraphDataController {
       shiftedCalculated: this._shiftedCalculated,
       detail: this._detail,
       detailLoading: this._detailLoading,
+      finestAggregation: this._finestAggregation(),
     };
+  }
+
+  /**
+   * The finest interval this card can *still reach* for the current window -
+   * not the one it happens to show. The difference matters: the detail layer
+   * picks its interval from the width of the window, so a day-wide window is
+   * loaded at `hour` even though `5minute` is right there once the window
+   * narrows. Reporting `hour` as the floor would stop the zoom before the
+   * window ever got small enough to ask for `5minute`.
+   *
+   * So the floor is the finest interval there is, unless the recorder has
+   * proven it does not have it for this region: a detail layer that came back
+   * coarser than it was asked for, or a plan that came back empty altogether.
+   */
+  private _finestAggregation(): AggregationTarget | undefined {
+    if (!this._refinesOnZoom) {
+      // Nothing finer will ever arrive; what is loaded is the floor.
+      return this._main.aggregation;
+    }
+    const plan = this._detailPlan();
+    if (plan && this._detailIsKnownMiss(plan)) {
+      return this._main.aggregation;
+    }
+    if (
+      this._detail &&
+      periodRank(this._detail.aggregation) > periodRank(this._detail.requested)
+    ) {
+      // The ladder had to step back up: everything below this rung is purged
+      // in this region, so it is the floor rather than a way station.
+      return this._detail.aggregation;
+    }
+    return AUTO_PERIODS[0];
   }
 
   // ------------------------------------------------------------ configuration

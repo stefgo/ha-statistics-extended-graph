@@ -5,7 +5,9 @@
  * trigger a reload.
  */
 
-import type { ZoomConfig } from "../config/types";
+import type { AggregationTarget, ZoomConfig } from "../config/types";
+import type { ZoomWindow } from "../time/aggregation";
+import { BUCKET_LENGTH_MS } from "../time/buckets";
 import type { ChartOptions, DataZoomOption } from "../types/echarts";
 
 /** Height of the slider handle bar plus its gap to the plotting area. */
@@ -55,17 +57,68 @@ const hasSliderComponent = (config: ZoomConfig): boolean =>
   config.type === "slider" || config.type === "both" || config.type === "auto";
 
 /**
+ * How many buckets a window has to keep showing at the very least.
+ *
+ * Not a taste decision: the x axis divides the visible window by the number of
+ * ticks it aims for and rounds the result onto ECharts' ladder of time steps.
+ * Below eight buckets that quotient drops under one bucket, and the axis starts
+ * labelling in steps that subdivide the bars - a chart of five-minute bars
+ * scaled in two-minute steps. From eight up it lands on a multiple of the
+ * bucket on its own, measured against ECharts 5.6 for `5minute`, `hour`, `day`
+ * and `month` and for every tick count the chart may aim for.
+ */
+const MIN_VISIBLE_BUCKETS = 8;
+
+/**
+ * The narrowest window worth allowing, in milliseconds. `filterMode: "none"`
+ * only clips, so below one bucket ECharts pulls the existing points apart and
+ * draws the straight line between two of them - resolution that never existed.
+ * The floor is therefore tied to the finest interval this card can still put
+ * under the window, not to the one that happens to be loaded.
+ *
+ * Capped at the width of the window that is already open: a floor that turns
+ * coarser afterwards - a detail layer that came back coarser than it was asked
+ * for - then blocks zooming in further instead of pushing the view back out
+ * from under the hand that opened it. Because that cap follows the window down,
+ * a single bucket is the hard stop underneath it: inside one bucket there is
+ * nothing but the interpolated line between its neighbours.
+ *
+ * `0` is ECharts' "no limit" and is what a floor without a fixed bucket grid
+ * gets: raw history is the finest resolution there is, and a disabled
+ * aggregation draws nothing to zoom into.
+ */
+export const minWindowSpan = (
+  finest: AggregationTarget | undefined,
+  window: ZoomWindow | null | undefined
+): number => {
+  if (!finest || finest === "raw" || finest === "disabled") {
+    return 0;
+  }
+  const bucket = BUCKET_LENGTH_MS[finest];
+  const floor = MIN_VISIBLE_BUCKETS * bucket;
+  const open = window ? window.end - window.start : undefined;
+  if (open === undefined || open <= 0) {
+    return floor;
+  }
+  return Math.max(bucket, Math.min(floor, open));
+};
+
+/**
  * Builds the `dataZoom` option array. `filterMode: "none"` keeps every data
  * point in place: values outside the window are only clipped, so stacks and
  * compare series stay aligned and the y axis does not jump while panning.
  */
 export const buildDataZoom = (
   config: ZoomConfig,
-  zoomed: boolean
+  zoomed: boolean,
+  minSpan = 0
 ): DataZoomOption[] => {
   const shared = {
     xAxisIndex: 0,
     filterMode: "none" as const,
+    // Always named, even as `0`: ECharts merges `dataZoom` by key, so leaving
+    // it out would keep the floor of the previous frame standing.
+    minValueSpan: minSpan,
     ...resolveWindow(config),
     ...(config.zoom_lock !== undefined ? { zoomLock: config.zoom_lock } : {}),
   };
