@@ -56,8 +56,18 @@ export const sliderVisible = (config: ZoomConfig, zoomed: boolean): boolean =>
 const hasSliderComponent = (config: ZoomConfig): boolean =>
   config.type === "slider" || config.type === "both" || config.type === "auto";
 
-/** How many buckets a window has to keep showing at the very least. */
-const MIN_VISIBLE_BUCKETS = 6;
+/**
+ * How many buckets a window has to keep showing at the very least.
+ *
+ * Not a taste decision: the x axis divides the visible window by the number of
+ * ticks it aims for and rounds the result onto ECharts' ladder of time steps.
+ * Below eight buckets that quotient drops under one bucket, and the axis starts
+ * labelling in steps that subdivide the bars - a chart of five-minute bars
+ * scaled in two-minute steps. From eight up it lands on a multiple of the
+ * bucket on its own, measured against ECharts 5.6 for `5minute`, `hour`, `day`
+ * and `month` and for every tick count the chart may aim for.
+ */
+const MIN_VISIBLE_BUCKETS = 8;
 
 /**
  * The narrowest window worth allowing, in milliseconds. `filterMode: "none"`
