@@ -6,8 +6,8 @@
  */
 
 import type { AggregationTarget, ZoomConfig } from "../config/types";
-import type { ZoomWindow } from "../time/aggregation";
 import { BUCKET_LENGTH_MS } from "../time/buckets";
+import { DEFAULT_AXIS_TICKS } from "./zoom-input";
 import type { ChartOptions, DataZoomOption } from "../types/echarts";
 
 /** Height of the slider handle bar plus its gap to the plotting area. */
@@ -57,31 +57,36 @@ const hasSliderComponent = (config: ZoomConfig): boolean =>
   config.type === "slider" || config.type === "both" || config.type === "auto";
 
 /**
- * How many buckets a window has to keep showing at the very least.
+ * How many buckets a window has to keep showing at the very least, for an axis
+ * that puts `ticks` labels across its width.
  *
- * Not a taste decision: the x axis divides the visible window by the number of
- * ticks it aims for and rounds the result onto ECharts' ladder of time steps.
- * Below eight buckets that quotient drops under one bucket, and the axis starts
- * labelling in steps that subdivide the bars - a chart of five-minute bars
- * scaled in two-minute steps. From eight up it lands on a multiple of the
- * bucket on its own, measured against ECharts 5.6 for `5minute`, `hour`, `day`
- * and `month` and for every tick count the chart may aim for.
+ * One label per bucket is the whole rule: an axis that writes `n` labels over
+ * its window needs a window of `n` buckets before those labels can land on
+ * bucket boundaries, and any narrower window forces it to subdivide - a chart
+ * of five-minute bars scaled in two-minute steps. The label density is a
+ * property of the chart, not of the zoom, so it is measured on the drawn axis
+ * rather than modelled: ECharts' own tick algorithm, whatever
+ * `<ha-chart-base>` configures on top of it, and the rung the ladder adds below
+ * the step it picked are all already contained in the number that comes back.
+ *
+ * Three buckets is the floor under the floor, for an axis so sparsely labelled
+ * that its own count would allow a window of one or two bars.
  */
-const MIN_VISIBLE_BUCKETS = 8;
+const minVisibleBuckets = (ticks: number): number => Math.max(3, ticks);
 
 /**
  * The narrowest window worth allowing, in milliseconds. `filterMode: "none"`
  * only clips, so below one bucket ECharts pulls the existing points apart and
- * draws the straight line between two of them - resolution that never existed.
- * The floor is therefore tied to the finest interval this card can still put
- * under the window, not to the one that happens to be loaded.
+ * draws the straight line between two of them - resolution that never existed,
+ * under an axis that has started labelling between the bars.
  *
- * Capped at the width of the window that is already open: a floor that turns
- * coarser afterwards - a detail layer that came back coarser than it was asked
- * for - then blocks zooming in further instead of pushing the view back out
- * from under the hand that opened it. Because that cap follows the window down,
- * a single bucket is the hard stop underneath it: inside one bucket there is
- * nothing but the interpolated line between its neighbours.
+ * The floor is tied to the finest interval this card can still put under the
+ * window, not to the one that happens to be loaded, and it holds unconditionally
+ * - including against a window that is already narrower than it. A floor that
+ * gave way to the window it is meant to limit would give way again at every
+ * step, which is no floor at all; the view is pushed back out to it instead.
+ * That only ever happens when the recorder turns out to hold nothing finer for
+ * this window, and pushing out is then the truthful answer.
  *
  * `0` is ECharts' "no limit" and is what a floor without a fixed bucket grid
  * gets: raw history is the finest resolution there is, and a disabled
@@ -89,18 +94,12 @@ const MIN_VISIBLE_BUCKETS = 8;
  */
 export const minWindowSpan = (
   finest: AggregationTarget | undefined,
-  window: ZoomWindow | null | undefined
+  axisTicks = DEFAULT_AXIS_TICKS
 ): number => {
   if (!finest || finest === "raw" || finest === "disabled") {
     return 0;
   }
-  const bucket = BUCKET_LENGTH_MS[finest];
-  const floor = MIN_VISIBLE_BUCKETS * bucket;
-  const open = window ? window.end - window.start : undefined;
-  if (open === undefined || open <= 0) {
-    return floor;
-  }
-  return Math.max(bucket, Math.min(floor, open));
+  return minVisibleBuckets(axisTicks) * BUCKET_LENGTH_MS[finest];
 };
 
 /**

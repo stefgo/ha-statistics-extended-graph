@@ -7,6 +7,22 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html). A release
 its `v*` tag by the release workflow, which attaches the bundle to the GitHub release — that
 asset is what HACS installs.
 
+## [Unreleased]
+
+### Fixed
+
+- `zoom`: the floor the window may not narrow past is no longer a constant, and no
+  longer modelled either. It is measured on the drawn x axis: an axis that writes
+  `n` labels across its width needs a window of `n` buckets before those labels
+  can land on bucket boundaries, so the tick spacing the chart really produced is
+  read back and turned into the floor. Configuration alone was not enough -
+  `splitNumber` is only where ECharts starts, `<ha-chart-base>` adds defaults of
+  its own, and the ladder of time steps contributes a rung below the one it picks.
+- `zoom`: the floor no longer gives way to a window that is already narrower than
+  it. It did, so that a floor turning coarser mid-gesture would not push the view
+  back out - but a floor that yields to the window it limits yields again at every
+  step, which let the zoom ratchet its way down past the data after all.
+
 ## [0.6.1] — 2026-08-26
 
 ### Fixed
