@@ -23,6 +23,29 @@ const SETTLE_MS = 400;
 /** Percentage below/above which a window is treated as "the whole range". */
 const FULL_RANGE_EPSILON = 0.5;
 
+/**
+ * Tick count to assume while no chart has been built yet. ECharts falls back to
+ * this in `TimeScale.calcNiceTicks` when an axis names no `splitNumber`, and it
+ * sits above the default of a time axis (6), so the assumption errs on the side
+ * of the wider window. Nobody can zoom a chart that does not exist yet, so this
+ * only ever covers the very first frame.
+ */
+export const DEFAULT_AXIS_TICKS = 10;
+
+/**
+ * The number of ticks the x axis of `host` aims for. Read from the chart rather
+ * than assumed, because `<ha-chart-base>` brings axis defaults of its own: the
+ * option ECharts reports back is the merged one, so this is the number the
+ * labels are actually spaced by.
+ */
+export const readAxisTickCount = (host: Element | null | undefined): number => {
+  const chart = (host as ChartHost | null)?.chart;
+  const ticks = chart?.getOption?.()?.xAxis?.[0]?.splitNumber;
+  return typeof ticks === "number" && Number.isFinite(ticks) && ticks > 0
+    ? ticks
+    : DEFAULT_AXIS_TICKS;
+};
+
 export class ZoomInput {
   private _chart?: ChartInstance;
   private _timeout?: number;

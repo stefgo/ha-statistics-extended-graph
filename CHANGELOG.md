@@ -7,6 +7,18 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html). A release
 its `v*` tag by the release workflow, which attaches the bundle to the GitHub release — that
 asset is what HACS installs.
 
+## [Unreleased]
+
+### Fixed
+
+- `zoom`: the floor the window may not narrow past is no longer a constant. It is
+  derived from how many labels the x axis of that chart aims for, read back from
+  the chart instead of assumed: the axis divides the visible window by that count
+  (`TimeScale.calcNiceTicks`) and rounds onto ECharts' ladder of time steps, so
+  the more labels an axis wants, the wider the window that still survives it. The
+  fixed floor of 0.6.1 was measured against one chart and stopped a five-minute
+  window at 40 minutes on every other one.
+
 ## [0.6.1] — 2026-08-26
 
 ### Fixed

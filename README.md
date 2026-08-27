@@ -349,16 +349,19 @@ compare series and the y axis stay stable while panning.
 A drag that pans the chart does not select a period; only a click that stays in
 place does (see [Time selection](#time-selection)).
 
-The zoom stops where the data does: the window never narrows below about eight
-buckets of the finest interval the card can still *reach* for it. Without
+The zoom stops where the data does: the window never narrows below a few buckets
+of the finest interval the card can still *reach* for it. Without
 [`refine`](#higher-resolution-when-zooming-in-refine) that is the interval the
-range is loaded at - a chart of daily bars stops at roughly eight days. With
+range is loaded at - a chart of daily bars stops after a handful of days. With
 `refine` it is whatever the detail layer can still fetch, which is `5minute`
-until the recorder says otherwise, so the same chart keeps zooming down to about
-40 minutes - the interval currently on screen is not the limit, it only follows
-the window down. Below that there is nothing left to reveal: the chart would
-only stretch the same points and draw the straight line between two of them,
-and the x axis would start labelling in steps that subdivide the bars.
+until the recorder says otherwise, so the same chart keeps zooming down into the
+minutes - the interval currently on screen is not the limit, it only follows the
+window down. Below that there is nothing left to reveal: the chart would only
+stretch the same points and draw the straight line between two of them.
+
+How many buckets that is exactly is not a fixed number: it is derived from how
+many labels the x axis of that chart aims for, read from the chart itself, so a
+window is never narrower than the labels can describe in whole buckets.
 
 ![A zoomed PV generation chart: three daily bell curves of hourly bars stacked from east and west modules, the zoom slider below the plot marking the window over the middle of the range, and three legend rows with their sums underneath](https://raw.githubusercontent.com/stefgo/ha-statistics-extended-graph/main/screenshots/statistics-legend-with-dynamic-zoom.png)
 

@@ -8,6 +8,7 @@
 import type { AggregationTarget, ZoomConfig } from "../config/types";
 import type { ZoomWindow } from "../time/aggregation";
 import { BUCKET_LENGTH_MS } from "../time/buckets";
+import { DEFAULT_AXIS_TICKS } from "./zoom-input";
 import type { ChartOptions, DataZoomOption } from "../types/echarts";
 
 /** Height of the slider handle bar plus its gap to the plotting area. */
@@ -57,17 +58,26 @@ const hasSliderComponent = (config: ZoomConfig): boolean =>
   config.type === "slider" || config.type === "both" || config.type === "auto";
 
 /**
- * How many buckets a window has to keep showing at the very least.
+ * How many buckets a window has to keep showing at the very least, for an axis
+ * that aims for `ticks` labels.
  *
- * Not a taste decision: the x axis divides the visible window by the number of
- * ticks it aims for and rounds the result onto ECharts' ladder of time steps.
- * Below eight buckets that quotient drops under one bucket, and the axis starts
- * labelling in steps that subdivide the bars - a chart of five-minute bars
- * scaled in two-minute steps. From eight up it lands on a multiple of the
- * bucket on its own, measured against ECharts 5.6 for `5minute`, `hour`, `day`
- * and `month` and for every tick count the chart may aim for.
+ * Not a taste decision, and not a constant either: the axis divides the visible
+ * window by the number of ticks it wants (`TimeScale.calcNiceTicks`:
+ * `span / splitNumber`) and rounds the result onto ECharts' ladder of time
+ * steps, one rung below included. Once the window is narrow enough for that
+ * quotient to fall under one bucket, the axis labels in steps that subdivide
+ * the bars - five-minute bars scaled in two-minute steps. The more ticks an
+ * axis wants, the wider the window that still survives it, which is why the
+ * floor follows the tick count instead of standing on its own.
+ *
+ * A third of the tick count plus one rung of headroom is where that turns, and
+ * three buckets is the floor under the floor. Measured against ECharts 5.6 for
+ * `5minute`, `hour`, `day`, `month` and `year`, from five ticks up to thirty.
+ * `week` is outside all of this: the ladder has no weekly step, so a weekly
+ * chart is labelled in days at every width - with or without a zoom.
  */
-const MIN_VISIBLE_BUCKETS = 8;
+const minVisibleBuckets = (ticks: number): number =>
+  Math.max(3, Math.ceil(ticks / 3) + 1);
 
 /**
  * The narrowest window worth allowing, in milliseconds. `filterMode: "none"`
@@ -89,13 +99,14 @@ const MIN_VISIBLE_BUCKETS = 8;
  */
 export const minWindowSpan = (
   finest: AggregationTarget | undefined,
-  window: ZoomWindow | null | undefined
+  window: ZoomWindow | null | undefined,
+  axisTicks = DEFAULT_AXIS_TICKS
 ): number => {
   if (!finest || finest === "raw" || finest === "disabled") {
     return 0;
   }
   const bucket = BUCKET_LENGTH_MS[finest];
-  const floor = MIN_VISIBLE_BUCKETS * bucket;
+  const floor = minVisibleBuckets(axisTicks) * bucket;
   const open = window ? window.end - window.start : undefined;
   if (open === undefined || open <= 0) {
     return floor;

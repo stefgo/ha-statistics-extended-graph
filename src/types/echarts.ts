@@ -119,7 +119,9 @@ export interface ChartInstance {
   getZr(): ZRenderHandler | undefined;
   on?(event: string, handler: (payload: unknown) => void): void;
   off?(event: string, handler?: (payload: unknown) => void): void;
-  getOption?(): { dataZoom?: DataZoomOption[] } | undefined;
+  getOption?():
+    | { dataZoom?: DataZoomOption[]; xAxis?: Array<{ splitNumber?: number }> }
+    | undefined;
   convertFromPixel(
     finder: Record<string, unknown>,
     value: number | [number, number]

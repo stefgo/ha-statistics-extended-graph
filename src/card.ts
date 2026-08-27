@@ -13,7 +13,7 @@ import { createZeroSnapshot } from "./chart/lines";
 import { applyZoomWindow, dropZoomWindow } from "./chart/zoom";
 import { slidesInOnZoom, tracksZoomWindow } from "./config/zoom";
 import { SelectionInput } from "./chart/selection-input";
-import { ZoomInput } from "./chart/zoom-input";
+import { readAxisTickCount, ZoomInput } from "./chart/zoom-input";
 import { resolveBucket } from "./chart/selection";
 import type { SelectedPeriod } from "./chart/selection";
 import type { ZoomWindow } from "./time/aggregation";
@@ -411,6 +411,11 @@ export class StatisticsExtendedGraph extends LitElement {
       selectedX: this._selectedX,
       zoomWindow: this._zoomWindow,
       zoomed: this._zoomed,
+      // Read per frame rather than cached: the number belongs to the chart
+      // instance, and `<ha-chart-base>` builds a new one whenever the theme
+      // flips. Before the first one exists the assumed default stands in, and
+      // a chart that does not exist cannot be zoomed either.
+      axisTicks: readAxisTickCount(this.renderRoot?.querySelector("ha-chart-base")),
     });
 
     if (!assembled) {

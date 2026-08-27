@@ -48,6 +48,11 @@ export interface AssembleParams {
    * the slider is meant to appear with the first turn of the wheel.
    */
   zoomed?: boolean;
+  /**
+   * How many labels the x axis aims for, read back from the chart. It decides
+   * how narrow a window may get before the labels subdivide the buckets.
+   */
+  axisTicks?: number;
 }
 
 export interface AssembledChart {
@@ -223,6 +228,7 @@ export const assembleChart = ({
   selectedX = null,
   zoomWindow = null,
   zoomed,
+  axisTicks,
 }: AssembleParams): AssembledChart | undefined => {
   const { periodStart, periodEnd } = snapshot;
   if (!periodStart || !snapshot.main.statistics || !snapshot.main.range) {
@@ -433,7 +439,7 @@ export const assembleChart = ({
             zoom,
             isZoomed,
             // The window may only narrow as far as there is data behind it.
-            minWindowSpan(snapshot.finestAggregation, zoomWindow)
+            minWindowSpan(snapshot.finestAggregation, zoomWindow, axisTicks)
           ),
         }
       : {}),
