@@ -1,6 +1,6 @@
 {
   "name": "statistics-extended-graph",
-  "version": "0.6.1",
+  "version": "0.6.2",
   "description": "Statistics Extended Graph for Home Assistant - a customizable statistics chart card for Lovelace",
   "type": "module",
   "main": "dist/statistics-extended-graph.js",
