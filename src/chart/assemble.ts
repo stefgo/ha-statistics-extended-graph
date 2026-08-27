@@ -439,7 +439,7 @@ export const assembleChart = ({
             zoom,
             isZoomed,
             // The window may only narrow as far as there is data behind it.
-            minWindowSpan(snapshot.finestAggregation, zoomWindow, axisTicks)
+            minWindowSpan(snapshot.finestAggregation, axisTicks)
           ),
         }
       : {}),

@@ -11,13 +11,17 @@ asset is what HACS installs.
 
 ### Fixed
 
-- `zoom`: the floor the window may not narrow past is no longer a constant. It is
-  derived from how many labels the x axis of that chart aims for, read back from
-  the chart instead of assumed: the axis divides the visible window by that count
-  (`TimeScale.calcNiceTicks`) and rounds onto ECharts' ladder of time steps, so
-  the more labels an axis wants, the wider the window that still survives it. The
-  fixed floor of 0.6.1 was measured against one chart and stopped a five-minute
-  window at 40 minutes on every other one.
+- `zoom`: the floor the window may not narrow past is no longer a constant, and no
+  longer modelled either. It is measured on the drawn x axis: an axis that writes
+  `n` labels across its width needs a window of `n` buckets before those labels
+  can land on bucket boundaries, so the tick spacing the chart really produced is
+  read back and turned into the floor. Configuration alone was not enough -
+  `splitNumber` is only where ECharts starts, `<ha-chart-base>` adds defaults of
+  its own, and the ladder of time steps contributes a rung below the one it picks.
+- `zoom`: the floor no longer gives way to a window that is already narrower than
+  it. It did, so that a floor turning coarser mid-gesture would not push the view
+  back out - but a floor that yields to the window it limits yields again at every
+  step, which let the zoom ratchet its way down past the data after all.
 
 ## [0.6.1] — 2026-08-26
 

@@ -359,9 +359,10 @@ minutes - the interval currently on screen is not the limit, it only follows the
 window down. Below that there is nothing left to reveal: the chart would only
 stretch the same points and draw the straight line between two of them.
 
-How many buckets that is exactly is not a fixed number: it is derived from how
-many labels the x axis of that chart aims for, read from the chart itself, so a
-window is never narrower than the labels can describe in whole buckets.
+How many buckets that is exactly is not a fixed number: it is measured on the
+chart's own x axis. An axis that writes ten labels across its width needs ten
+buckets before every label can sit on a bucket boundary, so that is where the
+window stops - never narrower than its own labels can describe.
 
 ![A zoomed PV generation chart: three daily bell curves of hourly bars stacked from east and west modules, the zoom slider below the plot marking the window over the middle of the range, and three legend rows with their sums underneath](https://raw.githubusercontent.com/stefgo/ha-statistics-extended-graph/main/screenshots/statistics-legend-with-dynamic-zoom.png)
 

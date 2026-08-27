@@ -115,8 +115,24 @@ export interface ZRenderHandler {
  * instance inside `<ha-chart-base>` and exposes it as `chart`; the card only
  * reads click positions from it and never drives the chart through it.
  */
+/** The rendered x axis, as far as the card reads it back. */
+export interface AxisScale {
+  getExtent(): [number, number];
+  getTicks?(): Array<{ value: number }>;
+}
+
 export interface ChartInstance {
   getZr(): ZRenderHandler | undefined;
+  /**
+   * Not part of the documented API, but present since ECharts 4 and the only
+   * way to the ticks the axis really drew. Every use is optional and guarded.
+   */
+  getModel?(): {
+    getComponent?(
+      type: string,
+      index: number
+    ): { axis?: { scale?: AxisScale } } | undefined;
+  } | undefined;
   on?(event: string, handler: (payload: unknown) => void): void;
   off?(event: string, handler?: (payload: unknown) => void): void;
   getOption?():
