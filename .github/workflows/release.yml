@@ -17,17 +17,31 @@ jobs:
   release:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           ref: ${{ github.event.inputs.tag || github.ref }}
 
-      - uses: actions/setup-node@v4
+      # HACS shows the tag, the bundle reports the version baked in at build
+      # time — if the two drift apart, an update looks installed but is not.
+      - name: Check version against tag
+        run: |
+          tag="${TAG#v}"
+          version=$(python3 -c "import json;print(json.load(open('package.json'))['version'])")
+          if [ "$tag" != "$version" ]; then
+            echo "Tag $TAG does not match version $version in package.json" >&2
+            exit 1
+          fi
+        env:
+          TAG: ${{ github.event.inputs.tag || github.ref_name }}
+
+      - uses: actions/setup-node@v7
         with:
-          node-version: "20"
+          node-version: "22"
           cache: npm
 
       - run: npm ci
       - run: npm run typecheck
+      - run: npm test
       # No SEG_BUILD_COUNTER here: the released bundle reports the bare
       # semver, the build counter stays with the local deploy build.
       # SEG_MINIFY is release-only: local builds stay readable.
@@ -35,18 +49,20 @@ jobs:
         env:
           SEG_MINIFY: "1"
 
+      # The release body is the tag's CHANGELOG section, so every release is
+      # described in full — a missing section stops the release instead of
+      # publishing one that says nothing.
+      - name: Assemble release notes
+        env:
+          TAG: ${{ github.event.inputs.tag || github.ref_name }}
+        run: python3 .github/scripts/release_notes.py "$TAG" release-notes.md
+
       - name: Create release with dist asset
         env:
           GH_TOKEN: ${{ github.token }}
           TAG: ${{ github.event.inputs.tag || github.ref_name }}
         run: |
-          # The release body leads with this version's CHANGELOG entry, so the
-          # release page says what changed; --generate-notes appends the commit
-          # list below it. A tag the CHANGELOG does not know writes an empty
-          # file and the release falls back to the generated notes alone.
-          node scripts/release-notes.mjs "$TAG" > release-notes.md
           gh release create "$TAG" \
             --title "$TAG" \
             --notes-file release-notes.md \
-            --generate-notes \
             dist/statistics-extended-graph.js
