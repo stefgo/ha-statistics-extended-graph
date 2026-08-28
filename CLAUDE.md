@@ -21,6 +21,7 @@ npm ci
 npm run build      # Rollup → dist/statistics-extended-graph.js
 npm run watch      # rebuild on change
 npm run typecheck  # tsc --noEmit
+npm run lint       # eslint (npm run lint:fix to autofix)
 npm test           # vitest run
 SEG_MINIFY=1 npm run build   # minified, as the release does
 ./builddeploy.sh   # build + scp to the instance from .env (see .env.example)
