@@ -106,7 +106,7 @@ loaded.
 For development there is `builddeploy.sh`: it builds the card and copies
 `dist/statistics-extended-graph.js` to the Home Assistant instance over SSH.
 
-1. `cp .env.example .env` and enter your instance (`SEG_HOST`, and
+1. `cp .env.example .env` and enter your instance (`HA_HOST`, and
    optionally port, config path or target directory). `.env` is git-ignored.
 2. Run `./builddeploy.sh`.
 

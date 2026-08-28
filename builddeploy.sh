@@ -16,13 +16,13 @@ if [ -f .env ]; then
   set +a
 fi
 
-HOST="${SEG_HOST:-}"
-CONFIG="${SEG_CONFIG:-/config}"
-TARGET="${SEG_TARGET:-${CONFIG}/www/community/ha-statistics-extended-graph}"
-SSH_PORT="${SEG_SSH_PORT:-22}"
+HOST="${HA_HOST:-}"
+CONFIG="${HA_CONFIG:-/config}"
+TARGET="${HA_TARGET:-${CONFIG}/www/community/ha-statistics-extended-graph}"
+SSH_PORT="${HA_SSH_PORT:-22}"
 
 if [ -z "$HOST" ]; then
-  echo "SEG_HOST is not set. Copy .env.example to .env and fill it in." >&2
+  echo "HA_HOST is not set. Copy .env.example to .env and fill it in." >&2
   exit 1
 fi
 
