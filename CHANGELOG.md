@@ -146,3 +146,10 @@ gathered into this one entry rather than split into versions nobody could instal
 - The data controller's lifecycle is honest about start and teardown, and it is fed every `hass`
   update rather than only the ones that led to a render.
 - The fetch queue keeps the delay it was given instead of collapsing it.
+
+[0.6.2]: https://github.com/stefgo/ha-statistics-extended-graph/compare/v0.6.1...v0.6.2
+[0.6.1]: https://github.com/stefgo/ha-statistics-extended-graph/compare/v0.6.0...v0.6.1
+[0.6.0]: https://github.com/stefgo/ha-statistics-extended-graph/compare/v0.5.0...v0.6.0
+[0.5.0]: https://github.com/stefgo/ha-statistics-extended-graph/compare/v0.0.6...v0.5.0
+[0.0.6]: https://github.com/stefgo/ha-statistics-extended-graph/compare/v0.0.5...v0.0.6
+[0.0.5]: https://github.com/stefgo/ha-statistics-extended-graph/releases/tag/v0.0.5
