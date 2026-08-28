@@ -1,6 +1,7 @@
 {
   "name": "Statistics Extended Graph",
+  "content_in_root": false,
   "render_readme": true,
-  "filename": "statistics-extended-graph.js",
-  "content_in_root": false
+  "homeassistant": "2025.2.0",
+  "filename": "statistics-extended-graph.js"
 }
