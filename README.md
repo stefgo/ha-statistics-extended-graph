@@ -3,7 +3,7 @@
 [![Release](https://img.shields.io/github/v/release/stefgo/ha-statistics-extended-graph?style=flat-square)](https://github.com/stefgo/ha-statistics-extended-graph/releases)
 [![HACS: custom](https://img.shields.io/badge/HACS-custom-41BDF5?style=flat-square)](https://hacs.xyz/)
 [![Home Assistant](https://img.shields.io/badge/Home%20Assistant-Lovelace-41BDF5?style=flat-square)](https://www.home-assistant.io/)
-[![License: MIT](https://img.shields.io/badge/license-MIT-blue?style=flat-square)](https://github.com/stefgo/ha-statistics-extended-graph/blob/main/LICENSE.md)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue?style=flat-square)](https://github.com/stefgo/ha-statistics-extended-graph/blob/main/LICENSE)
 
 A lightweight statistics chart card for Home Assistant Lovelace dashboards.
 
@@ -722,4 +722,4 @@ Released versions are documented in [CHANGELOG.md](https://github.com/stefgo/ha-
 
 Independent reimplementation inspired by
 [energy-custom-graph](https://github.com/Thyraz/energy-custom-graph) (MIT).
-Released under the MIT license, see [LICENSE.md](https://github.com/stefgo/ha-statistics-extended-graph/blob/main/LICENSE.md).
+Released under the MIT license, see [LICENSE](https://github.com/stefgo/ha-statistics-extended-graph/blob/main/LICENSE).
