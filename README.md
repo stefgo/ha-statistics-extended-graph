@@ -721,5 +721,6 @@ Released versions are documented in [CHANGELOG.md](https://github.com/stefgo/ha-
 ## Credits
 
 Independent reimplementation inspired by
-[energy-custom-graph](https://github.com/Thyraz/energy-custom-graph) (MIT).
+[energy-custom-graph](https://github.com/Thyraz/energy-custom-graph)
+(MIT, Copyright (c) 2025 Thyraz).
 Released under the MIT license, see [LICENSE](https://github.com/stefgo/ha-statistics-extended-graph/blob/main/LICENSE).
