@@ -3,7 +3,7 @@
 [![Release](https://img.shields.io/github/v/release/stefgo/ha-statistics-extended-graph?style=flat-square)](https://github.com/stefgo/ha-statistics-extended-graph/releases)
 [![HACS: custom](https://img.shields.io/badge/HACS-custom-41BDF5?style=flat-square)](https://hacs.xyz/)
 [![Home Assistant](https://img.shields.io/badge/Home%20Assistant-Lovelace-41BDF5?style=flat-square)](https://www.home-assistant.io/)
-[![License: MIT](https://img.shields.io/badge/license-MIT-blue?style=flat-square)](https://github.com/stefgo/ha-statistics-extended-graph/blob/main/LICENSE.md)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue?style=flat-square)](https://github.com/stefgo/ha-statistics-extended-graph/blob/main/LICENSE)
 
 A lightweight statistics chart card for Home Assistant Lovelace dashboards.
 
@@ -106,7 +106,7 @@ loaded.
 For development there is `builddeploy.sh`: it builds the card and copies
 `dist/statistics-extended-graph.js` to the Home Assistant instance over SSH.
 
-1. `cp .env.example .env` and enter your instance (`SEG_HOST`, and
+1. `cp .env.example .env` and enter your instance (`HA_HOST`, and
    optionally port, config path or target directory). `.env` is git-ignored.
 2. Run `./builddeploy.sh`.
 
@@ -721,5 +721,6 @@ Released versions are documented in [CHANGELOG.md](https://github.com/stefgo/ha-
 ## Credits
 
 Independent reimplementation inspired by
-[energy-custom-graph](https://github.com/Thyraz/energy-custom-graph) (MIT).
-Released under the MIT license, see [LICENSE.md](https://github.com/stefgo/ha-statistics-extended-graph/blob/main/LICENSE.md).
+[energy-custom-graph](https://github.com/Thyraz/energy-custom-graph)
+(MIT, Copyright (c) 2025 Thyraz).
+Released under the MIT license, see [LICENSE](https://github.com/stefgo/ha-statistics-extended-graph/blob/main/LICENSE).
