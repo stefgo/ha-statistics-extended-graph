@@ -8,6 +8,14 @@ An entry is put together by the release workflow: the text written by hand in
 are added to the release page and do not belong in an entry. The entries up to
 0.6.3 were written by hand as a whole.
 
+## [0.6.4](https://github.com/stefgo/ha-statistics-extended-graph/compare/v0.6.3...v0.6.4) (2026-10-10)
+
+No change to the card itself.
+
+Releases are now produced by the release workflow all stefgo projects share. A version can
+be tried as a beta before it is released, and every release is described here by hand, above
+the list of commits.
+
 ## [0.6.3] — 2026-08-29
 
 A maintenance release. The card renders exactly as in 0.6.2 — nothing under
