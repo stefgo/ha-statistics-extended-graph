@@ -705,16 +705,15 @@ The architecture of the source tree is documented in
 
 ## Releases
 
-A release is built from its tag: pushing `vX.Y.Z` runs
-[`.github/workflows/release.yml`](https://github.com/stefgo/ha-statistics-extended-graph/blob/main/.github/workflows/release.yml), which
-typechecks, builds and attaches `statistics-extended-graph.js` to the GitHub
-release. That asset is what HACS installs, which is why `dist/` is not committed.
+A release is started by hand with the *Create Release* workflow
+([`.github/workflows/release.yml`](https://github.com/stefgo/ha-statistics-extended-graph/blob/main/.github/workflows/release.yml)),
+on `main` for a release and on `dev` for a beta. It takes the version from the
+commit types or from the step chosen at the start, typechecks, builds and
+attaches `statistics-extended-graph.js` to the GitHub release. That asset is
+what HACS installs, which is why `dist/` is not committed.
 
-```bash
-# bump "version" in package.json and note the changes in CHANGELOG.md first
-git tag v0.0.5
-git push origin v0.0.5
-```
+Every release is described by hand in `.release/next.md`; the text is placed
+above the generated list of commits, and a release without it is refused.
 
 Released versions are documented in [CHANGELOG.md](https://github.com/stefgo/ha-statistics-extended-graph/blob/main/CHANGELOG.md).
 
