@@ -39,7 +39,7 @@
     "rollup": "^4.64.6",
     "tslib": "^2.7.0",
     "typescript": "^6.0.3",
-    "typescript-eslint": "^8.69.0",
+    "typescript-eslint": "^8.71.2",
     "vitest": "^4.1.11"
   },
   "dependencies": {
