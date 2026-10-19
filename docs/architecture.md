@@ -23,6 +23,7 @@ card.ts                  Lit element: rendering, placeholders, animation
 | `src/config/types.ts` | All configuration types. The single source of truth for what a YAML configuration may contain. |
 | `src/config/validate.ts` | Validation and defaults for `setConfig`. Only a missing series list is fatal; everything else is a console warning. |
 | `src/core/data-controller.ts` | Orchestrates all data acquisition: range resolution, energy picker binding, statistics/raw loading with aggregation fallback, calculation rebuilds, time-offset loading, live hour, auto refresh and visibility handling. Publishes a `GraphSnapshot`. |
+| `src/core/chart-element.ts` | Makes sure `<ha-chart-base>` is defined: Home Assistant only loads it with its own chart cards, so the card has Lovelace create a `statistics-graph` card once to trigger that import. |
 | `src/core/fetch-queue.ts` | Debounces and serializes loads per target, and parks them while the dashboard is hidden. |
 | `src/core/color.ts` | Color maths: alpha handling, theme resolution, CSS variable resolution, zero-aware gradients. |
 | `src/core/format.ts`, `src/core/logger.ts` | Locale-aware formatting and level-filtered, deduplicated logging. |
@@ -67,6 +68,9 @@ card.ts                  Lit element: rendering, placeholders, animation
 
 - **No chart library dependency.** The card only produces plain option objects
   and delegates rendering to Home Assistant's own `<ha-chart-base>`.
+  That element is loaded lazily by the frontend, so the card triggers its import
+  through the Lovelace card helpers instead of relying on another card having
+  done so.
 - **Rendering has no side effects.** All state lives in the controller, so a
   redraw can never trigger a fetch loop.
 - **Failures degrade locally.** A broken series is skipped and logged; the rest

@@ -8,6 +8,7 @@ import { normalizeConfig } from "./config/validate";
 import { GraphDataController } from "./core/data-controller";
 import type { GraphSnapshot } from "./core/data-controller";
 import { OnceLogger } from "./core/logger";
+import { CHART_ELEMENT, ensureChartElement } from "./core/chart-element";
 import { assembleChart } from "./chart/assemble";
 import { createZeroSnapshot } from "./chart/lines";
 import { applyZoomWindow, dropZoomWindow } from "./chart/zoom";
@@ -176,6 +177,24 @@ export class StatisticsExtendedGraph extends LitElement {
   public override connectedCallback(): void {
     super.connectedCallback();
     this._controller.connect();
+    this._awaitChartElement();
+  }
+
+  /**
+   * `<ha-chart-base>` may not be defined yet. Rendering goes on regardless:
+   * the element upgrades in place once it is, keeping the data already handed
+   * to it. The extra update afterwards gives the zoom input its chance to
+   * attach to the now real chart.
+   */
+  private _awaitChartElement(): void {
+    if (customElements.get(CHART_ELEMENT)) {
+      return;
+    }
+    void ensureChartElement().then((ready) => {
+      if (ready && this.isConnected) {
+        this.requestUpdate();
+      }
+    });
   }
 
   public override disconnectedCallback(): void {
