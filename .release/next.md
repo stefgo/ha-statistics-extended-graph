@@ -9,3 +9,10 @@ dev keeps the text; the stable release from main empties this file again.
 
 Nothing inside an HTML comment is published.
 -->
+
+### Fixes
+
+- Charts now appear reliably on the first load, also on dashboards without a
+  built-in history or statistics graph and right after the mobile app starts.
+  Before, a chart could stay empty until the page was reloaded, sometimes
+  several times.
