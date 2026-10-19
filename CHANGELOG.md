@@ -8,6 +8,19 @@ An entry is put together by the release workflow: the text written by hand in
 are added to the release page and do not belong in an entry. The entries up to
 0.6.3 were written by hand as a whole.
 
+## [0.6.5](https://github.com/stefgo/ha-statistics-extended-graph/compare/v0.6.4...v0.6.5) (2026-10-19)
+
+### Fixes
+
+- Charts now appear reliably on the first load, also on dashboards without a
+  built-in history or statistics graph and right after the mobile app starts.
+  Before, a chart could stay empty until the page was reloaded, sometimes
+  several times.
+
+### Bug Fixes
+
+* load ha-chart-base before the chart is drawn ([e81f150](https://github.com/stefgo/ha-statistics-extended-graph/commit/e81f15016f7239b762a1848051615dd621efb26a))
+
 ## [0.6.4](https://github.com/stefgo/ha-statistics-extended-graph/compare/v0.6.3...v0.6.4) (2026-10-10)
 
 No change to the card itself.
