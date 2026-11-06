@@ -8,6 +8,39 @@ An entry is put together by the release workflow: the text written by hand in
 are added to the release page and do not belong in an entry. The entries up to
 0.6.3 were written by hand as a whole.
 
+## [0.7.0](https://github.com/stefgo/ha-statistics-extended-graph/compare/v0.6.5...v0.7.0) (2026-11-06)
+
+### New
+
+- **Constants as a rate per bucket.** A calculation term can now give its
+  constant as a rate per hour, day or week with `constant_per`. The constant is
+  multiplied by the length of every bucket, so one target line fits hourly,
+  daily and monthly bars alike: 36.5 per day becomes 1.52 per hour, 1 095 in
+  June and 1 131.5 in July. Days with a daylight saving change count as one
+  day. See "Rate per bucket" in the README.
+
+  ```yaml
+  - name: Target
+    chart_type: step
+    calculation:
+      terms:
+        - constant: 36.5
+          constant_per: day
+  ```
+
+### Upgrade
+
+Nothing to do. Existing configurations draw as before; `constant_per` is
+optional. It needs aggregated statistics: with `raw` the constant is not scaled
+and a warning is logged.
+
+Also in this release: Renovate replaces Dependabot, and the dependencies were
+brought up to date.
+
+### Features
+
+* **calculation:** Scale constants by bucket length (constant_per) ([5d2d714](https://github.com/stefgo/ha-statistics-extended-graph/commit/5d2d7140392be6b6ad82e6ece782ca2cb0639b42))
+
 ## [0.6.5](https://github.com/stefgo/ha-statistics-extended-graph/compare/v0.6.4...v0.6.5) (2026-10-19)
 
 ### Fixes
