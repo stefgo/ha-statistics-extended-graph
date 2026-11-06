@@ -36,7 +36,7 @@ card.ts                  Lit element: rendering, placeholders, animation
 | `src/time/aggregation.ts` | Automatic interval selection and the ordered aggregation plan. |
 | `src/time/refresh.ts` | When the next refresh is due for a given interval. |
 | `src/series/model.ts` | Small shared rules: default stat type, value transform, series ids. |
-| `src/series/calculation.ts` | Evaluates calculation series, including last-known-value fallback, constant-only series and constants scaled by bucket length (`constant_per`). |
+| `src/series/calculation.ts` | Evaluates calculation series, including last-known-value fallback and constant-only series. |
 | `src/series/time-offset.ts` | Normalizes offsets and shifts dates and samples between source and display range. |
 | `src/series/builder.ts` | Turns series configurations into ECharts series options, including fill bands. |
 | `src/chart/selection.ts` | Snapping a click onto a bucket, the period it covers and the marker series that makes it visible. |

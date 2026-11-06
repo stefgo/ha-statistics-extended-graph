@@ -1,12 +1,6 @@
 import { log } from "../core/logger";
 import { DEFAULT_TIMESPAN } from "../time/timespan";
-import type {
-  ConstantPerUnit,
-  StatisticsExtendedGraphConfig,
-  ZoomConfig,
-} from "./types";
-
-export const CONSTANT_PER_UNITS: readonly ConstantPerUnit[] = ["hour", "day", "week"];
+import type { StatisticsExtendedGraphConfig, ZoomConfig } from "./types";
 
 /** Options that exist in comparable cards but are intentionally not supported. */
 const UNSUPPORTED_CARD_OPTIONS = [
@@ -145,19 +139,6 @@ export const normalizeConfig = (
             "warn",
             `Calculation term ${termIndex} of series ${index} has neither statistic_id nor constant and is ignored.`
           );
-        }
-        if (term.constant_per !== undefined) {
-          if (!CONSTANT_PER_UNITS.includes(term.constant_per)) {
-            log(
-              "warn",
-              `Calculation term ${termIndex} of series ${index} has an unknown constant_per "${String(term.constant_per)}" (hour, day, week). The constant is not scaled.`
-            );
-          } else if (term.constant === undefined || term.statistic_id?.trim()) {
-            log(
-              "warn",
-              `Calculation term ${termIndex} of series ${index} uses constant_per without a plain constant. constant_per is ignored.`
-            );
-          }
         }
       });
     }
