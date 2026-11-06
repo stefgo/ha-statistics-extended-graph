@@ -41,7 +41,8 @@ loaded.
   (`change`, `sum`, `mean`, `min`, `max`, `state`).
 - Raw recorder history for short ranges, kept current through a live history stream.
 - Calculated series: add, subtract, multiply and divide several statistics — or
-  plain constants — into one computed signal.
+  plain constants — into one computed signal. A constant can be a rate per
+  hour, day or week that follows the bucket size.
 - Per-series [time offset](#time-offset), e.g. this year and last year side by side.
 - Per-series value transformation: `multiply`, `add` and clipping to bounds.
 - Boolean-like states (`on/off`, `open/closed`, `true/false`) are mapped to 1/0.
@@ -268,7 +269,8 @@ Each term accepts:
 | --- | --- | --- | --- |
 | `operation` | `add`, `subtract`, `multiply`, `divide` | `add` | Operation of this step. |
 | `statistic_id` | string | – | Statistic used by this term. |
-| `constant` | number | – | Constant instead of a statistic. All other term keys are ignored then. |
+| `constant` | number | – | Constant instead of a statistic. Used only without `statistic_id`; `stat_type` is ignored then. |
+| `constant_per` | `hour`, `day`, `week` | – | The constant is a rate per this unit and is multiplied by the length of each bucket, see [Rate per bucket](#rate-per-bucket-constant_per). |
 | `stat_type` | see [Series options](#series-options) | series value | Statistic type of this term. |
 | `multiply` | number | `1` | Factor applied to the term value. |
 | `add` | number | `0` | Offset added after `multiply`. |
@@ -280,7 +282,43 @@ Notes:
   exists at the evaluated timestamp, so mixed reporting intervals stay stable.
 - **Constant-only calculations:** if every term is a constant, points are
   synthesized across the visible range - handy for horizontal reference lines.
+  With `constant_per`, there is one point per bucket instead.
 - **Division by zero** produces a gap at the affected timestamp.
+
+#### Rate per bucket (`constant_per`)
+
+A plain constant draws the same value whatever the bucket size. A target of
+36.5 km per day next to monthly bars of ~1 100 km is useless that way.
+`constant_per` turns the constant into a rate: it is multiplied by the length of
+every bucket, so the same series fits hours, days and months.
+
+```yaml
+series:
+  - statistic_id: sensor.odometer
+    name: Driven
+    chart_type: bar
+  - name: Target
+    chart_type: step
+    calculation:
+      terms:
+        - constant: 36.5
+          constant_per: day
+```
+
+| Bucket | Value |
+| --- | --- |
+| hour | 1.52 |
+| day | 36.5 |
+| week | 255.5 |
+| June / July | 1 095 / 1 131.5 |
+
+- Buckets from midnight to midnight count calendar days, so a day with a
+  daylight saving change is one day and March has 31.
+- The term's `multiply`, `add` and `clip_*` apply to the rate, before scaling.
+- In a calculation with statistics, a point is scaled by the bucket of the
+  statistic at that time.
+- Needs aggregated statistics. With `raw` the constant is not scaled and a
+  warning is logged.
 
 #### Fill between two lines
 

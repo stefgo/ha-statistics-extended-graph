@@ -7,6 +7,9 @@ export type StatisticType = "change" | "sum" | "mean" | "min" | "max" | "state";
 
 export type CalculationOperation = "add" | "subtract" | "multiply" | "divide";
 
+/** Time unit a constant term is given in; it is scaled by the bucket length. */
+export type ConstantPerUnit = "hour" | "day" | "week";
+
 /** Numeric post-processing shared by series and calculation terms. */
 export interface ValueTransformConfig {
   multiply?: number;
@@ -19,6 +22,8 @@ export interface CalculationTermConfig extends ValueTransformConfig {
   statistic_id?: string;
   stat_type?: StatisticType;
   constant?: number;
+  /** The constant is a rate per this unit and is multiplied by the bucket length. */
+  constant_per?: ConstantPerUnit;
   operation?: CalculationOperation;
 }
 

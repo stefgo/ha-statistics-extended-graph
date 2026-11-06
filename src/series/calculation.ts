@@ -1,11 +1,14 @@
+import { differenceInCalendarDays } from "date-fns";
 import type {
   AggregationTarget,
   CalculationConfig,
   CalculationTermConfig,
+  ConstantPerUnit,
   SeriesConfig,
 } from "../config/types";
+import { CONSTANT_PER_UNITS } from "../config/validate";
 import type { Statistics, StatisticValue } from "../data/statistics";
-import { buildBucketSequence } from "../time/buckets";
+import { advanceBucket, buildBucketSequence } from "../time/buckets";
 import { OnceLogger } from "../core/logger";
 import { DEFAULT_STAT_TYPE, transformValue } from "./model";
 
@@ -35,7 +38,66 @@ interface ResolvedTerm {
   cursor: number;
   lastKnown?: TermSample;
   constant?: number;
+  /** Unit the constant is given in; it is then scaled by the bucket length. */
+  constantPer?: ConstantPerUnit;
 }
+
+const HOUR_MS = 60 * 60_000;
+const DAY_MS = 24 * HOUR_MS;
+
+const isLocalMidnight = (timestamp: number): boolean => {
+  const date = new Date(timestamp);
+  return (
+    date.getHours() === 0 &&
+    date.getMinutes() === 0 &&
+    date.getSeconds() === 0 &&
+    date.getMilliseconds() === 0
+  );
+};
+
+/**
+ * How many `unit`s fit into the bucket from `start` to `end`. Buckets between
+ * two local midnights count calendar days, so a 23- or 25-hour day around a
+ * daylight saving change is still one day and March still has 31.
+ */
+export const bucketLength = (
+  start: number,
+  end: number,
+  unit: ConstantPerUnit
+): number => {
+  if (unit === "hour") {
+    return (end - start) / HOUR_MS;
+  }
+  const days =
+    isLocalMidnight(start) && isLocalMidnight(end)
+      ? differenceInCalendarDays(end, start)
+      : (end - start) / DAY_MS;
+  return unit === "week" ? days / 7 : days;
+};
+
+interface BucketBounds {
+  start: number;
+  end: number;
+}
+
+/** One bucket per grid step, or `undefined` when the range has no fixed grid. */
+const constantPerBuckets = (context: CalculationContext): BucketBounds[] | undefined => {
+  const { start, end, period } = context;
+  if (!start || !end || period === undefined || period === "raw" || period === "disabled") {
+    return undefined;
+  }
+  const endTs = end.getTime();
+  const sequence = buildBucketSequence(start.getTime(), endTs, period);
+  if (!sequence?.length) {
+    return undefined;
+  }
+  return sequence
+    .filter((bucketStart, index) => index === 0 || bucketStart < endTs)
+    .map((bucketStart) => ({
+      start: bucketStart,
+      end: advanceBucket(new Date(bucketStart), period).getTime(),
+    }));
+};
 
 const resolveTermValue = (
   term: ResolvedTerm,
@@ -81,6 +143,12 @@ const buildResolvedTerms = (
         term,
         cursor: 0,
         constant: transformValue(term.constant ?? 0, term),
+        constantPer:
+          term.constant !== undefined &&
+          term.constant_per !== undefined &&
+          CONSTANT_PER_UNITS.includes(term.constant_per)
+            ? term.constant_per
+            : undefined,
       };
     }
 
@@ -209,12 +277,40 @@ export const evaluateCalculation = (
 
   const initialValue = calculation.initial_value ?? 0;
   const values: StatisticValue[] = [];
+  const usesConstantPer = terms.some((item) => item.constantPer !== undefined);
+  const hasGrid =
+    context.period !== undefined &&
+    context.period !== "raw" &&
+    context.period !== "disabled";
 
-  const evaluateTimestamp = (timestamp: number) => {
+  /** Bucket of a statistic-driven point: the bounds of a term's exact sample. */
+  const boundsAt = (timestamp: number): BucketBounds | undefined => {
+    for (const item of terms) {
+      const sample = item.byTimestamp?.get(timestamp);
+      if (sample) {
+        return { start: sample.start, end: sample.end };
+      }
+    }
+    return undefined;
+  };
+
+  const warnUnscaled = () =>
+    logger.warnOnce(
+      `calc-constant-per-${seriesLabel}`,
+      `Calculation series "${seriesLabel}" uses constant_per, which needs aggregated statistics. The constant is not scaled.`
+    );
+
+  const evaluateTimestamp = (timestamp: number, bucket?: BucketBounds) => {
     let total = initialValue;
-    let start: number | undefined;
-    let end: number | undefined;
+    let start: number | undefined = bucket?.start;
+    let end: number | undefined = bucket?.end;
     let valid = true;
+
+    const bounds = usesConstantPer && hasGrid ? (bucket ?? boundsAt(timestamp)) : undefined;
+    const scalable = !!bounds && bounds.end > bounds.start;
+    if (usesConstantPer && !scalable) {
+      warnUnscaled();
+    }
 
     for (const item of terms) {
       if (!valid) {
@@ -223,7 +319,10 @@ export const evaluateCalculation = (
 
       let termValue: number;
       if (item.constant !== undefined) {
-        termValue = item.constant;
+        termValue =
+          item.constantPer && scalable
+            ? item.constant * bucketLength(bounds.start, bounds.end, item.constantPer)
+            : item.constant;
       } else {
         const resolved = resolveTermValue(item, timestamp);
         if (resolved && resolved.value !== null) {
@@ -279,9 +378,19 @@ export const evaluateCalculation = (
   };
 
   if (timestamps.length) {
-    timestamps.forEach(evaluateTimestamp);
+    timestamps.forEach((timestamp) => evaluateTimestamp(timestamp));
+    return { values };
+  }
+
+  // A rate per unit differs from bucket to bucket, so it gets one point per
+  // bucket instead of a flat line across the range.
+  const buckets = usesConstantPer ? constantPerBuckets(context) : undefined;
+  if (buckets) {
+    buckets.forEach((bucket) => evaluateTimestamp(bucket.start, bucket));
   } else {
-    constantTimestamps(context, statistics).forEach(evaluateTimestamp);
+    constantTimestamps(context, statistics).forEach((timestamp) =>
+      evaluateTimestamp(timestamp)
+    );
   }
 
   return { values };
