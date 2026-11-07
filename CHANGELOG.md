@@ -8,6 +8,22 @@ An entry is put together by the release workflow: the text written by hand in
 are added to the release page and do not belong in an entry. The entries up to
 0.6.3 were written by hand as a whole.
 
+## [0.7.1](https://github.com/stefgo/ha-statistics-extended-graph/compare/v0.7.0...v0.7.1) (2026-11-07)
+
+### Removed
+
+- **`constant_per` is gone again.** A calculation constant is no longer scaled
+  by the length of a bucket; it is drawn as the plain value, as before 0.7.0.
+
+### Upgrade
+
+If a series uses `constant_per`, remove the line. The option is ignored, so the
+constant is drawn unscaled: a line at 36.5 instead of 36.5 per day.
+
+### Reverts
+
+* Remove constant_per (scaling constants by bucket length) ([67ec5f2](https://github.com/stefgo/ha-statistics-extended-graph/commit/67ec5f284911d70a9d78dfcd37682d5104c1afad))
+
 ## [0.7.0](https://github.com/stefgo/ha-statistics-extended-graph/compare/v0.6.5...v0.7.0) (2026-11-06)
 
 ### New
