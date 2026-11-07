@@ -18,7 +18,7 @@ unaggregated ("raw") recorder history.
 ![One ha-card combining Statistics Extended Graph and Statistics Table and Legend: a stacked hourly energy chart on top, five legend rows with their sums underneath, closed by a self-sufficiency total row](https://raw.githubusercontent.com/stefgo/ha-statistics-extended-graph/main/screenshots/statistics-legend-with-custom-graph.png)
 
 *This card's chart of hourly grid, battery and PV energy, combined in one `ha-card` with
-[Statistics Table and Legend](https://github.com/stefgo/ha-statistics-legend-table), which
+[Legend Table Cards](https://github.com/stefgo/ha-legend-table), which
 contributes the legend rows with their sums and the self-sufficiency total row.*
 
 ## Features
@@ -371,7 +371,7 @@ window stops - never narrower than its own labels can describe.
 has appeared with the zoom and marks the window inside the full range, and the
 bars are hourly because the window is short enough for the detail to be loaded at
 that resolution. The legend rows with their sums and the `PV gesamt` total come
-from [Statistics Table and Legend](https://github.com/stefgo/ha-statistics-legend-table)
+from [Legend Table Cards](https://github.com/stefgo/ha-legend-table)
 in the same `ha-card`, not from this card.*
 
 ```yaml
